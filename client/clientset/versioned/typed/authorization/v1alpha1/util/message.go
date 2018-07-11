@@ -4,8 +4,8 @@ import (
 	"github.com/appscode/kutil"
 	"github.com/evanphx/json-patch"
 	"github.com/golang/glog"
-	api "github.com/kubedb/user-manager/apis/users/v1alpha1"
-	cs "github.com/kubedb/user-manager/client/clientset/versioned/typed/users/v1alpha1"
+	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
+	cs "github.com/kubedb/user-manager/client/clientset/versioned/typed/authorization/v1alpha1"
 	"github.com/pkg/errors"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -13,7 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
-func CreateOrPatchMessage(c cs.UsersV1alpha1Interface, meta metav1.ObjectMeta, transform func(alert *api.Message) *api.Message) (*api.Message, kutil.VerbType, error) {
+func CreateOrPatchMessage(c cs.AuthorizationV1alpha1Interface, meta metav1.ObjectMeta, transform func(alert *api.Message) *api.Message) (*api.Message, kutil.VerbType, error) {
 	cur, err := c.Messages(meta.Namespace).Get(meta.Name, metav1.GetOptions{})
 	if kerr.IsNotFound(err) {
 		glog.V(3).Infof("Creating Message %s/%s.", meta.Namespace, meta.Name)
@@ -31,11 +31,11 @@ func CreateOrPatchMessage(c cs.UsersV1alpha1Interface, meta metav1.ObjectMeta, t
 	return PatchMessage(c, cur, transform)
 }
 
-func PatchMessage(c cs.UsersV1alpha1Interface, cur *api.Message, transform func(*api.Message) *api.Message) (*api.Message, kutil.VerbType, error) {
+func PatchMessage(c cs.AuthorizationV1alpha1Interface, cur *api.Message, transform func(*api.Message) *api.Message) (*api.Message, kutil.VerbType, error) {
 	return PatchMessageObject(c, cur, transform(cur.DeepCopy()))
 }
 
-func PatchMessageObject(c cs.UsersV1alpha1Interface, cur, mod *api.Message) (*api.Message, kutil.VerbType, error) {
+func PatchMessageObject(c cs.AuthorizationV1alpha1Interface, cur, mod *api.Message) (*api.Message, kutil.VerbType, error) {
 	curJson, err := json.Marshal(cur)
 	if err != nil {
 		return nil, kutil.VerbUnchanged, err
@@ -58,7 +58,7 @@ func PatchMessageObject(c cs.UsersV1alpha1Interface, cur, mod *api.Message) (*ap
 	return out, kutil.VerbPatched, err
 }
 
-func TryUpdateMessage(c cs.UsersV1alpha1Interface, meta metav1.ObjectMeta, transform func(*api.Message) *api.Message) (result *api.Message, err error) {
+func TryUpdateMessage(c cs.AuthorizationV1alpha1Interface, meta metav1.ObjectMeta, transform func(*api.Message) *api.Message) (result *api.Message, err error) {
 	attempt := 0
 	err = wait.PollImmediate(kutil.RetryInterval, kutil.RetryTimeout, func() (bool, error) {
 		attempt++
@@ -79,7 +79,7 @@ func TryUpdateMessage(c cs.UsersV1alpha1Interface, meta metav1.ObjectMeta, trans
 	return
 }
 
-func UpdateMessageStatus(c cs.UsersV1alpha1Interface, cur *api.Message, transform func(*api.MessageStatus) *api.MessageStatus, useSubresource ...bool) (*api.Message, error) {
+func UpdateMessageStatus(c cs.AuthorizationV1alpha1Interface, cur *api.Message, transform func(*api.MessageStatus) *api.MessageStatus, useSubresource ...bool) (*api.Message, error) {
 	if len(useSubresource) > 1 {
 		return nil, errors.Errorf("invalid value passed for useSubresource: %v", useSubresource)
 	}

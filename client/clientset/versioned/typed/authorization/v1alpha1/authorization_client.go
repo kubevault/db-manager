@@ -19,33 +19,33 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/kubedb/user-manager/apis/users/v1alpha1"
+	v1alpha1 "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
 	"github.com/kubedb/user-manager/client/clientset/versioned/scheme"
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	rest "k8s.io/client-go/rest"
 )
 
-type UsersV1alpha1Interface interface {
+type AuthorizationV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	MessagesGetter
 	MessagingServicesGetter
 }
 
-// UsersV1alpha1Client is used to interact with features provided by the users.kubedb.com group.
-type UsersV1alpha1Client struct {
+// AuthorizationV1alpha1Client is used to interact with features provided by the authorization.kubedb.com group.
+type AuthorizationV1alpha1Client struct {
 	restClient rest.Interface
 }
 
-func (c *UsersV1alpha1Client) Messages(namespace string) MessageInterface {
+func (c *AuthorizationV1alpha1Client) Messages(namespace string) MessageInterface {
 	return newMessages(c, namespace)
 }
 
-func (c *UsersV1alpha1Client) MessagingServices(namespace string) MessagingServiceInterface {
+func (c *AuthorizationV1alpha1Client) MessagingServices(namespace string) MessagingServiceInterface {
 	return newMessagingServices(c, namespace)
 }
 
-// NewForConfig creates a new UsersV1alpha1Client for the given config.
-func NewForConfig(c *rest.Config) (*UsersV1alpha1Client, error) {
+// NewForConfig creates a new AuthorizationV1alpha1Client for the given config.
+func NewForConfig(c *rest.Config) (*AuthorizationV1alpha1Client, error) {
 	config := *c
 	if err := setConfigDefaults(&config); err != nil {
 		return nil, err
@@ -54,12 +54,12 @@ func NewForConfig(c *rest.Config) (*UsersV1alpha1Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &UsersV1alpha1Client{client}, nil
+	return &AuthorizationV1alpha1Client{client}, nil
 }
 
-// NewForConfigOrDie creates a new UsersV1alpha1Client for the given config and
+// NewForConfigOrDie creates a new AuthorizationV1alpha1Client for the given config and
 // panics if there is an error in the config.
-func NewForConfigOrDie(c *rest.Config) *UsersV1alpha1Client {
+func NewForConfigOrDie(c *rest.Config) *AuthorizationV1alpha1Client {
 	client, err := NewForConfig(c)
 	if err != nil {
 		panic(err)
@@ -67,9 +67,9 @@ func NewForConfigOrDie(c *rest.Config) *UsersV1alpha1Client {
 	return client
 }
 
-// New creates a new UsersV1alpha1Client for the given RESTClient.
-func New(c rest.Interface) *UsersV1alpha1Client {
-	return &UsersV1alpha1Client{c}
+// New creates a new AuthorizationV1alpha1Client for the given RESTClient.
+func New(c rest.Interface) *AuthorizationV1alpha1Client {
+	return &AuthorizationV1alpha1Client{c}
 }
 
 func setConfigDefaults(config *rest.Config) error {
@@ -87,7 +87,7 @@ func setConfigDefaults(config *rest.Config) error {
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *UsersV1alpha1Client) RESTClient() rest.Interface {
+func (c *AuthorizationV1alpha1Client) RESTClient() rest.Interface {
 	if c == nil {
 		return nil
 	}

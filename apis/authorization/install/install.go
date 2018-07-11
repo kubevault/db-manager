@@ -17,7 +17,7 @@ limitations under the License.
 package install
 
 import (
-	"github.com/kubedb/user-manager/apis/users/v1alpha1"
+	"github.com/kubedb/user-manager/apis/authorization/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 )

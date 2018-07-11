@@ -11,8 +11,8 @@ import (
 	"github.com/appscode/kutil/openapi"
 	"github.com/go-openapi/spec"
 	"github.com/golang/glog"
-	"github.com/kubedb/user-manager/apis/users/install"
-	"github.com/kubedb/user-manager/apis/users/v1alpha1"
+	"github.com/kubedb/user-manager/apis/authorization/install"
+	"github.com/kubedb/user-manager/apis/authorization/v1alpha1"
 	crd_api "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
@@ -20,7 +20,7 @@ import (
 )
 
 func generateCRDDefinitions() {
-	filename := gort.GOPath() + "/src/github.com/kubedb/user-manager/apis/users/v1alpha1/crds.yaml"
+	filename := gort.GOPath() + "/src/github.com/kubedb/user-manager/apis/authorization/v1alpha1/crds.yaml"
 
 	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {

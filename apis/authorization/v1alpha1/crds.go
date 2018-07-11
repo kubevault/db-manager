@@ -26,7 +26,7 @@ func (p MessagingService) CustomResourceDefinition() *apiextensions.CustomResour
 		Labels: crdutils.Labels{
 			LabelsMap: map[string]string{"app": "messenger"},
 		},
-		SpecDefinitionName:      "github.com/kubedb/user-manager/apis/users/v1alpha1.MessagingService",
+		SpecDefinitionName:      "github.com/kubedb/user-manager/apis/authorization/v1alpha1.MessagingService",
 		EnableValidation:        true,
 		GetOpenAPIDefinitions:   GetOpenAPIDefinitions,
 		EnableStatusSubresource: EnableStatusSubresource,
@@ -54,7 +54,7 @@ func (p Message) CustomResourceDefinition() *apiextensions.CustomResourceDefinit
 		Labels: crdutils.Labels{
 			LabelsMap: map[string]string{"app": "messenger"},
 		},
-		SpecDefinitionName:      "github.com/kubedb/user-manager/apis/users/v1alpha1.Message",
+		SpecDefinitionName:      "github.com/kubedb/user-manager/apis/authorization/v1alpha1.Message",
 		EnableValidation:        true,
 		GetOpenAPIDefinitions:   GetOpenAPIDefinitions,
 		EnableStatusSubresource: EnableStatusSubresource,

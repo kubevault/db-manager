@@ -1,7 +1,7 @@
 package controller
 
 import (
-	api "github.com/kubedb/user-manager/apis/users/v1alpha1"
+	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
 )
 
 func (c *MessengerController) enqueueUpdate(oldObj, newObj interface{}) bool {

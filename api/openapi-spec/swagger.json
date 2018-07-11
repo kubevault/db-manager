@@ -44,7 +44,7 @@
         }
       }
     },
-    "/apis/users.kubedb.com/": {
+    "/apis/authorization.kubedb.com/": {
       "get": {
         "description": "get information of a group",
         "consumes": [
@@ -61,9 +61,9 @@
           "https"
         ],
         "tags": [
-          "usersKubedbCom"
+          "authorizationKubedbCom"
         ],
-        "operationId": "getUsersKubedbComAPIGroup",
+        "operationId": "getAuthorizationKubedbComAPIGroup",
         "responses": {
           "200": {
             "description": "OK",
@@ -74,7 +74,7 @@
         }
       }
     },
-    "/apis/users.kubedb.com/v1alpha1/": {
+    "/apis/authorization.kubedb.com/v1alpha1/": {
       "get": {
         "description": "get available resources",
         "consumes": [
@@ -91,9 +91,9 @@
           "https"
         ],
         "tags": [
-          "usersKubedbCom_v1alpha1"
+          "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "getUsersKubedbComV1alpha1APIResources",
+        "operationId": "getAuthorizationKubedbComV1alpha1APIResources",
         "responses": {
           "200": {
             "description": "OK",
@@ -104,7 +104,7 @@
         }
       }
     },
-    "/apis/users.kubedb.com/v1alpha1/messages": {
+    "/apis/authorization.kubedb.com/v1alpha1/messages": {
       "get": {
         "description": "list or watch objects of kind Message",
         "consumes": [
@@ -121,20 +121,20 @@
           "https"
         ],
         "tags": [
-          "usersKubedbCom_v1alpha1"
+          "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "listUsersKubedbComV1alpha1MessageForAllNamespaces",
+        "operationId": "listAuthorizationKubedbComV1alpha1MessageForAllNamespaces",
         "responses": {
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.users.v1alpha1.MessageList"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MessageList"
             }
           }
         },
         "x-kubernetes-action": "list",
         "x-kubernetes-group-version-kind": {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "Message"
         }
@@ -205,7 +205,7 @@
         }
       ]
     },
-    "/apis/users.kubedb.com/v1alpha1/messagingservices": {
+    "/apis/authorization.kubedb.com/v1alpha1/messagingservices": {
       "get": {
         "description": "list or watch objects of kind MessagingService",
         "consumes": [
@@ -222,20 +222,20 @@
           "https"
         ],
         "tags": [
-          "usersKubedbCom_v1alpha1"
+          "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "listUsersKubedbComV1alpha1MessagingServiceForAllNamespaces",
+        "operationId": "listAuthorizationKubedbComV1alpha1MessagingServiceForAllNamespaces",
         "responses": {
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.users.v1alpha1.MessagingServiceList"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MessagingServiceList"
             }
           }
         },
         "x-kubernetes-action": "list",
         "x-kubernetes-group-version-kind": {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "MessagingService"
         }
@@ -306,7 +306,7 @@
         }
       ]
     },
-    "/apis/users.kubedb.com/v1alpha1/namespaces/{namespace}/messages": {
+    "/apis/authorization.kubedb.com/v1alpha1/namespaces/{namespace}/messages": {
       "get": {
         "description": "list or watch objects of kind Message",
         "consumes": [
@@ -323,9 +323,9 @@
           "https"
         ],
         "tags": [
-          "usersKubedbCom_v1alpha1"
+          "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "listUsersKubedbComV1alpha1NamespacedMessage",
+        "operationId": "listAuthorizationKubedbComV1alpha1NamespacedMessage",
         "parameters": [
           {
             "uniqueItems": true,
@@ -388,13 +388,13 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.users.v1alpha1.MessageList"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MessageList"
             }
           }
         },
         "x-kubernetes-action": "list",
         "x-kubernetes-group-version-kind": {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "Message"
         }
@@ -413,16 +413,16 @@
           "https"
         ],
         "tags": [
-          "usersKubedbCom_v1alpha1"
+          "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "createUsersKubedbComV1alpha1NamespacedMessage",
+        "operationId": "createAuthorizationKubedbComV1alpha1NamespacedMessage",
         "parameters": [
           {
             "name": "body",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.users.v1alpha1.Message"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.Message"
             }
           }
         ],
@@ -430,25 +430,25 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.users.v1alpha1.Message"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.Message"
             }
           },
           "201": {
             "description": "Created",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.users.v1alpha1.Message"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.Message"
             }
           },
           "202": {
             "description": "Accepted",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.users.v1alpha1.Message"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.Message"
             }
           }
         },
         "x-kubernetes-action": "post",
         "x-kubernetes-group-version-kind": {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "Message"
         }
@@ -467,9 +467,9 @@
           "https"
         ],
         "tags": [
-          "usersKubedbCom_v1alpha1"
+          "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "deleteUsersKubedbComV1alpha1CollectionNamespacedMessage",
+        "operationId": "deleteAuthorizationKubedbComV1alpha1CollectionNamespacedMessage",
         "parameters": [
           {
             "uniqueItems": true,
@@ -538,7 +538,7 @@
         },
         "x-kubernetes-action": "deletecollection",
         "x-kubernetes-group-version-kind": {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "Message"
         }
@@ -561,7 +561,7 @@
         }
       ]
     },
-    "/apis/users.kubedb.com/v1alpha1/namespaces/{namespace}/messages/{name}": {
+    "/apis/authorization.kubedb.com/v1alpha1/namespaces/{namespace}/messages/{name}": {
       "get": {
         "description": "read the specified Message",
         "consumes": [
@@ -576,20 +576,20 @@
           "https"
         ],
         "tags": [
-          "usersKubedbCom_v1alpha1"
+          "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "readUsersKubedbComV1alpha1NamespacedMessage",
+        "operationId": "readAuthorizationKubedbComV1alpha1NamespacedMessage",
         "responses": {
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.users.v1alpha1.Message"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.Message"
             }
           }
         },
         "x-kubernetes-action": "get",
         "x-kubernetes-group-version-kind": {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "Message"
         }
@@ -608,16 +608,16 @@
           "https"
         ],
         "tags": [
-          "usersKubedbCom_v1alpha1"
+          "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "replaceUsersKubedbComV1alpha1NamespacedMessage",
+        "operationId": "replaceAuthorizationKubedbComV1alpha1NamespacedMessage",
         "parameters": [
           {
             "name": "body",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.users.v1alpha1.Message"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.Message"
             }
           }
         ],
@@ -625,19 +625,19 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.users.v1alpha1.Message"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.Message"
             }
           },
           "201": {
             "description": "Created",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.users.v1alpha1.Message"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.Message"
             }
           }
         },
         "x-kubernetes-action": "put",
         "x-kubernetes-group-version-kind": {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "Message"
         }
@@ -656,9 +656,9 @@
           "https"
         ],
         "tags": [
-          "usersKubedbCom_v1alpha1"
+          "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "deleteUsersKubedbComV1alpha1NamespacedMessage",
+        "operationId": "deleteAuthorizationKubedbComV1alpha1NamespacedMessage",
         "parameters": [
           {
             "name": "body",
@@ -700,7 +700,7 @@
         },
         "x-kubernetes-action": "delete",
         "x-kubernetes-group-version-kind": {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "Message"
         }
@@ -721,9 +721,9 @@
           "https"
         ],
         "tags": [
-          "usersKubedbCom_v1alpha1"
+          "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "patchUsersKubedbComV1alpha1NamespacedMessage",
+        "operationId": "patchAuthorizationKubedbComV1alpha1NamespacedMessage",
         "parameters": [
           {
             "name": "body",
@@ -738,13 +738,13 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.users.v1alpha1.Message"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.Message"
             }
           }
         },
         "x-kubernetes-action": "patch",
         "x-kubernetes-group-version-kind": {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "Message"
         }
@@ -775,7 +775,7 @@
         }
       ]
     },
-    "/apis/users.kubedb.com/v1alpha1/namespaces/{namespace}/messagingservices": {
+    "/apis/authorization.kubedb.com/v1alpha1/namespaces/{namespace}/messagingservices": {
       "get": {
         "description": "list or watch objects of kind MessagingService",
         "consumes": [
@@ -792,9 +792,9 @@
           "https"
         ],
         "tags": [
-          "usersKubedbCom_v1alpha1"
+          "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "listUsersKubedbComV1alpha1NamespacedMessagingService",
+        "operationId": "listAuthorizationKubedbComV1alpha1NamespacedMessagingService",
         "parameters": [
           {
             "uniqueItems": true,
@@ -857,13 +857,13 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.users.v1alpha1.MessagingServiceList"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MessagingServiceList"
             }
           }
         },
         "x-kubernetes-action": "list",
         "x-kubernetes-group-version-kind": {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "MessagingService"
         }
@@ -882,16 +882,16 @@
           "https"
         ],
         "tags": [
-          "usersKubedbCom_v1alpha1"
+          "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "createUsersKubedbComV1alpha1NamespacedMessagingService",
+        "operationId": "createAuthorizationKubedbComV1alpha1NamespacedMessagingService",
         "parameters": [
           {
             "name": "body",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.users.v1alpha1.MessagingService"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MessagingService"
             }
           }
         ],
@@ -899,25 +899,25 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.users.v1alpha1.MessagingService"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MessagingService"
             }
           },
           "201": {
             "description": "Created",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.users.v1alpha1.MessagingService"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MessagingService"
             }
           },
           "202": {
             "description": "Accepted",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.users.v1alpha1.MessagingService"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MessagingService"
             }
           }
         },
         "x-kubernetes-action": "post",
         "x-kubernetes-group-version-kind": {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "MessagingService"
         }
@@ -936,9 +936,9 @@
           "https"
         ],
         "tags": [
-          "usersKubedbCom_v1alpha1"
+          "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "deleteUsersKubedbComV1alpha1CollectionNamespacedMessagingService",
+        "operationId": "deleteAuthorizationKubedbComV1alpha1CollectionNamespacedMessagingService",
         "parameters": [
           {
             "uniqueItems": true,
@@ -1007,7 +1007,7 @@
         },
         "x-kubernetes-action": "deletecollection",
         "x-kubernetes-group-version-kind": {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "MessagingService"
         }
@@ -1030,7 +1030,7 @@
         }
       ]
     },
-    "/apis/users.kubedb.com/v1alpha1/namespaces/{namespace}/messagingservices/{name}": {
+    "/apis/authorization.kubedb.com/v1alpha1/namespaces/{namespace}/messagingservices/{name}": {
       "get": {
         "description": "read the specified MessagingService",
         "consumes": [
@@ -1045,20 +1045,20 @@
           "https"
         ],
         "tags": [
-          "usersKubedbCom_v1alpha1"
+          "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "readUsersKubedbComV1alpha1NamespacedMessagingService",
+        "operationId": "readAuthorizationKubedbComV1alpha1NamespacedMessagingService",
         "responses": {
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.users.v1alpha1.MessagingService"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MessagingService"
             }
           }
         },
         "x-kubernetes-action": "get",
         "x-kubernetes-group-version-kind": {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "MessagingService"
         }
@@ -1077,16 +1077,16 @@
           "https"
         ],
         "tags": [
-          "usersKubedbCom_v1alpha1"
+          "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "replaceUsersKubedbComV1alpha1NamespacedMessagingService",
+        "operationId": "replaceAuthorizationKubedbComV1alpha1NamespacedMessagingService",
         "parameters": [
           {
             "name": "body",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.users.v1alpha1.MessagingService"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MessagingService"
             }
           }
         ],
@@ -1094,19 +1094,19 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.users.v1alpha1.MessagingService"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MessagingService"
             }
           },
           "201": {
             "description": "Created",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.users.v1alpha1.MessagingService"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MessagingService"
             }
           }
         },
         "x-kubernetes-action": "put",
         "x-kubernetes-group-version-kind": {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "MessagingService"
         }
@@ -1125,9 +1125,9 @@
           "https"
         ],
         "tags": [
-          "usersKubedbCom_v1alpha1"
+          "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "deleteUsersKubedbComV1alpha1NamespacedMessagingService",
+        "operationId": "deleteAuthorizationKubedbComV1alpha1NamespacedMessagingService",
         "parameters": [
           {
             "name": "body",
@@ -1169,7 +1169,7 @@
         },
         "x-kubernetes-action": "delete",
         "x-kubernetes-group-version-kind": {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "MessagingService"
         }
@@ -1190,9 +1190,9 @@
           "https"
         ],
         "tags": [
-          "usersKubedbCom_v1alpha1"
+          "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "patchUsersKubedbComV1alpha1NamespacedMessagingService",
+        "operationId": "patchAuthorizationKubedbComV1alpha1NamespacedMessagingService",
         "parameters": [
           {
             "name": "body",
@@ -1207,13 +1207,13 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.users.v1alpha1.MessagingService"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MessagingService"
             }
           }
         },
         "x-kubernetes-action": "patch",
         "x-kubernetes-group-version-kind": {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "MessagingService"
         }
@@ -1244,7 +1244,7 @@
         }
       ]
     },
-    "/apis/users.kubedb.com/v1alpha1/watch/messages": {
+    "/apis/authorization.kubedb.com/v1alpha1/watch/messages": {
       "get": {
         "description": "watch individual changes to a list of Message",
         "consumes": [
@@ -1261,9 +1261,9 @@
           "https"
         ],
         "tags": [
-          "usersKubedbCom_v1alpha1"
+          "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "watchUsersKubedbComV1alpha1MessageListForAllNamespaces",
+        "operationId": "watchAuthorizationKubedbComV1alpha1MessageListForAllNamespaces",
         "responses": {
           "200": {
             "description": "OK",
@@ -1274,7 +1274,7 @@
         },
         "x-kubernetes-action": "watchlist",
         "x-kubernetes-group-version-kind": {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "Message"
         }
@@ -1345,7 +1345,7 @@
         }
       ]
     },
-    "/apis/users.kubedb.com/v1alpha1/watch/messagingservices": {
+    "/apis/authorization.kubedb.com/v1alpha1/watch/messagingservices": {
       "get": {
         "description": "watch individual changes to a list of MessagingService",
         "consumes": [
@@ -1362,9 +1362,9 @@
           "https"
         ],
         "tags": [
-          "usersKubedbCom_v1alpha1"
+          "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "watchUsersKubedbComV1alpha1MessagingServiceListForAllNamespaces",
+        "operationId": "watchAuthorizationKubedbComV1alpha1MessagingServiceListForAllNamespaces",
         "responses": {
           "200": {
             "description": "OK",
@@ -1375,7 +1375,7 @@
         },
         "x-kubernetes-action": "watchlist",
         "x-kubernetes-group-version-kind": {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "MessagingService"
         }
@@ -1446,7 +1446,7 @@
         }
       ]
     },
-    "/apis/users.kubedb.com/v1alpha1/watch/namespaces/{namespace}/messages": {
+    "/apis/authorization.kubedb.com/v1alpha1/watch/namespaces/{namespace}/messages": {
       "get": {
         "description": "watch individual changes to a list of Message",
         "consumes": [
@@ -1463,9 +1463,9 @@
           "https"
         ],
         "tags": [
-          "usersKubedbCom_v1alpha1"
+          "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "watchUsersKubedbComV1alpha1NamespacedMessageList",
+        "operationId": "watchAuthorizationKubedbComV1alpha1NamespacedMessageList",
         "responses": {
           "200": {
             "description": "OK",
@@ -1476,7 +1476,7 @@
         },
         "x-kubernetes-action": "watchlist",
         "x-kubernetes-group-version-kind": {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "Message"
         }
@@ -1555,7 +1555,7 @@
         }
       ]
     },
-    "/apis/users.kubedb.com/v1alpha1/watch/namespaces/{namespace}/messages/{name}": {
+    "/apis/authorization.kubedb.com/v1alpha1/watch/namespaces/{namespace}/messages/{name}": {
       "get": {
         "description": "watch changes to an object of kind Message",
         "consumes": [
@@ -1572,9 +1572,9 @@
           "https"
         ],
         "tags": [
-          "usersKubedbCom_v1alpha1"
+          "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "watchUsersKubedbComV1alpha1NamespacedMessage",
+        "operationId": "watchAuthorizationKubedbComV1alpha1NamespacedMessage",
         "responses": {
           "200": {
             "description": "OK",
@@ -1585,7 +1585,7 @@
         },
         "x-kubernetes-action": "watch",
         "x-kubernetes-group-version-kind": {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "Message"
         }
@@ -1672,7 +1672,7 @@
         }
       ]
     },
-    "/apis/users.kubedb.com/v1alpha1/watch/namespaces/{namespace}/messagingservices": {
+    "/apis/authorization.kubedb.com/v1alpha1/watch/namespaces/{namespace}/messagingservices": {
       "get": {
         "description": "watch individual changes to a list of MessagingService",
         "consumes": [
@@ -1689,9 +1689,9 @@
           "https"
         ],
         "tags": [
-          "usersKubedbCom_v1alpha1"
+          "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "watchUsersKubedbComV1alpha1NamespacedMessagingServiceList",
+        "operationId": "watchAuthorizationKubedbComV1alpha1NamespacedMessagingServiceList",
         "responses": {
           "200": {
             "description": "OK",
@@ -1702,7 +1702,7 @@
         },
         "x-kubernetes-action": "watchlist",
         "x-kubernetes-group-version-kind": {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "MessagingService"
         }
@@ -1781,7 +1781,7 @@
         }
       ]
     },
-    "/apis/users.kubedb.com/v1alpha1/watch/namespaces/{namespace}/messagingservices/{name}": {
+    "/apis/authorization.kubedb.com/v1alpha1/watch/namespaces/{namespace}/messagingservices/{name}": {
       "get": {
         "description": "watch changes to an object of kind MessagingService",
         "consumes": [
@@ -1798,9 +1798,9 @@
           "https"
         ],
         "tags": [
-          "usersKubedbCom_v1alpha1"
+          "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "watchUsersKubedbComV1alpha1NamespacedMessagingService",
+        "operationId": "watchAuthorizationKubedbComV1alpha1NamespacedMessagingService",
         "responses": {
           "200": {
             "description": "OK",
@@ -1811,7 +1811,7 @@
         },
         "x-kubernetes-action": "watch",
         "x-kubernetes-group-version-kind": {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "MessagingService"
         }
@@ -1900,7 +1900,7 @@
     }
   },
   "definitions": {
-    "com.github.kubedb.user-manager.apis.users.v1alpha1.Message": {
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.Message": {
       "properties": {
         "apiVersion": {
           "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
@@ -1914,21 +1914,21 @@
           "$ref": "#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta"
         },
         "spec": {
-          "$ref": "#/definitions/com.github.kubedb.user-manager.apis.users.v1alpha1.MessageSpec"
+          "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MessageSpec"
         },
         "status": {
-          "$ref": "#/definitions/com.github.kubedb.user-manager.apis.users.v1alpha1.MessageStatus"
+          "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MessageStatus"
         }
       },
       "x-kubernetes-group-version-kind": [
         {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "Message"
         }
       ]
     },
-    "com.github.kubedb.user-manager.apis.users.v1alpha1.MessageList": {
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MessageList": {
       "properties": {
         "apiVersion": {
           "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
@@ -1938,7 +1938,7 @@
           "description": "Items is a list of Notification TPR objects",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/com.github.kubedb.user-manager.apis.users.v1alpha1.Message"
+            "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.Message"
           }
         },
         "kind": {
@@ -1951,13 +1951,13 @@
       },
       "x-kubernetes-group-version-kind": [
         {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "MessageList"
         }
       ]
     },
-    "com.github.kubedb.user-manager.apis.users.v1alpha1.MessageSpec": {
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MessageSpec": {
       "properties": {
         "chat": {
           "type": "string"
@@ -1976,7 +1976,7 @@
         }
       }
     },
-    "com.github.kubedb.user-manager.apis.users.v1alpha1.MessageStatus": {
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MessageStatus": {
       "properties": {
         "errorMessage": {
           "type": "string"
@@ -1986,7 +1986,7 @@
         }
       }
     },
-    "com.github.kubedb.user-manager.apis.users.v1alpha1.MessagingService": {
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MessagingService": {
       "description": "Notifier defines a Notifier database.",
       "properties": {
         "apiVersion": {
@@ -2001,18 +2001,18 @@
           "$ref": "#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta"
         },
         "spec": {
-          "$ref": "#/definitions/com.github.kubedb.user-manager.apis.users.v1alpha1.MessagingServiceSpec"
+          "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MessagingServiceSpec"
         }
       },
       "x-kubernetes-group-version-kind": [
         {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "MessagingService"
         }
       ]
     },
-    "com.github.kubedb.user-manager.apis.users.v1alpha1.MessagingServiceList": {
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MessagingServiceList": {
       "properties": {
         "apiVersion": {
           "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
@@ -2022,7 +2022,7 @@
           "description": "Items is a list of MessagingService TPR objects",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/com.github.kubedb.user-manager.apis.users.v1alpha1.MessagingService"
+            "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MessagingService"
           }
         },
         "kind": {
@@ -2035,13 +2035,13 @@
       },
       "x-kubernetes-group-version-kind": [
         {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "MessagingServiceList"
         }
       ]
     },
-    "com.github.kubedb.user-manager.apis.users.v1alpha1.MessagingServiceSpec": {
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MessagingServiceSpec": {
       "properties": {
         "credentialSecretName": {
           "description": "Secret name to which credential data is provided to send notification",
@@ -2269,7 +2269,7 @@
           "kind": "DeleteOptions"
         },
         {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "DeleteOptions"
         }
@@ -2536,7 +2536,7 @@
           "kind": "Status"
         },
         {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "Status"
         }
@@ -2619,7 +2619,7 @@
           "kind": "WatchEvent"
         },
         {
-          "group": "users.kubedb.com",
+          "group": "authorization.kubedb.com",
           "version": "v1alpha1",
           "kind": "WatchEvent"
         }

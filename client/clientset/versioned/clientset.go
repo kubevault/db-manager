@@ -19,7 +19,7 @@ limitations under the License.
 package versioned
 
 import (
-	usersv1alpha1 "github.com/kubedb/user-manager/client/clientset/versioned/typed/users/v1alpha1"
+	authorizationv1alpha1 "github.com/kubedb/user-manager/client/clientset/versioned/typed/authorization/v1alpha1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
@@ -27,27 +27,27 @@ import (
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
-	UsersV1alpha1() usersv1alpha1.UsersV1alpha1Interface
+	AuthorizationV1alpha1() authorizationv1alpha1.AuthorizationV1alpha1Interface
 	// Deprecated: please explicitly pick a version if possible.
-	Users() usersv1alpha1.UsersV1alpha1Interface
+	Authorization() authorizationv1alpha1.AuthorizationV1alpha1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	usersV1alpha1 *usersv1alpha1.UsersV1alpha1Client
+	authorizationV1alpha1 *authorizationv1alpha1.AuthorizationV1alpha1Client
 }
 
-// UsersV1alpha1 retrieves the UsersV1alpha1Client
-func (c *Clientset) UsersV1alpha1() usersv1alpha1.UsersV1alpha1Interface {
-	return c.usersV1alpha1
+// AuthorizationV1alpha1 retrieves the AuthorizationV1alpha1Client
+func (c *Clientset) AuthorizationV1alpha1() authorizationv1alpha1.AuthorizationV1alpha1Interface {
+	return c.authorizationV1alpha1
 }
 
-// Deprecated: Users retrieves the default version of UsersClient.
+// Deprecated: Authorization retrieves the default version of AuthorizationClient.
 // Please explicitly pick a version.
-func (c *Clientset) Users() usersv1alpha1.UsersV1alpha1Interface {
-	return c.usersV1alpha1
+func (c *Clientset) Authorization() authorizationv1alpha1.AuthorizationV1alpha1Interface {
+	return c.authorizationV1alpha1
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -66,7 +66,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	}
 	var cs Clientset
 	var err error
-	cs.usersV1alpha1, err = usersv1alpha1.NewForConfig(&configShallowCopy)
+	cs.authorizationV1alpha1, err = authorizationv1alpha1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 // panics if there is an error in the config.
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
-	cs.usersV1alpha1 = usersv1alpha1.NewForConfigOrDie(c)
+	cs.authorizationV1alpha1 = authorizationv1alpha1.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &cs
@@ -91,7 +91,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
-	cs.usersV1alpha1 = usersv1alpha1.New(c)
+	cs.authorizationV1alpha1 = authorizationv1alpha1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

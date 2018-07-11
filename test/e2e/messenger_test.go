@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"fmt"
-	api "github.com/kubedb/user-manager/apis/users/v1alpha1"
+	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
 	"github.com/kubedb/user-manager/test/e2e/framework"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

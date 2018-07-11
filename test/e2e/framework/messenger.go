@@ -3,7 +3,7 @@ package framework
 import (
 	"encoding/json"
 	"fmt"
-	api "github.com/kubedb/user-manager/apis/users/v1alpha1"
+	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
 	. "github.com/onsi/gomega"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

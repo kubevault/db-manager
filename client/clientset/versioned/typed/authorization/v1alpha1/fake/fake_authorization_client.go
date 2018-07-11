@@ -19,26 +19,26 @@ limitations under the License.
 package fake
 
 import (
-	v1alpha1 "github.com/kubedb/user-manager/client/clientset/versioned/typed/users/v1alpha1"
+	v1alpha1 "github.com/kubedb/user-manager/client/clientset/versioned/typed/authorization/v1alpha1"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
 )
 
-type FakeUsersV1alpha1 struct {
+type FakeAuthorizationV1alpha1 struct {
 	*testing.Fake
 }
 
-func (c *FakeUsersV1alpha1) Messages(namespace string) v1alpha1.MessageInterface {
+func (c *FakeAuthorizationV1alpha1) Messages(namespace string) v1alpha1.MessageInterface {
 	return &FakeMessages{c, namespace}
 }
 
-func (c *FakeUsersV1alpha1) MessagingServices(namespace string) v1alpha1.MessagingServiceInterface {
+func (c *FakeAuthorizationV1alpha1) MessagingServices(namespace string) v1alpha1.MessagingServiceInterface {
 	return &FakeMessagingServices{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *FakeUsersV1alpha1) RESTClient() rest.Interface {
+func (c *FakeAuthorizationV1alpha1) RESTClient() rest.Interface {
 	var ret *rest.RESTClient
 	return ret
 }

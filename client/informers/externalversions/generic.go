@@ -21,7 +21,7 @@ package externalversions
 import (
 	"fmt"
 
-	v1alpha1 "github.com/kubedb/user-manager/apis/users/v1alpha1"
+	v1alpha1 "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 )
@@ -52,11 +52,11 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=users.kubedb.com, Version=v1alpha1
+	// Group=authorization.kubedb.com, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("messages"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Users().V1alpha1().Messages().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Authorization().V1alpha1().Messages().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("messagingservices"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Users().V1alpha1().MessagingServices().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Authorization().V1alpha1().MessagingServices().Informer()}, nil
 
 	}
 

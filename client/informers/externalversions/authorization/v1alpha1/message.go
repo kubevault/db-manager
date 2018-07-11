@@ -21,69 +21,69 @@ package v1alpha1
 import (
 	time "time"
 
-	users_v1alpha1 "github.com/kubedb/user-manager/apis/users/v1alpha1"
+	authorization_v1alpha1 "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
 	versioned "github.com/kubedb/user-manager/client/clientset/versioned"
 	internalinterfaces "github.com/kubedb/user-manager/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/kubedb/user-manager/client/listers/users/v1alpha1"
+	v1alpha1 "github.com/kubedb/user-manager/client/listers/authorization/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
 )
 
-// MessagingServiceInformer provides access to a shared informer and lister for
-// MessagingServices.
-type MessagingServiceInformer interface {
+// MessageInformer provides access to a shared informer and lister for
+// Messages.
+type MessageInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.MessagingServiceLister
+	Lister() v1alpha1.MessageLister
 }
 
-type messagingServiceInformer struct {
+type messageInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
 	tweakListOptions internalinterfaces.TweakListOptionsFunc
 	namespace        string
 }
 
-// NewMessagingServiceInformer constructs a new informer for MessagingService type.
+// NewMessageInformer constructs a new informer for Message type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewMessagingServiceInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
-	return NewFilteredMessagingServiceInformer(client, namespace, resyncPeriod, indexers, nil)
+func NewMessageInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
+	return NewFilteredMessageInformer(client, namespace, resyncPeriod, indexers, nil)
 }
 
-// NewFilteredMessagingServiceInformer constructs a new informer for MessagingService type.
+// NewFilteredMessageInformer constructs a new informer for Message type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewFilteredMessagingServiceInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
+func NewFilteredMessageInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.UsersV1alpha1().MessagingServices(namespace).List(options)
+				return client.AuthorizationV1alpha1().Messages(namespace).List(options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.UsersV1alpha1().MessagingServices(namespace).Watch(options)
+				return client.AuthorizationV1alpha1().Messages(namespace).Watch(options)
 			},
 		},
-		&users_v1alpha1.MessagingService{},
+		&authorization_v1alpha1.Message{},
 		resyncPeriod,
 		indexers,
 	)
 }
 
-func (f *messagingServiceInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredMessagingServiceInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+func (f *messageInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
+	return NewFilteredMessageInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
 }
 
-func (f *messagingServiceInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&users_v1alpha1.MessagingService{}, f.defaultInformer)
+func (f *messageInformer) Informer() cache.SharedIndexInformer {
+	return f.factory.InformerFor(&authorization_v1alpha1.Message{}, f.defaultInformer)
 }
 
-func (f *messagingServiceInformer) Lister() v1alpha1.MessagingServiceLister {
-	return v1alpha1.NewMessagingServiceLister(f.Informer().GetIndexer())
+func (f *messageInformer) Lister() v1alpha1.MessageLister {
+	return v1alpha1.NewMessageLister(f.Informer().GetIndexer())
 }
