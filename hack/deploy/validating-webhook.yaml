@@ -1,0 +1,25 @@
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: admission.users.kubedb.com
+  labels:
+    app: messenger
+webhooks:
+- name: message.admission.users.kubedb.com
+  clientConfig:
+    service:
+      namespace: default
+      name: kubernetes
+      path: /apis/admission.users.kubedb.com/v1alpha1/messages
+    caBundle: ${KUBE_CA}
+  rules:
+  - operations:
+    - CREATE
+    - UPDATE
+    apiGroups:
+    - users.kubedb.com
+    apiVersions:
+    - "*"
+    resources:
+    - messages
+  failurePolicy: Fail
