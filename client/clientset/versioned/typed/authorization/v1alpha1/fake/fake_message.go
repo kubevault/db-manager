@@ -19,7 +19,7 @@ limitations under the License.
 package fake
 
 import (
-	v1alpha1 "github.com/kubedb/user-manager/apis/users/v1alpha1"
+	v1alpha1 "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -30,13 +30,13 @@ import (
 
 // FakeMessages implements MessageInterface
 type FakeMessages struct {
-	Fake *FakeUsersV1alpha1
+	Fake *FakeAuthorizationV1alpha1
 	ns   string
 }
 
-var messagesResource = schema.GroupVersionResource{Group: "users.kubedb.com", Version: "v1alpha1", Resource: "messages"}
+var messagesResource = schema.GroupVersionResource{Group: "authorization.kubedb.com", Version: "v1alpha1", Resource: "messages"}
 
-var messagesKind = schema.GroupVersionKind{Group: "users.kubedb.com", Version: "v1alpha1", Kind: "Message"}
+var messagesKind = schema.GroupVersionKind{Group: "authorization.kubedb.com", Version: "v1alpha1", Kind: "Message"}
 
 // Get takes name of the message, and returns the corresponding message object, and an error if there is any.
 func (c *FakeMessages) Get(name string, options v1.GetOptions) (result *v1alpha1.Message, err error) {

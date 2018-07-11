@@ -11,7 +11,7 @@ func (c *MessengerController) garbageCollect(stopCh <-chan struct{}, gcTime time
 	for {
 		var stop bool
 
-		messages, err := c.messengerClient.UsersV1alpha1().Messages(metav1.NamespaceAll).List(metav1.ListOptions{})
+		messages, err := c.authzClient.AuthorizationV1alpha1().Messages(metav1.NamespaceAll).List(metav1.ListOptions{})
 		if err == nil {
 			doneC := make(chan bool, 1)
 			// delete messages in a go routine
@@ -19,7 +19,7 @@ func (c *MessengerController) garbageCollect(stopCh <-chan struct{}, gcTime time
 				for _, msg := range messages.Items {
 					age := msg.CreationTimestamp.Add(gcTime)
 					if age.Before(time.Now()) {
-						c.messengerClient.UsersV1alpha1().Messages(msg.Namespace).Delete(msg.Name, deleteInBackground())
+						c.authzClient.AuthorizationV1alpha1().Messages(msg.Namespace).Delete(msg.Name, deleteInBackground())
 					}
 				}
 				doneC <- true

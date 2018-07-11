@@ -4,7 +4,7 @@ import (
 	"flag"
 	"time"
 
-	api "github.com/kubedb/user-manager/apis/users/v1alpha1"
+	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
 	cs "github.com/kubedb/user-manager/client/clientset/versioned"
 	"github.com/kubedb/user-manager/pkg/controller"
 	"github.com/spf13/pflag"

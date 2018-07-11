@@ -20,8 +20,8 @@ package fake
 
 import (
 	clientset "github.com/kubedb/user-manager/client/clientset/versioned"
-	usersv1alpha1 "github.com/kubedb/user-manager/client/clientset/versioned/typed/users/v1alpha1"
-	fakeusersv1alpha1 "github.com/kubedb/user-manager/client/clientset/versioned/typed/users/v1alpha1/fake"
+	authorizationv1alpha1 "github.com/kubedb/user-manager/client/clientset/versioned/typed/authorization/v1alpha1"
+	fakeauthorizationv1alpha1 "github.com/kubedb/user-manager/client/clientset/versioned/typed/authorization/v1alpha1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
@@ -71,12 +71,12 @@ func (c *Clientset) Discovery() discovery.DiscoveryInterface {
 
 var _ clientset.Interface = &Clientset{}
 
-// UsersV1alpha1 retrieves the UsersV1alpha1Client
-func (c *Clientset) UsersV1alpha1() usersv1alpha1.UsersV1alpha1Interface {
-	return &fakeusersv1alpha1.FakeUsersV1alpha1{Fake: &c.Fake}
+// AuthorizationV1alpha1 retrieves the AuthorizationV1alpha1Client
+func (c *Clientset) AuthorizationV1alpha1() authorizationv1alpha1.AuthorizationV1alpha1Interface {
+	return &fakeauthorizationv1alpha1.FakeAuthorizationV1alpha1{Fake: &c.Fake}
 }
 
-// Users retrieves the UsersV1alpha1Client
-func (c *Clientset) Users() usersv1alpha1.UsersV1alpha1Interface {
-	return &fakeusersv1alpha1.FakeUsersV1alpha1{Fake: &c.Fake}
+// Authorization retrieves the AuthorizationV1alpha1Client
+func (c *Clientset) Authorization() authorizationv1alpha1.AuthorizationV1alpha1Interface {
+	return &fakeauthorizationv1alpha1.FakeAuthorizationV1alpha1{Fake: &c.Fake}
 }

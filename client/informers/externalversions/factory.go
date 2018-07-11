@@ -24,8 +24,8 @@ import (
 	time "time"
 
 	versioned "github.com/kubedb/user-manager/client/clientset/versioned"
+	authorization "github.com/kubedb/user-manager/client/informers/externalversions/authorization"
 	internalinterfaces "github.com/kubedb/user-manager/client/informers/externalversions/internalinterfaces"
-	users "github.com/kubedb/user-manager/client/informers/externalversions/users"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -172,9 +172,9 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
-	Users() users.Interface
+	Authorization() authorization.Interface
 }
 
-func (f *sharedInformerFactory) Users() users.Interface {
-	return users.New(f, f.namespace, f.tweakListOptions)
+func (f *sharedInformerFactory) Authorization() authorization.Interface {
+	return authorization.New(f, f.namespace, f.tweakListOptions)
 }

@@ -13,9 +13,9 @@ import (
 	webhook "github.com/appscode/kubernetes-webhook-util/admission/v1beta1/generic"
 	"github.com/appscode/kutil/tools/queue"
 	"github.com/golang/glog"
-	"github.com/kubedb/user-manager/apis/users"
-	api "github.com/kubedb/user-manager/apis/users/v1alpha1"
-	"github.com/kubedb/user-manager/client/clientset/versioned/typed/users/v1alpha1/util"
+	"github.com/kubedb/user-manager/apis/authorization"
+	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
+	"github.com/kubedb/user-manager/client/clientset/versioned/typed/authorization/v1alpha1/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -24,12 +24,12 @@ import (
 func (c *MessengerController) NewNotifierWebhook() hooks.AdmissionHook {
 	return webhook.NewGenericWebhook(
 		schema.GroupVersionResource{
-			Group:    "admission.users.kubedb.com",
+			Group:    "admission.authorization.kubedb.com",
 			Version:  "v1alpha1",
 			Resource: api.ResourceMessages,
 		},
 		api.ResourceMessage,
-		[]string{users.GroupName},
+		[]string{authorization.GroupName},
 		api.SchemeGroupVersion.WithKind(api.ResourceKindMessage),
 		nil,
 		&admission.ResourceHandlerFuncs{
@@ -43,11 +43,11 @@ func (c *MessengerController) NewNotifierWebhook() hooks.AdmissionHook {
 	)
 }
 func (c *MessengerController) initMessageWatcher() {
-	c.messageInformer = c.messengerInformerFactory.Users().V1alpha1().Messages().Informer()
+	c.messageInformer = c.authzInformerFactory.Authorization().V1alpha1().Messages().Informer()
 	c.messageQueue = queue.New(api.ResourceKindMessage, c.MaxNumRequeues, c.NumThreads, c.reconcileMessage)
 	//c.messageInformer.AddEventHandler(queue.DefaultEventHandler(c.messageQueue.GetQueue()))
 	c.messageInformer.AddEventHandler(queue.NewEventHandler(c.messageQueue.GetQueue(), c.enqueueUpdate))
-	c.messageLister = c.messengerInformerFactory.Users().V1alpha1().Messages().Lister()
+	c.messageLister = c.authzInformerFactory.Authorization().V1alpha1().Messages().Lister()
 }
 
 func (c *MessengerController) reconcileMessage(key string) error {
@@ -76,7 +76,7 @@ func (c *MessengerController) reconcileMessage(key string) error {
 			glog.Infof("Message with key %s has been sent", key)
 		}
 
-		_, updateErr := util.UpdateMessageStatus(c.messengerClient.UsersV1alpha1(), msg, func(in *api.MessageStatus) *api.MessageStatus {
+		_, updateErr := util.UpdateMessageStatus(c.authzClient.AuthorizationV1alpha1(), msg, func(in *api.MessageStatus) *api.MessageStatus {
 			*in = *msgStatus
 			return in
 		}, api.EnableStatusSubresource)
@@ -96,7 +96,7 @@ func (c *MessengerController) deleteMessengerNotifier(repository *api.Message) e
 }
 
 func (c *MessengerController) send(msg *api.Message) error {
-	messagingService, err := c.messengerClient.UsersV1alpha1().MessagingServices(msg.Namespace).Get(msg.Spec.Service, metav1.GetOptions{})
+	messagingService, err := c.authzClient.AuthorizationV1alpha1().MessagingServices(msg.Namespace).Get(msg.Spec.Service, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}

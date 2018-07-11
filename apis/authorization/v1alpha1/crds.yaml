@@ -5,9 +5,9 @@ metadata:
   creationTimestamp: null
   labels:
     app: messenger
-  name: messagingservices.users.kubedb.com
+  name: messagingservices.authorization.kubedb.com
 spec:
-  group: users.kubedb.com
+  group: authorization.kubedb.com
   names:
     kind: MessagingService
     plural: messagingservices
@@ -333,9 +333,9 @@ metadata:
   creationTimestamp: null
   labels:
     app: messenger
-  name: messages.users.kubedb.com
+  name: messages.authorization.kubedb.com
 spec:
-  group: users.kubedb.com
+  group: authorization.kubedb.com
   names:
     kind: Message
     plural: messages

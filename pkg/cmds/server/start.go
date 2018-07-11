@@ -5,7 +5,7 @@ import (
 	"io"
 	"net"
 
-	"github.com/kubedb/user-manager/apis/users/v1alpha1"
+	"github.com/kubedb/user-manager/apis/authorization/v1alpha1"
 	"github.com/kubedb/user-manager/pkg/controller"
 	"github.com/kubedb/user-manager/pkg/server"
 	"github.com/spf13/pflag"
@@ -15,7 +15,7 @@ import (
 	genericoptions "k8s.io/apiserver/pkg/server/options"
 )
 
-const defaultEtcdPathPrefix = "/registry/users.kubedb.com"
+const defaultEtcdPathPrefix = "/registry/authorization.kubedb.com"
 
 type MessengerOptions struct {
 	RecommendedOptions *genericoptions.RecommendedOptions
@@ -67,7 +67,7 @@ func (o MessengerOptions) Config() (*server.MessengerConfig, error) {
 	serverConfig.OpenAPIConfig.Info.Version = v1alpha1.SchemeGroupVersion.Version
 	serverConfig.OpenAPIConfig.IgnorePrefixes = []string{
 		"/swaggerapi",
-		"/apis/admission.users.kubedb.com/v1alpha1/messages",
+		"/apis/admission.authorization.kubedb.com/v1alpha1/messages",
 	}
 
 	extraConfig := controller.NewConfig(serverConfig.ClientConfig)

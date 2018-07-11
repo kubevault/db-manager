@@ -16,7 +16,7 @@ docker run --rm -ti -u $(id -u):$(id -g) \
   appscode/gengo:release-1.11 "$DOCKER_CODEGEN_PKG"/generate-groups.sh all \
   github.com/kubedb/user-manager/client \
   github.com/kubedb/user-manager/apis \
-  users:v1alpha1 \
+  authorization:v1alpha1 \
   --go-header-file "$DOCKER_REPO_ROOT/hack/gengo/boilerplate.go.txt"
 
 # Generate openapi
@@ -26,8 +26,8 @@ docker run --rm -ti -u $(id -u):$(id -g) \
   appscode/gengo:release-1.11 openapi-gen \
   --v 1 --logtostderr \
   --go-header-file "hack/gengo/boilerplate.go.txt" \
-  --input-dirs "$PACKAGE_NAME/apis/users/v1alpha1,k8s.io/apimachinery/pkg/apis/meta/v1,k8s.io/apimachinery/pkg/api/resource,k8s.io/apimachinery/pkg/runtime,k8s.io/apimachinery/pkg/version,k8s.io/api/core/v1" \
-  --output-package "$PACKAGE_NAME/apis/users/v1alpha1"
+  --input-dirs "$PACKAGE_NAME/apis/authorization/v1alpha1,k8s.io/apimachinery/pkg/apis/meta/v1,k8s.io/apimachinery/pkg/api/resource,k8s.io/apimachinery/pkg/runtime,k8s.io/apimachinery/pkg/version,k8s.io/api/core/v1" \
+  --output-package "$PACKAGE_NAME/apis/authorization/v1alpha1"
 
 # Generate crds.yaml and swagger.json
 go run ./hack/gencrd/main.go

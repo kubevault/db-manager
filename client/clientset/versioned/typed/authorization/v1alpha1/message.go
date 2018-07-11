@@ -19,7 +19,7 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/kubedb/user-manager/apis/users/v1alpha1"
+	v1alpha1 "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
 	scheme "github.com/kubedb/user-manager/client/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -54,7 +54,7 @@ type messages struct {
 }
 
 // newMessages returns a Messages
-func newMessages(c *UsersV1alpha1Client, namespace string) *messages {
+func newMessages(c *AuthorizationV1alpha1Client, namespace string) *messages {
 	return &messages{
 		client: c.RESTClient(),
 		ns:     namespace,
