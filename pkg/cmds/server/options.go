@@ -61,7 +61,7 @@ func (s *ExtraOptions) ApplyTo(cfg *controller.Config) error {
 	if cfg.KubeClient, err = kubernetes.NewForConfig(cfg.ClientConfig); err != nil {
 		return err
 	}
-	if cfg.MessengerClient, err = cs.NewForConfig(cfg.ClientConfig); err != nil {
+	if cfg.DbClient, err = cs.NewForConfig(cfg.ClientConfig); err != nil {
 		return err
 	}
 	if cfg.CRDClient, err = crd_cs.NewForConfig(cfg.ClientConfig); err != nil {

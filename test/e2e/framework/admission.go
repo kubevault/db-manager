@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-func (f *Framework) NewMessengerOptions(kubeConfigPath string, extraOptions *server.ExtraOptions) *server.MessengerOptions {
+func (f *Framework) NewMessengerOptions(kubeConfigPath string, extraOptions *server.ExtraOptions) *server.UserManagerOptions {
 	opts := server.NewMessengerOptions(os.Stdout, os.Stderr)
 	opts.RecommendedOptions.Authentication.RemoteKubeConfigFile = kubeConfigPath
 	//opts.RecommendedOptions.Authentication.SkipInClusterLookup = true

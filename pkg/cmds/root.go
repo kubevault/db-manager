@@ -6,10 +6,12 @@ import (
 	"os"
 	"strings"
 
+	"github.com/appscode/go/log/golog"
 	v "github.com/appscode/go/version"
 	"github.com/appscode/kutil/tools/analytics"
 	"github.com/jpillora/go-ogle-analytics"
 	"github.com/kubedb/user-manager/client/clientset/versioned/scheme"
+	"github.com/kubedb/user-manager/pkg/controller"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	genericapiserver "k8s.io/apiserver/pkg/server"
@@ -27,9 +29,9 @@ var (
 
 func NewRootCmd() *cobra.Command {
 	var rootCmd = &cobra.Command{
-		Use:               "messenger",
-		Short:             `Messenger by AppsCode - Send notifications`,
-		Long:              `Messenger is a Kubernetes controller for sending notifications via email, chat or sms. For more information, visit here: https://appscode.com/products/messenger`,
+		Use:               "user manager",
+		Short:             `user manager by AppsCode`,
+		Long:              `user manager by AppsCode`,
 		DisableAutoGenTag: true,
 		PersistentPreRun: func(c *cobra.Command, args []string) {
 			c.Flags().VisitAll(func(flag *pflag.Flag) {
@@ -44,6 +46,7 @@ func NewRootCmd() *cobra.Command {
 			}
 			scheme.AddToScheme(clientsetscheme.Scheme)
 			scheme.AddToScheme(legacyscheme.Scheme)
+			controller.LoggerOptions = golog.ParseFlags(c.Flags())
 		},
 	}
 	rootCmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)

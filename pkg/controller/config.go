@@ -3,8 +3,9 @@ package controller
 import (
 	"time"
 
+	"github.com/appscode/go/log/golog"
 	cs "github.com/kubedb/user-manager/client/clientset/versioned"
-	authzinformers "github.com/kubedb/user-manager/client/informers/externalversions"
+	dbinformers "github.com/kubedb/user-manager/client/informers/externalversions"
 	"github.com/kubedb/user-manager/pkg/eventer"
 	core "k8s.io/api/core/v1"
 	crd_cs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
@@ -14,22 +15,26 @@ import (
 	"k8s.io/client-go/rest"
 )
 
+var (
+	LoggerOptions golog.Options
+)
+
 type config struct {
-	MessengerImageTag  string
-	DockerRegistry     string
-	MaxNumRequeues     int
-	NumThreads         int
-	ResyncPeriod       time.Duration
-	GarbageCollectTime time.Duration
+	UserManagerImageTag string
+	DockerRegistry      string
+	MaxNumRequeues      int
+	NumThreads          int
+	ResyncPeriod        time.Duration
+	GarbageCollectTime  time.Duration
 }
 
 type Config struct {
 	config
 
-	ClientConfig    *rest.Config
-	KubeClient      kubernetes.Interface
-	MessengerClient cs.Interface
-	CRDClient       crd_cs.ApiextensionsV1beta1Interface
+	ClientConfig *rest.Config
+	KubeClient   kubernetes.Interface
+	DbClient     cs.Interface
+	CRDClient    crd_cs.ApiextensionsV1beta1Interface
 }
 
 func NewConfig(clientConfig *rest.Config) *Config {
@@ -38,25 +43,25 @@ func NewConfig(clientConfig *rest.Config) *Config {
 	}
 }
 
-func (c *Config) New() (*MessengerController, error) {
+func (c *Config) New() (*UserManagerController, error) {
 	tweakListOptions := func(opt *metav1.ListOptions) {
 		opt.IncludeUninitialized = true
 	}
-	ctrl := &MessengerController{
-		config:               c.config,
-		kubeClient:           c.KubeClient,
-		authzClient:          c.MessengerClient,
-		crdClient:            c.CRDClient,
-		kubeInformerFactory:  informers.NewFilteredSharedInformerFactory(c.KubeClient, c.ResyncPeriod, core.NamespaceAll, tweakListOptions),
-		authzInformerFactory: authzinformers.NewSharedInformerFactory(c.MessengerClient, c.ResyncPeriod),
-		recorder:             eventer.NewEventRecorder(c.KubeClient, "messenger-controller"),
+	ctrl := &UserManagerController{
+		config:              c.config,
+		kubeClient:          c.KubeClient,
+		dbClient:            c.DbClient,
+		crdClient:           c.CRDClient,
+		kubeInformerFactory: informers.NewFilteredSharedInformerFactory(c.KubeClient, c.ResyncPeriod, core.NamespaceAll, tweakListOptions),
+		dbInformerFactory:   dbinformers.NewSharedInformerFactory(c.DbClient, c.ResyncPeriod),
+		recorder:            eventer.NewEventRecorder(c.KubeClient, "messenger-controller"),
 	}
 
 	if err := ctrl.ensureCustomResourceDefinitions(); err != nil {
 		return nil, err
 	}
 
-	ctrl.initMessageWatcher()
+	ctrl.initPostgresRoleWatcher()
 
 	return ctrl, nil
 }

@@ -10,7 +10,7 @@ import (
 )
 
 func NewCmdRun(out, errOut io.Writer, stopCh <-chan struct{}) *cobra.Command {
-	o := server.NewMessengerOptions(out, errOut)
+	o := server.NewUserManagerOptions(out, errOut)
 
 	cmd := &cobra.Command{
 		Use:               "run",

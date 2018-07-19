@@ -29,8 +29,7 @@ func generateCRDDefinitions() {
 	defer f.Close()
 
 	crds := []*crd_api.CustomResourceDefinition{
-		v1alpha1.MessagingService{}.CustomResourceDefinition(),
-		v1alpha1.Message{}.CustomResourceDefinition(),
+		v1alpha1.PostgresRole{}.CustomResourceDefinition(),
 	}
 	for _, crd := range crds {
 		crdutils.MarshallCrd(f, crd, "yaml")
@@ -65,8 +64,7 @@ func generateSwaggerJson() {
 			v1alpha1.GetOpenAPIDefinitions,
 		},
 		Resources: []openapi.TypeInfo{
-			{v1alpha1.SchemeGroupVersion, v1alpha1.ResourceMessagingServices, v1alpha1.ResourceKindMessagingService, true},
-			{v1alpha1.SchemeGroupVersion, v1alpha1.ResourceMessages, v1alpha1.ResourceKindMessage, true},
+			{v1alpha1.SchemeGroupVersion, v1alpha1.ResourcePostgresRoles, v1alpha1.ResourceKindPostgresRole, true},
 		},
 	})
 	if err != nil {
