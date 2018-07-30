@@ -1,5 +1,5 @@
-hash: 26a023397e20b561e02de6d138cc4294fde4d1bd24edd559eec8d9f109a96a77
-updated: 2018-07-25T16:10:03.246236297+06:00
+hash: 8e0c5d8367c81ef91fe14ae70e8e676039da9931e69521951aafe88b8f6d3535
+updated: 2018-07-30T16:13:15.99980385-07:00
 imports:
 - name: bitbucket.org/ww/goautoneg
   version: 75cd24fc2f2c2a2088577d12123ddee5f54e0675
@@ -174,7 +174,7 @@ imports:
 - name: github.com/go-openapi/jsonreference
   version: 13c6e3589ad90f49bd3e3bbe2c2cb3d7a4142272
 - name: github.com/go-openapi/spec
-  version: 7abd5745472fff5eb3685386d5fb8bf38683154d
+  version: 1de3e0542de65ad8d75452a595886fdd0befb363
 - name: github.com/go-openapi/swag
   version: f3f9494671f93fcff853e3c6e9e948b3eb71e590
 - name: github.com/gogo/protobuf
@@ -200,11 +200,11 @@ imports:
   - ptypes/struct
   - ptypes/timestamp
 - name: github.com/golang/snappy
-  version: 2e65f85255dbc3072edf28d6b5b8efc472979f5a
+  version: d9eb7a3d35ec988b8585d4a0068e462c27d28380
 - name: github.com/google/btree
   version: 7d79101e329e5a3adf994758c578dab82b90c017
 - name: github.com/google/go-cmp
-  version: 97aa668b73e764ccdd786bc3ccd2edffe621150e
+  version: 5411ab924f9ffa6566244a9e504bc347edacffd3
   subpackages:
   - cmp
   - cmp/internal/diff
@@ -370,8 +370,7 @@ imports:
 - name: github.com/ryanuber/go-glob
   version: 256dc444b735e061061cf46c809487313d5b0065
 - name: github.com/sergi/go-diff
-  version: 24e2351369ec4949b2ed0dc5c477afdd4c4034e8
-  repo: https://github.com/sergi/go-diff
+  version: 97b2266dfe4bd4ea1b81a463322f04f8b724801e
   subpackages:
   - diffmatchpatch
 - name: github.com/shurcooL/sanitized_anchor_name
@@ -387,20 +386,15 @@ imports:
   subpackages:
   - codec
 - name: github.com/yudai/gojsondiff
-  version: 0525c875b75ca60b9e67ddc44496aa16f21066b0
+  version: 7b1b7adf999dab73a6eb02669c3d82dbb27a3dd6
   subpackages:
   - formatter
 - name: github.com/yudai/golcs
   version: d1c525dea8ce39ea9a783d33cf08932305373f2c
-  repo: https://github.com/yudai/golcs
 - name: golang.org/x/crypto
   version: 49796115aa4b964c318aad4f3084fdb41e9aa067
   subpackages:
-  - bcrypt
-  - blowfish
   - ssh/terminal
-- name: golang.org/x/crypto/ssh/terminal
-  version: 49796115aa4b964c318aad4f3084fdb41e9aa067
 - name: golang.org/x/net
   version: 1c05540f6879653db88113bc4a2b70aec4bd491f
   subpackages:
@@ -467,8 +461,8 @@ imports:
   - internal/log
   - internal/modules
   - internal/remote_api
-- name: google.golang.org/appengine/urlfetch
-  version: b1f26356af11148e710935ed1ac8a7f5702c7612
+  - internal/urlfetch
+  - urlfetch
 - name: google.golang.org/genproto
   version: 09f6ed296fc66555a25fe4ce95173148778dfa85
   subpackages:
@@ -598,7 +592,9 @@ imports:
   - third_party/forked/golang/json
   - third_party/forked/golang/reflect
 - name: k8s.io/apiserver
-  version: 01459b68eb5fee2dcf5ca0e29df8bcac89ead47b
+  version: 79540596e3b2021b528c4c147fb78cebc29a2f75
+  repo: https://github.com/pharmer/apiserver.git
+  vcs: git
   subpackages:
   - pkg/admission
   - pkg/admission/configuration
@@ -876,12 +872,4 @@ imports:
   version: 91e7b4fd31fcd3d5f436da26c980becec37ceefe
   subpackages:
   - pkg/api/legacyscheme
-testImports:
-- name: github.com/pmezard/go-difflib
-  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
-  subpackages:
-  - difflib
-- name: github.com/stretchr/testify
-  version: f35b8ab0b5a2cef36673838d662e249dd9c94686
-  subpackages:
-  - assert
+testImports: []
