@@ -24,7 +24,7 @@ func (p PostgresRole) CustomResourceDefinition() *apiextensions.CustomResourceDe
 			},
 		},
 		Labels: crdutils.Labels{
-			LabelsMap: map[string]string{"app": "postgresrole"},
+			LabelsMap: map[string]string{"app": "postgres"},
 		},
 		SpecDefinitionName:      "github.com/kubedb/user-manager/apis/authorization/v1alpha1.PostgresRole",
 		EnableValidation:        true,
@@ -34,5 +34,33 @@ func (p PostgresRole) CustomResourceDefinition() *apiextensions.CustomResourceDe
 }
 
 func (p PostgresRole) IsValid() error {
+	return nil
+}
+
+func (p PostgresRoleBinding) CustomResourceDefinition() *apiextensions.CustomResourceDefinition {
+	return crdutils.NewCustomResourceDefinition(crdutils.Config{
+		Group:         SchemeGroupVersion.Group,
+		Plural:        ResourcePostgresRoleBindings,
+		Singular:      ResourcePostgresRoleBinding,
+		Kind:          ResourceKindPostgresRoleBinding,
+		ResourceScope: string(apiextensions.NamespaceScoped),
+		Versions: []apiextensions.CustomResourceDefinitionVersion{
+			{
+				Name:    SchemeGroupVersion.Version,
+				Served:  true,
+				Storage: true,
+			},
+		},
+		Labels: crdutils.Labels{
+			LabelsMap: map[string]string{"app": "postgres"},
+		},
+		SpecDefinitionName:      "github.com/kubedb/user-manager/apis/authorization/v1alpha1.PostgresRoleBinding",
+		EnableValidation:        true,
+		GetOpenAPIDefinitions:   GetOpenAPIDefinitions,
+		EnableStatusSubresource: EnableStatusSubresource,
+	})
+}
+
+func (p PostgresRoleBinding) IsValid() error {
 	return nil
 }

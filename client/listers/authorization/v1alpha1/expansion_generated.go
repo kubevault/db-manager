@@ -25,3 +25,11 @@ type PostgresRoleListerExpansion interface{}
 // PostgresRoleNamespaceListerExpansion allows custom methods to be added to
 // PostgresRoleNamespaceLister.
 type PostgresRoleNamespaceListerExpansion interface{}
+
+// PostgresRoleBindingListerExpansion allows custom methods to be added to
+// PostgresRoleBindingLister.
+type PostgresRoleBindingListerExpansion interface{}
+
+// PostgresRoleBindingNamespaceListerExpansion allows custom methods to be added to
+// PostgresRoleBindingNamespaceLister.
+type PostgresRoleBindingNamespaceListerExpansion interface{}

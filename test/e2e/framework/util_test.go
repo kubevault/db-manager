@@ -1,12 +1,12 @@
 package framework
 
 import (
-	"testing"
-	"time"
-	_ "strings"
 	"fmt"
 	"math"
 	"strings"
+	_ "strings"
+	"testing"
+	"time"
 )
 
 func TestGetDateString(t *testing.T) {
@@ -33,5 +33,5 @@ func processValue(val, reqLen int) string {
 	}
 	digNum := int(math.Floor(math.Log10(float64(val))) + 1)
 
-	return fmt.Sprintf("%s%d", strings.Repeat("0", (reqLen - digNum)), val)
+	return fmt.Sprintf("%s%d", strings.Repeat("0", (reqLen-digNum)), val)
 }

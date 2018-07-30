@@ -51,7 +51,7 @@ func (c *UserManagerController) runPostgresRoleInjector(key string) error {
 
 				err = pg.DeleteRole()
 				if err != nil {
-					return errors.Wrap(err, "failed to ")
+					return errors.Wrap(err, "failed to database role")
 				}
 
 				// remove finalizer

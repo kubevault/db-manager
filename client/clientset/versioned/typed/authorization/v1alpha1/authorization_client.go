@@ -28,6 +28,7 @@ import (
 type AuthorizationV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	PostgresRolesGetter
+	PostgresRoleBindingsGetter
 }
 
 // AuthorizationV1alpha1Client is used to interact with features provided by the authorization.kubedb.com group.
@@ -37,6 +38,10 @@ type AuthorizationV1alpha1Client struct {
 
 func (c *AuthorizationV1alpha1Client) PostgresRoles(namespace string) PostgresRoleInterface {
 	return newPostgresRoles(c, namespace)
+}
+
+func (c *AuthorizationV1alpha1Client) PostgresRoleBindings(namespace string) PostgresRoleBindingInterface {
+	return newPostgresRoleBindings(c, namespace)
 }
 
 // NewForConfig creates a new AuthorizationV1alpha1Client for the given config.

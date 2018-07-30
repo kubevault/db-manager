@@ -1,5 +1,5 @@
 hash: 26a023397e20b561e02de6d138cc4294fde4d1bd24edd559eec8d9f109a96a77
-updated: 2018-07-19T12:26:31.854142102+06:00
+updated: 2018-07-25T16:10:03.246236297+06:00
 imports:
 - name: bitbucket.org/ww/goautoneg
   version: 75cd24fc2f2c2a2088577d12123ddee5f54e0675
@@ -33,12 +33,13 @@ imports:
   - admission/v1beta1
   - registry/admissionreview/v1beta1
 - name: github.com/appscode/kutil
-  version: d3937b4296055e551cd85c7d3fff52449a2f80a0
+  version: c9b929cfcab96c233c1b0ab59cd4a5ab6a4ff96a
   subpackages:
   - apiextensions/v1beta1
   - core/v1
   - meta
   - openapi
+  - rbac/v1
   - tools/analytics
   - tools/clientcmd
   - tools/queue
@@ -395,7 +396,11 @@ imports:
 - name: golang.org/x/crypto
   version: 49796115aa4b964c318aad4f3084fdb41e9aa067
   subpackages:
+  - bcrypt
+  - blowfish
   - ssh/terminal
+- name: golang.org/x/crypto/ssh/terminal
+  version: 49796115aa4b964c318aad4f3084fdb41e9aa067
 - name: golang.org/x/net
   version: 1c05540f6879653db88113bc4a2b70aec4bd491f
   subpackages:
@@ -462,8 +467,8 @@ imports:
   - internal/log
   - internal/modules
   - internal/remote_api
-  - internal/urlfetch
-  - urlfetch
+- name: google.golang.org/appengine/urlfetch
+  version: b1f26356af11148e710935ed1ac8a7f5702c7612
 - name: google.golang.org/genproto
   version: 09f6ed296fc66555a25fe4ce95173148778dfa85
   subpackages:
@@ -860,7 +865,7 @@ imports:
   - pkg/client/clientset_generated/clientset/typed/apiregistration/v1
   - pkg/client/clientset_generated/clientset/typed/apiregistration/v1beta1
 - name: k8s.io/kube-openapi
-  version: 0cf8f7e6ed1d2e3d47d02e3b6e559369af24d803
+  version: d8ea2fe547a448256204cfc68dfee7b26c720acb
   subpackages:
   - pkg/builder
   - pkg/common
@@ -871,4 +876,12 @@ imports:
   version: 91e7b4fd31fcd3d5f436da26c980becec37ceefe
   subpackages:
   - pkg/api/legacyscheme
-testImports: []
+testImports:
+- name: github.com/pmezard/go-difflib
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  subpackages:
+  - difflib
+- name: github.com/stretchr/testify
+  version: f35b8ab0b5a2cef36673838d662e249dd9c94686
+  subpackages:
+  - assert

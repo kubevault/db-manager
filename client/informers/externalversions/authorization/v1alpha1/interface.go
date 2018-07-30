@@ -26,6 +26,8 @@ import (
 type Interface interface {
 	// PostgresRoles returns a PostgresRoleInformer.
 	PostgresRoles() PostgresRoleInformer
+	// PostgresRoleBindings returns a PostgresRoleBindingInformer.
+	PostgresRoleBindings() PostgresRoleBindingInformer
 }
 
 type version struct {
@@ -42,4 +44,9 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // PostgresRoles returns a PostgresRoleInformer.
 func (v *version) PostgresRoles() PostgresRoleInformer {
 	return &postgresRoleInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// PostgresRoleBindings returns a PostgresRoleBindingInformer.
+func (v *version) PostgresRoleBindings() PostgresRoleBindingInformer {
+	return &postgresRoleBindingInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

@@ -1,10 +1,10 @@
 package framework
 
-import(
+import (
 	core "k8s.io/api/core/v1"
+	kerr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	kerr "k8s.io/apimachinery/pkg/api/errors"
 )
 
 func (f *Invocation) NewSecret(name, namespace, authTokenToSendMessage string, labels map[string]string) *core.Secret {
