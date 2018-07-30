@@ -32,10 +32,8 @@ func Resource(resource string) schema.GroupResource {
 // Adds the list of known types to api.Scheme.
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
-		&MessagingService{},
-		&MessagingServiceList{},
-		&Message{},
-		&MessageList{},
+		&PostgresRole{},
+		&PostgresRoleList{},
 	)
 
 	scheme.AddKnownTypes(SchemeGroupVersion,

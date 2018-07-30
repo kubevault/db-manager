@@ -17,7 +17,7 @@ import (
 
 const defaultEtcdPathPrefix = "/registry/authorization.kubedb.com"
 
-type MessengerOptions struct {
+type UserManagerOptions struct {
 	RecommendedOptions *genericoptions.RecommendedOptions
 	ExtraOptions       *ExtraOptions
 
@@ -25,8 +25,8 @@ type MessengerOptions struct {
 	StdErr io.Writer
 }
 
-func NewMessengerOptions(out, errOut io.Writer) *MessengerOptions {
-	o := &MessengerOptions{
+func NewUserManagerOptions(out, errOut io.Writer) *UserManagerOptions {
+	o := &UserManagerOptions{
 		// TODO we will nil out the etcd storage options.  This requires a later level of k8s.io/apiserver
 		RecommendedOptions: genericoptions.NewRecommendedOptions(defaultEtcdPathPrefix, server.Codecs.LegacyCodec(admissionv1beta1.SchemeGroupVersion)),
 		ExtraOptions:       NewExtraOptions(),
@@ -39,20 +39,20 @@ func NewMessengerOptions(out, errOut io.Writer) *MessengerOptions {
 	return o
 }
 
-func (o MessengerOptions) AddFlags(fs *pflag.FlagSet) {
+func (o UserManagerOptions) AddFlags(fs *pflag.FlagSet) {
 	o.RecommendedOptions.AddFlags(fs)
 	o.ExtraOptions.AddFlags(fs)
 }
 
-func (o MessengerOptions) Validate(args []string) error {
+func (o UserManagerOptions) Validate(args []string) error {
 	return nil
 }
 
-func (o *MessengerOptions) Complete() error {
+func (o *UserManagerOptions) Complete() error {
 	return nil
 }
 
-func (o MessengerOptions) Config() (*server.MessengerConfig, error) {
+func (o UserManagerOptions) Config() (*server.UserManagerConfig, error) {
 	// TODO have a "real" external address
 	if err := o.RecommendedOptions.SecureServing.MaybeDefaultWithSelfSignedCerts("localhost", nil, []net.IP{net.ParseIP("127.0.0.1")}); err != nil {
 		return nil, fmt.Errorf("error creating self-signed certificates: %v", err)
@@ -75,14 +75,14 @@ func (o MessengerOptions) Config() (*server.MessengerConfig, error) {
 		return nil, err
 	}
 
-	config := &server.MessengerConfig{
+	config := &server.UserManagerConfig{
 		GenericConfig: serverConfig,
 		ExtraConfig:   extraConfig,
 	}
 	return config, nil
 }
 
-func (o MessengerOptions) Run(stopCh <-chan struct{}) error {
+func (o UserManagerOptions) Run(stopCh <-chan struct{}) error {
 	config, err := o.Config()
 	if err != nil {
 		return err

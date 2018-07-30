@@ -27,8 +27,7 @@ import (
 
 type AuthorizationV1alpha1Interface interface {
 	RESTClient() rest.Interface
-	MessagesGetter
-	MessagingServicesGetter
+	PostgresRolesGetter
 }
 
 // AuthorizationV1alpha1Client is used to interact with features provided by the authorization.kubedb.com group.
@@ -36,12 +35,8 @@ type AuthorizationV1alpha1Client struct {
 	restClient rest.Interface
 }
 
-func (c *AuthorizationV1alpha1Client) Messages(namespace string) MessageInterface {
-	return newMessages(c, namespace)
-}
-
-func (c *AuthorizationV1alpha1Client) MessagingServices(namespace string) MessagingServiceInterface {
-	return newMessagingServices(c, namespace)
+func (c *AuthorizationV1alpha1Client) PostgresRoles(namespace string) PostgresRoleInterface {
+	return newPostgresRoles(c, namespace)
 }
 
 // NewForConfig creates a new AuthorizationV1alpha1Client for the given config.

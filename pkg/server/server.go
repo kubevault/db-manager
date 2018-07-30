@@ -42,18 +42,18 @@ func init() {
 	)
 }
 
-type MessengerConfig struct {
+type UserManagerConfig struct {
 	GenericConfig *genericapiserver.RecommendedConfig
 	ExtraConfig   *controller.Config
 }
 
-// MessengerServer contains state for a Kubernetes cluster master/api server.
-type MessengerServer struct {
+// UserManagerServer contains state for a Kubernetes cluster master/api server.
+type UserManagerServer struct {
 	GenericAPIServer *genericapiserver.GenericAPIServer
-	Controller       *controller.MessengerController
+	Controller       *controller.UserManagerController
 }
 
-func (op *MessengerServer) Run(stopCh <-chan struct{}) error {
+func (op *UserManagerServer) Run(stopCh <-chan struct{}) error {
 	// sync cache
 	op.Controller.RunInformers(stopCh)
 	return op.GenericAPIServer.PrepareRun().Run(stopCh)
@@ -70,7 +70,7 @@ type CompletedConfig struct {
 }
 
 // Complete fills in any fields not set that are required to have valid data. It's mutating the receiver.
-func (c *MessengerConfig) Complete() CompletedConfig {
+func (c *UserManagerConfig) Complete() CompletedConfig {
 	completedCfg := completedConfig{
 		c.GenericConfig.Complete(),
 		c.ExtraConfig,
@@ -84,8 +84,8 @@ func (c *MessengerConfig) Complete() CompletedConfig {
 	return CompletedConfig{&completedCfg}
 }
 
-// New returns a new instance of MessengerServer from the given config.
-func (c completedConfig) New() (*MessengerServer, error) {
+// New returns a new instance of UserManagerServer from the given config.
+func (c completedConfig) New() (*UserManagerServer, error) {
 	genericServer, err := c.GenericConfig.New("messenger-apiserver", genericapiserver.NewEmptyDelegate()) // completion is done in Complete, no need for a second time
 	if err != nil {
 		return nil, err
@@ -94,11 +94,9 @@ func (c completedConfig) New() (*MessengerServer, error) {
 	if err != nil {
 		return nil, err
 	}
-	admissionHooks := []hooks.AdmissionHook{
-		ctrl.NewNotifierWebhook(),
-	}
+	admissionHooks := []hooks.AdmissionHook{}
 
-	s := &MessengerServer{
+	s := &UserManagerServer{
 		GenericAPIServer: genericServer,
 		Controller:       ctrl,
 	}

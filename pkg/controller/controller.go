@@ -8,8 +8,8 @@ import (
 	"github.com/golang/glog"
 	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
 	cs "github.com/kubedb/user-manager/client/clientset/versioned"
-	authzinformers "github.com/kubedb/user-manager/client/informers/externalversions"
-	authz_listers "github.com/kubedb/user-manager/client/listers/authorization/v1alpha1"
+	dbinformers "github.com/kubedb/user-manager/client/informers/externalversions"
+	dblisters "github.com/kubedb/user-manager/client/listers/authorization/v1alpha1"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	crd_cs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/util/runtime"
@@ -19,52 +19,54 @@ import (
 	"k8s.io/client-go/tools/record"
 )
 
-type MessengerController struct {
+type UserManagerController struct {
 	config
 
-	kubeClient  kubernetes.Interface
-	authzClient cs.Interface
-	crdClient   crd_cs.ApiextensionsV1beta1Interface
-	recorder    record.EventRecorder
+	kubeClient kubernetes.Interface
+	dbClient   cs.Interface
+	crdClient  crd_cs.ApiextensionsV1beta1Interface
+	recorder   record.EventRecorder
 
-	kubeInformerFactory  informers.SharedInformerFactory
-	authzInformerFactory authzinformers.SharedInformerFactory
+	kubeInformerFactory informers.SharedInformerFactory
+	dbInformerFactory   dbinformers.SharedInformerFactory
 
-	// Notification
-	messageQueue    *queue.Worker
-	messageInformer cache.SharedIndexInformer
-	messageLister   authz_listers.MessageLister
+	// PostgresRole
+	postgresRoleQueue    *queue.Worker
+	postgresRoleInformer cache.SharedIndexInformer
+	postgresRoleLister   dblisters.PostgresRoleLister
 }
 
-func (c *MessengerController) ensureCustomResourceDefinitions() error {
+func (c *UserManagerController) ensureCustomResourceDefinitions() error {
 	crds := []*apiextensions.CustomResourceDefinition{
-		api.MessagingService{}.CustomResourceDefinition(),
-		api.Message{}.CustomResourceDefinition(),
+		api.PostgresRole{}.CustomResourceDefinition(),
 	}
 	return crdutils.RegisterCRDs(c.crdClient, crds)
 }
 
-func (c *MessengerController) RunInformers(stopCh <-chan struct{}) {
+func (c *UserManagerController) RunInformers(stopCh <-chan struct{}) {
 	defer runtime.HandleCrash()
 
 	glog.Info("Starting KubeDB user manager controller")
-	c.kubeInformerFactory.Start(stopCh)
-	c.authzInformerFactory.Start(stopCh)
+
+	// c.kubeInformerFactory.Start(stopCh)
+	c.dbInformerFactory.Start(stopCh)
 
 	// Wait for all involved caches to be synced, before processing items from the queue is started
-	for _, v := range c.kubeInformerFactory.WaitForCacheSync(stopCh) {
-		if !v {
-			runtime.HandleError(fmt.Errorf("timed out waiting for caches to sync"))
-			return
-		}
-	}
-	for _, v := range c.authzInformerFactory.WaitForCacheSync(stopCh) {
+	//for _, v := range c.kubeInformerFactory.WaitForCacheSync(stopCh) {
+	//	if !v {
+	//		runtime.HandleError(fmt.Errorf("timed out waiting for caches to sync"))
+	//		return
+	//	}
+	//}
+	for _, v := range c.dbInformerFactory.WaitForCacheSync(stopCh) {
 		if !v {
 			runtime.HandleError(fmt.Errorf("timed out waiting for caches to sync"))
 			return
 		}
 	}
 
-	go c.garbageCollect(stopCh, c.GarbageCollectTime)
-	c.messageQueue.Run(stopCh)
+	c.postgresRoleQueue.Run(stopCh)
+
+	<-stopCh
+	glog.Info("Stopping KubeDB user manager controller")
 }

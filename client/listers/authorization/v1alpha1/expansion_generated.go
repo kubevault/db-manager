@@ -18,18 +18,10 @@ limitations under the License.
 
 package v1alpha1
 
-// MessageListerExpansion allows custom methods to be added to
-// MessageLister.
-type MessageListerExpansion interface{}
+// PostgresRoleListerExpansion allows custom methods to be added to
+// PostgresRoleLister.
+type PostgresRoleListerExpansion interface{}
 
-// MessageNamespaceListerExpansion allows custom methods to be added to
-// MessageNamespaceLister.
-type MessageNamespaceListerExpansion interface{}
-
-// MessagingServiceListerExpansion allows custom methods to be added to
-// MessagingServiceLister.
-type MessagingServiceListerExpansion interface{}
-
-// MessagingServiceNamespaceListerExpansion allows custom methods to be added to
-// MessagingServiceNamespaceLister.
-type MessagingServiceNamespaceListerExpansion interface{}
+// PostgresRoleNamespaceListerExpansion allows custom methods to be added to
+// PostgresRoleNamespaceLister.
+type PostgresRoleNamespaceListerExpansion interface{}
