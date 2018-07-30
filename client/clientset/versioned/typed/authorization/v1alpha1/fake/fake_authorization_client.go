@@ -32,6 +32,10 @@ func (c *FakeAuthorizationV1alpha1) PostgresRoles(namespace string) v1alpha1.Pos
 	return &FakePostgresRoles{c, namespace}
 }
 
+func (c *FakeAuthorizationV1alpha1) PostgresRoleBindings(namespace string) v1alpha1.PostgresRoleBindingInterface {
+	return &FakePostgresRoleBindings{c, namespace}
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeAuthorizationV1alpha1) RESTClient() rest.Interface {

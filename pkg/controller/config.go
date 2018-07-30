@@ -25,7 +25,7 @@ type config struct {
 	MaxNumRequeues      int
 	NumThreads          int
 	ResyncPeriod        time.Duration
-	GarbageCollectTime  time.Duration
+	LeaseRenewTime      time.Duration
 }
 
 type Config struct {
@@ -54,7 +54,7 @@ func (c *Config) New() (*UserManagerController, error) {
 		crdClient:           c.CRDClient,
 		kubeInformerFactory: informers.NewFilteredSharedInformerFactory(c.KubeClient, c.ResyncPeriod, core.NamespaceAll, tweakListOptions),
 		dbInformerFactory:   dbinformers.NewSharedInformerFactory(c.DbClient, c.ResyncPeriod),
-		recorder:            eventer.NewEventRecorder(c.KubeClient, "messenger-controller"),
+		recorder:            eventer.NewEventRecorder(c.KubeClient, "user-manager-controller"),
 	}
 
 	if err := ctrl.ensureCustomResourceDefinitions(); err != nil {
@@ -62,6 +62,7 @@ func (c *Config) New() (*UserManagerController, error) {
 	}
 
 	ctrl.initPostgresRoleWatcher()
+	ctrl.initPostgresRoleBindingWatcher()
 
 	return ctrl, nil
 }

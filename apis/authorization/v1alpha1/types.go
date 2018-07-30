@@ -1,6 +1,8 @@
 package v1alpha1
 
 import (
+	"k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -8,6 +10,10 @@ const (
 	ResourceKindPostgresRole = "PostgresRole"
 	ResourcePostgresRole     = "postgresrole"
 	ResourcePostgresRoles    = "postgresroles"
+
+	ResourceKindPostgresRoleBinding = "PostgresRoleBinding"
+	ResourcePostgresRoleBinding     = "postgresrolebinding"
+	ResourcePostgresRoleBindings    = "postgresrolebindings"
 )
 
 // +genclient
@@ -142,4 +148,85 @@ type DatabaseSpec struct {
 	// Specifies the maximum amount of time a connection may be reused.
 	// If <= 0s connections are reused forever.
 	MaxConnectionLifetime string `json:"maxConnectionLifetime,omitempty"`
+}
+
+// +genclient
+// +k8s:openapi-gen=true
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// PostgresRoleBinding binds postgres credential to user
+type PostgresRoleBinding struct {
+	metav1.TypeMeta   `json:",inline,omitempty"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Spec              PostgresRoleBindingSpec   `json:"spec,omitempty"`
+	Status            PostgresRoleBindingStatus `json:"status,omitempty"`
+}
+
+type PostgresRoleBindingSpec struct {
+	// Specifies the name of the PostgresRole
+	RoleRef string `json:"roleRef"`
+
+	Subjects []rbacv1.Subject `json:"subjects"`
+
+	Store Store `json:"store"`
+}
+
+// Store specifies where to store credentials
+type Store struct {
+	// Specifies the name of the secret
+	Secret string `json:"secret"`
+}
+
+type PostgresRoleBindingPhase string
+
+type PostgresRoleBindingStatus struct {
+	// observedGeneration is the most recent generation observed for this PostgresRoleBinding. It corresponds to the
+	// PostgresRoleBinding's generation, which is updated on mutation by the API Server.
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
+	// contains lease info of the credentials
+	Lease LeaseData `json:"lease,omitempty"`
+
+	// Specifies the phase of the postgres role binding
+	Phase PostgresRoleBindingPhase `json:"phase,omitempty"`
+
+	// Represents the latest available observations of a PostgresRoleBinding current state.
+	Conditions []PostgresRoleBindingCondition `json:"conditions,omitempty"`
+}
+
+// PostgresRoleBindingCondition describes the state of a PostgresRoleBinding at a certain point.
+type PostgresRoleBindingCondition struct {
+	// Type of PostgresRoleBinding condition.
+	Type string `json:"type,omitempty"`
+
+	// Status of the condition, one of True, False, Unknown.
+	Status v1.ConditionStatus `json:"status,omitempty"`
+
+	// The reason for the condition's.
+	Reason string `json:"reason,omitempty"`
+
+	// A human readable message indicating details about the transition.
+	Message string `json:"message,omitempty"`
+}
+
+// LeaseData contains lease info
+type LeaseData struct {
+	// lease id
+	ID string `json:"id,omitempty"`
+
+	// lease duration in seconds
+	Duration int64 `json:"duration,omitempty"`
+
+	// lease renew deadline in Unix time
+	RenewDeadline int64 `json:"renewDeadline,omitempty"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type PostgresRoleBindingList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+
+	// Items is a list of PostgresRoleBinding objects
+	Items []PostgresRoleBinding `json:"items,omitempty"`
 }

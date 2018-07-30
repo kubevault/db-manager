@@ -34,6 +34,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
 		&PostgresRole{},
 		&PostgresRoleList{},
+		&PostgresRoleBinding{},
+		&PostgresRoleBindingList{},
 	)
 
 	scheme.AddKnownTypes(SchemeGroupVersion,

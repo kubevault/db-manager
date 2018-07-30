@@ -34,11 +34,17 @@ type UserManagerController struct {
 	postgresRoleQueue    *queue.Worker
 	postgresRoleInformer cache.SharedIndexInformer
 	postgresRoleLister   dblisters.PostgresRoleLister
+
+	// PostgresRoleBinding
+	postgresRoleBindingQueue    *queue.Worker
+	postgresRoleBindingInformer cache.SharedIndexInformer
+	postgresRoleBindingLister   dblisters.PostgresRoleBindingLister
 }
 
 func (c *UserManagerController) ensureCustomResourceDefinitions() error {
 	crds := []*apiextensions.CustomResourceDefinition{
 		api.PostgresRole{}.CustomResourceDefinition(),
+		api.PostgresRoleBinding{}.CustomResourceDefinition(),
 	}
 	return crdutils.RegisterCRDs(c.crdClient, crds)
 }
@@ -65,7 +71,10 @@ func (c *UserManagerController) RunInformers(stopCh <-chan struct{}) {
 		}
 	}
 
-	c.postgresRoleQueue.Run(stopCh)
+	go c.postgresRoleQueue.Run(stopCh)
+	go c.postgresRoleBindingQueue.Run(stopCh)
+
+	go c.LeaseRenewer(c.LeaseRenewTime)
 
 	<-stopCh
 	glog.Info("Stopping KubeDB user manager controller")
