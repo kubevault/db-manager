@@ -57,7 +57,10 @@ func (p *PostgresRole) CreateConfig() error {
 		payload["max_connection_lifetime"] = cfg.MaxConnectionLifetime
 	}
 
-	req.SetJSONBody(payload)
+	err = req.SetJSONBody(payload)
+	if err != nil {
+		return errors.WithStack(err)
+	}
 	_, err = p.vaultClient.RawRequest(req)
 	if err != nil {
 		return errors.WithStack(err)
@@ -76,7 +79,6 @@ func (p *PostgresRole) CreateRole() error {
 	req := p.vaultClient.NewRequest("POST", fmt.Sprintf("/v1/database/roles/%s", name))
 
 	payload := map[string]interface{}{
-		"name":                p,
 		"db_name":             pg.DBName,
 		"creation_statements": pg.CreationStatements,
 	}
@@ -97,8 +99,12 @@ func (p *PostgresRole) CreateRole() error {
 		payload["max_ttl"] = pg.MaxTTL
 	}
 
-	req.SetJSONBody(payload)
-	_, err := p.vaultClient.RawRequest(req)
+	err := req.SetJSONBody(payload)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	_, err = p.vaultClient.RawRequest(req)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create database role(%s) for config(%s)", name, pg.DBName)
 	}

@@ -13,6 +13,8 @@ import (
 	"github.com/kubedb/user-manager/pkg/vault/database/postgres"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
+	kerr "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -54,24 +56,7 @@ func (c *UserManagerController) runPostgresRoleBindingInjector(key string) error
 
 		if pgRoleBinding.DeletionTimestamp != nil {
 			if kutilcorev1.HasFinalizer(pgRoleBinding.ObjectMeta, PostgresRoleBindingFinalizer) {
-				pg, err := postgres.NewPostgresRoleBinding(c.kubeClient, c.dbClient, pgRoleBinding)
-				if err != nil {
-					glog.Errorf("for postgresRoleBinding(%s/%s): %v", pgRoleBinding.Namespace, pgRoleBinding.Name, err)
-				} else {
-					err = pg.RevokeLease(pgRoleBinding.Status.Lease.ID)
-					if err != nil {
-						glog.Errorf("for postgresRoleBinding(%s/%s): %v", pgRoleBinding.Namespace, pgRoleBinding.Name, err)
-					}
-				}
-
-				// remove finalizer
-				_, _, err = patchutil.PatchPostgresRoleBinding(c.dbClient.AuthorizationV1alpha1(), pgRoleBinding, func(binding *api.PostgresRoleBinding) *api.PostgresRoleBinding {
-					binding.ObjectMeta = kutilcorev1.RemoveFinalizer(binding.ObjectMeta, PostgresRoleBindingFinalizer)
-					return binding
-				})
-				if err != nil {
-					return errors.Wrapf(err, "failed to remove postgresRoleBinding finalizer for (%s/%s)", pgRoleBinding.Namespace, pgRoleBinding.Name)
-				}
+				go c.runPostgresRoleBindingFinalizer(pgRoleBinding, 1*time.Minute, 10*time.Second)
 			}
 
 		} else if !kutilcorev1.HasFinalizer(pgRoleBinding.ObjectMeta, PostgresRoleBindingFinalizer) {
@@ -292,6 +277,108 @@ func (c *UserManagerController) updatedPostgresRoleBindingStatus(status *api.Pos
 	}
 
 	return nil
+}
+
+func (c *UserManagerController) runPostgresRoleBindingFinalizer(pgRoleBinding *api.PostgresRoleBinding, timeout time.Duration, interval time.Duration) {
+	id := getPostgresRoleBindingId(pgRoleBinding)
+
+	if _, ok := c.processingFinalizer[id]; ok {
+		// already processing
+		return
+	}
+
+	c.processingFinalizer[id] = true
+
+	stopCh := time.After(timeout)
+	finalizationDone := false
+
+	for {
+		p, err := c.dbClient.AuthorizationV1alpha1().PostgresRoleBindings(pgRoleBinding.Namespace).Get(pgRoleBinding.Name, metav1.GetOptions{})
+		if kerr.IsNotFound(err) {
+			delete(c.processingFinalizer, id)
+			return
+		} else if err != nil {
+			glog.Errorf("PostgresRoleBinding(%s/%s) finalizer: %v\n", pgRoleBinding.Namespace, pgRoleBinding.Name, err)
+		}
+
+		// to make sure p is not nil
+		if p == nil {
+			p = pgRoleBinding
+		}
+
+		select {
+		case <-stopCh:
+			err := c.removePostgresRoleBindingFinalizer(p)
+			if err != nil {
+				glog.Errorf("PostgresRoleBinding(%s/%s) finalizer: %v\n", p.Namespace, p.Name, err)
+			}
+			delete(c.processingFinalizer, id)
+			return
+		default:
+		}
+
+		if !finalizationDone {
+			err = c.finalizePostgresRoleBinding(p)
+			if err != nil {
+				glog.Errorf("PostgresRoleBinding(%s/%s) finalizer: %v\n", p.Namespace, p.Name, err)
+			} else {
+				finalizationDone = true
+			}
+		}
+
+		if finalizationDone {
+			err := c.removePostgresRoleBindingFinalizer(p)
+			if err != nil {
+				glog.Errorf("PostgresRoleBinding(%s/%s) finalizer: %v\n", p.Namespace, p.Name, err)
+			}
+			delete(c.processingFinalizer, id)
+			return
+		}
+
+		select {
+		case <-stopCh:
+			err := c.removePostgresRoleBindingFinalizer(p)
+			if err != nil {
+				glog.Errorf("PostgresRoleBinding(%s/%s) finalizer: %v\n", p.Namespace, p.Name, err)
+			}
+			delete(c.processingFinalizer, id)
+			return
+		case <-time.After(interval):
+		}
+	}
+}
+
+func (c *UserManagerController) finalizePostgresRoleBinding(pgRoleBinding *api.PostgresRoleBinding) error {
+	pg, err := postgres.NewPostgresRoleBinding(c.kubeClient, c.dbClient, pgRoleBinding)
+	if err != nil {
+		return err
+	}
+
+	if pgRoleBinding.Status.Lease.ID == "" {
+		return nil
+	}
+
+	err = pg.RevokeLease(pgRoleBinding.Status.Lease.ID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *UserManagerController) removePostgresRoleBindingFinalizer(pgRoleBinding *api.PostgresRoleBinding) error {
+	_, _, err := patchutil.PatchPostgresRoleBinding(c.dbClient.AuthorizationV1alpha1(), pgRoleBinding, func(r *api.PostgresRoleBinding) *api.PostgresRoleBinding {
+		r.ObjectMeta = kutilcorev1.RemoveFinalizer(r.ObjectMeta, PostgresRoleBindingFinalizer)
+		return r
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func getPostgresRoleBindingId(pgRoleBinding *api.PostgresRoleBinding) string {
+	return fmt.Sprintf("%s/%s/%s", api.ResourcePostgresRoleBinding, pgRoleBinding.Namespace, pgRoleBinding.Name)
 }
 
 func getPostgresRbacRoleName(name string) string {

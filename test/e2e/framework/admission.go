@@ -2,6 +2,11 @@ package framework
 
 import (
 	"fmt"
+	"net"
+	"os"
+	"path/filepath"
+	"time"
+
 	shell "github.com/codeskyblue/go-sh"
 	"github.com/kubedb/user-manager/pkg/cmds/server"
 	. "github.com/onsi/ginkgo"
@@ -9,14 +14,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	genericapiserver "k8s.io/apiserver/pkg/server"
 	kapi "k8s.io/kube-aggregator/pkg/apis/apiregistration/v1beta1"
-	"net"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 func (f *Framework) NewMessengerOptions(kubeConfigPath string, extraOptions *server.ExtraOptions) *server.UserManagerOptions {
-	opts := server.NewMessengerOptions(os.Stdout, os.Stderr)
+	opts := server.NewUserManagerOptions(os.Stdout, os.Stderr)
 	opts.RecommendedOptions.Authentication.RemoteKubeConfigFile = kubeConfigPath
 	//opts.RecommendedOptions.Authentication.SkipInClusterLookup = true
 	opts.RecommendedOptions.Authorization.RemoteKubeConfigFile = kubeConfigPath

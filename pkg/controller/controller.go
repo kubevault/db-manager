@@ -39,6 +39,9 @@ type UserManagerController struct {
 	postgresRoleBindingQueue    *queue.Worker
 	postgresRoleBindingInformer cache.SharedIndexInformer
 	postgresRoleBindingLister   dblisters.PostgresRoleBindingLister
+
+	// Contain the currently processing finalizer
+	processingFinalizer map[string]bool
 }
 
 func (c *UserManagerController) ensureCustomResourceDefinitions() error {
