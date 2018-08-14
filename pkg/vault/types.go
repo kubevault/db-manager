@@ -1,6 +1,6 @@
 package vault
 
-type DatabaseCredentials struct {
+type DatabaseCredential struct {
 	LeaseID string `json:"lease_id"`
 
 	Renewable bool `json:"renewable"`

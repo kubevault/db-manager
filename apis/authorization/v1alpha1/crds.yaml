@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
   labels:
-    app: postgres
+    app: user-manager
   name: postgresroles.authorization.kubedb.com
 spec:
   group: authorization.kubedb.com
@@ -352,6 +352,11 @@ spec:
                 name:
                   description: Specifies the name for this database connection
                   type: string
+                pluginName:
+                  description: "Specifies the name of the plugin to use for this connection.
+                    Default plugin:\n\t- for postgres: postgresql-database-plugin\n
+                    - for mysql: mysql-database-plugin"
+                  type: string
               required:
               - name
               - connectionUrl
@@ -439,7 +444,7 @@ kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
   labels:
-    app: postgres
+    app: user-manager
   name: postgresrolebindings.authorization.kubedb.com
 spec:
   group: authorization.kubedb.com

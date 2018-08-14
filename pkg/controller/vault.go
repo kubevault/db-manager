@@ -66,7 +66,7 @@ func (u *UserManagerController) RenewLease(p *api.PostgresRoleBinding, duration 
 	status := p.Status
 	status.Lease.RenewDeadline = time.Now().Unix()
 
-	err = u.updatedPostgresRoleBindingStatus(&status, p)
+	err = u.updatePostgresRoleBindingStatus(&status, p)
 	if err != nil {
 		return errors.Wrap(err, "failed to update renew deadline")
 	}

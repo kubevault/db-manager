@@ -36,6 +36,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&PostgresRoleList{},
 		&PostgresRoleBinding{},
 		&PostgresRoleBindingList{},
+		&MysqlRole{},
+		&MysqlRoleList{},
 	)
 
 	scheme.AddKnownTypes(SchemeGroupVersion,

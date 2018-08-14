@@ -1,4 +1,4 @@
-package postgres
+package mysql
 
 import (
 	"fmt"
@@ -10,16 +10,16 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-type PostgresRole struct {
-	pgRole       *api.PostgresRole
+type MysqlRole struct {
+	mRole        *api.MysqlRole
 	vaultClient  *vaultapi.Client
 	kubeClient   kubernetes.Interface
 	databasePath string
 }
 
-func NewPostgresRole(k kubernetes.Interface, v *vaultapi.Client, pgRole *api.PostgresRole, databasePath string) *PostgresRole {
-	return &PostgresRole{
-		pgRole:       pgRole,
+func NewMysqlRole(k kubernetes.Interface, v *vaultapi.Client, mRole *api.MysqlRole, databasePath string) *MysqlRole {
+	return &MysqlRole{
+		mRole:        mRole,
 		vaultClient:  v,
 		kubeClient:   k,
 		databasePath: databasePath,
@@ -27,22 +27,20 @@ func NewPostgresRole(k kubernetes.Interface, v *vaultapi.Client, pgRole *api.Pos
 }
 
 // https://www.vaultproject.io/api/secret/databases/index.html#configure-connection
-// https://www.vaultproject.io/api/secret/databases/postgresql.html#configure-connection
+// https:https://www.vaultproject.io/api/secret/databases/mysql-maria.html#configure-connection
 //
 // CreateConfig creates database configuration
-func (p *PostgresRole) CreateConfig() error {
-	if p.pgRole.Spec.Database == nil {
+func (m *MysqlRole) CreateConfig() error {
+	if m.mRole.Spec.Database == nil {
 		return errors.New("spec.database is not provided")
 	}
 
-	cfg := p.pgRole.Spec.Database
-	ns := p.pgRole.Namespace
+	cfg := m.mRole.Spec.Database
+	ns := m.mRole.Namespace
 
-	path := fmt.Sprintf("/v1/%s/config/%s", p.databasePath, cfg.Name)
-	req := p.vaultClient.NewRequest("POST", path)
-
+	req := m.vaultClient.NewRequest("POST", fmt.Sprintf("/v1/database/config/%s", cfg.Name))
 	payload := map[string]interface{}{
-		"plugin_name":    "postgresql-database-plugin",
+		"plugin_name":    "mysql-database-plugin",
 		"allowed_roles":  cfg.AllowedRoles,
 		"connection_url": cfg.ConnectionUrl,
 	}
@@ -51,7 +49,7 @@ func (p *PostgresRole) CreateConfig() error {
 		payload["plugin_name"] = cfg.PluginName
 	}
 
-	sr, err := p.kubeClient.CoreV1().Secrets(ns).Get(cfg.CredentialSecret, metav1.GetOptions{})
+	sr, err := m.kubeClient.CoreV1().Secrets(ns).Get(cfg.CredentialSecret, metav1.GetOptions{})
 	if err != nil {
 		return errors.Wrapf(err, "failed to get credential information from secret(%s/%s)", ns, cfg.CredentialSecret)
 	}
@@ -73,7 +71,7 @@ func (p *PostgresRole) CreateConfig() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	_, err = p.vaultClient.RawRequest(req)
+	_, err = m.vaultClient.RawRequest(req)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -84,12 +82,11 @@ func (p *PostgresRole) CreateConfig() error {
 // https://www.vaultproject.io/api/secret/databases/index.html#create-role
 //
 // CreateRole creates role
-func (p *PostgresRole) CreateRole() error {
-	name := p.pgRole.Name
-	pg := p.pgRole.Spec
+func (m *MysqlRole) CreateRole() error {
+	name := m.mRole.Name
+	pg := m.mRole.Spec
 
-	path := fmt.Sprintf("/v1/%s/roles/%s", p.databasePath, name)
-	req := p.vaultClient.NewRequest("POST", path)
+	req := m.vaultClient.NewRequest("POST", fmt.Sprintf("/v1/database/roles/%s", name))
 
 	payload := map[string]interface{}{
 		"db_name":             pg.DBName,
@@ -98,12 +95,6 @@ func (p *PostgresRole) CreateRole() error {
 
 	if len(pg.RevocationStatements) > 0 {
 		payload["revocation_statements"] = pg.RevocationStatements
-	}
-	if len(pg.RollbackStatements) > 0 {
-		payload["rollback_statements"] = pg.RollbackStatements
-	}
-	if len(pg.RenewStatements) > 0 {
-		payload["renew_statements"] = pg.RenewStatements
 	}
 	if pg.DefaultTTL != "" {
 		payload["default_ttl"] = pg.DefaultTTL
@@ -117,7 +108,7 @@ func (p *PostgresRole) CreateRole() error {
 		return errors.WithStack(err)
 	}
 
-	_, err = p.vaultClient.RawRequest(req)
+	_, err = m.vaultClient.RawRequest(req)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create database role(%s) for config(%s)", name, pg.DBName)
 	}
