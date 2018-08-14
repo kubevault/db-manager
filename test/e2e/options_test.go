@@ -22,7 +22,7 @@ var (
 	options = &E2EOptions{
 		ExtraOptions:   server.NewExtraOptions(),
 		KubeConfig:     filepath.Join(homedir.HomeDir(), ".kube", "config"),
-		StartAPIServer: true,
+		StartAPIServer: false,
 	}
 )
 

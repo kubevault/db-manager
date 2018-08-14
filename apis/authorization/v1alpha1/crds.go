@@ -24,7 +24,7 @@ func (p PostgresRole) CustomResourceDefinition() *apiextensions.CustomResourceDe
 			},
 		},
 		Labels: crdutils.Labels{
-			LabelsMap: map[string]string{"app": "postgres"},
+			LabelsMap: map[string]string{"app": "user-manager"},
 		},
 		SpecDefinitionName:      "github.com/kubedb/user-manager/apis/authorization/v1alpha1.PostgresRole",
 		EnableValidation:        true,
@@ -52,7 +52,7 @@ func (p PostgresRoleBinding) CustomResourceDefinition() *apiextensions.CustomRes
 			},
 		},
 		Labels: crdutils.Labels{
-			LabelsMap: map[string]string{"app": "postgres"},
+			LabelsMap: map[string]string{"app": "user-manager"},
 		},
 		SpecDefinitionName:      "github.com/kubedb/user-manager/apis/authorization/v1alpha1.PostgresRoleBinding",
 		EnableValidation:        true,

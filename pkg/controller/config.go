@@ -55,6 +55,7 @@ func (c *Config) New() (*UserManagerController, error) {
 		kubeInformerFactory: informers.NewFilteredSharedInformerFactory(c.KubeClient, c.ResyncPeriod, core.NamespaceAll, tweakListOptions),
 		dbInformerFactory:   dbinformers.NewSharedInformerFactory(c.DbClient, c.ResyncPeriod),
 		recorder:            eventer.NewEventRecorder(c.KubeClient, "user-manager-controller"),
+		processingFinalizer: map[string]bool{},
 	}
 
 	if err := ctrl.ensureCustomResourceDefinitions(); err != nil {

@@ -7,19 +7,13 @@ import (
 	logs "github.com/appscode/go/log/golog"
 	"github.com/appscode/kutil/meta"
 	"github.com/appscode/kutil/tools/clientcmd"
-	cs "github.com/kubedb/user-manager/client/clientset/versioned"
-	"github.com/kubedb/user-manager/client/clientset/versioned/scheme"
+	"github.com/kubedb/user-manager/pkg/controller"
 	"github.com/kubedb/user-manager/test/e2e/framework"
 	. "github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/reporters"
 	. "github.com/onsi/gomega"
-	crd_cs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/kubernetes"
-	clientsetscheme "k8s.io/client-go/kubernetes/scheme"
-	ka "k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset"
-	"k8s.io/kubernetes/pkg/api/legacyscheme"
 )
 
 const (
@@ -39,33 +33,39 @@ func TestE2e(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
-	scheme.AddToScheme(clientsetscheme.Scheme)
-	scheme.AddToScheme(legacyscheme.Scheme)
-
 	clientConfig, err := clientcmd.BuildConfigFromContext(options.KubeConfig, options.KubeContext)
 	Expect(err).NotTo(HaveOccurred())
 
-	kubeClient, err := kubernetes.NewForConfig(clientConfig)
+	ctrlConfig := controller.NewConfig(clientConfig)
+	ctrlConfig.MaxNumRequeues = 5
+	ctrlConfig.NumThreads = 1
+	ctrlConfig.ResyncPeriod = 10 * time.Minute
+	ctrlConfig.LeaseRenewTime = 10 * time.Minute
+
+	err = options.ApplyTo(ctrlConfig)
 	Expect(err).NotTo(HaveOccurred())
 
-	messengerClient, err := cs.NewForConfig(clientConfig)
+	ctrl, err := ctrlConfig.New()
 	Expect(err).NotTo(HaveOccurred())
 
-	crdClient, err := crd_cs.NewForConfig(clientConfig)
-	Expect(err).NotTo(HaveOccurred())
+	root = framework.New(ctrlConfig.KubeClient, ctrlConfig.DbClient, ctrlConfig.CRDClient, nil, options.StartAPIServer, clientConfig)
 
-	kaClient, err := ka.NewForConfig(clientConfig)
-	Expect(err).NotTo(HaveOccurred())
-
-	root = framework.New(kubeClient, messengerClient, crdClient, kaClient, options.StartAPIServer, clientConfig)
 	err = root.CreateNamespace()
 	Expect(err).NotTo(HaveOccurred())
 	By("Using test namespace " + root.Namespace() + "...")
 
-	go root.StartAPIServerAndOperator(options.KubeConfig, options.ExtraOptions)
-	root.EventuallyAPIServerReady("v1alpha1.admission.authorization.kubedb.com").Should(Succeed())
-	// let's API server be warmed up
-	time.Sleep(time.Second * 5)
+	By("Deploying postgres, vault...")
+	err = root.InitialSetup()
+	Expect(err).NotTo(HaveOccurred())
+
+	if options.StartAPIServer {
+		go root.StartAPIServerAndOperator(options.KubeConfig, options.ExtraOptions)
+		root.EventuallyAPIServerReady("v1alpha1.admission.authorization.kubedb.com").Should(Succeed())
+		// let's API server be warmed up
+		time.Sleep(time.Second * 5)
+	} else {
+		go ctrl.RunInformers(nil)
+	}
 })
 
 var _ = AfterSuite(func() {
@@ -78,10 +78,12 @@ var _ = AfterSuite(func() {
 		root.KAClient.ApiregistrationV1beta1().APIServices().Delete("v1alpha1.authorization.kubedb.com", meta.DeleteInBackground())
 	}
 
+	// Expect(root.Cleanup()).NotTo(HaveOccurred())
+
 	By("Removing CRD group...")
 	crds, err := root.CRDClient.CustomResourceDefinitions().List(metav1.ListOptions{
 		LabelSelector: labels.Set{
-			"app": "messenger",
+			"app": "user-manager",
 		}.String(),
 	})
 	Expect(err).NotTo(HaveOccurred())
