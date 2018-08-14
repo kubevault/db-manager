@@ -32,6 +32,10 @@ func (c *FakeAuthorizationV1alpha1) MysqlRoles(namespace string) v1alpha1.MysqlR
 	return &FakeMysqlRoles{c, namespace}
 }
 
+func (c *FakeAuthorizationV1alpha1) MysqlRoleBindings(namespace string) v1alpha1.MysqlRoleBindingInterface {
+	return &FakeMysqlRoleBindings{c, namespace}
+}
+
 func (c *FakeAuthorizationV1alpha1) PostgresRoles(namespace string) v1alpha1.PostgresRoleInterface {
 	return &FakePostgresRoles{c, namespace}
 }

@@ -20,6 +20,8 @@ package v1alpha1
 
 type MysqlRoleExpansion interface{}
 
+type MysqlRoleBindingExpansion interface{}
+
 type PostgresRoleExpansion interface{}
 
 type PostgresRoleBindingExpansion interface{}

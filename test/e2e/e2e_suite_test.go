@@ -78,7 +78,7 @@ var _ = AfterSuite(func() {
 		root.KAClient.ApiregistrationV1beta1().APIServices().Delete("v1alpha1.authorization.kubedb.com", meta.DeleteInBackground())
 	}
 
-	// Expect(root.Cleanup()).NotTo(HaveOccurred())
+	Expect(root.Cleanup()).NotTo(HaveOccurred())
 
 	By("Removing CRD group...")
 	crds, err := root.CRDClient.CustomResourceDefinitions().List(metav1.ListOptions{

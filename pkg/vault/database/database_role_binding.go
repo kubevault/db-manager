@@ -8,6 +8,7 @@ import (
 	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
 	crd "github.com/kubedb/user-manager/client/clientset/versioned"
 	"github.com/kubedb/user-manager/pkg/vault"
+	"github.com/kubedb/user-manager/pkg/vault/database/mysql"
 	"github.com/kubedb/user-manager/pkg/vault/database/postgres"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -38,6 +39,27 @@ func NewDatabaseRoleBindingForPostgres(k kubernetes.Interface, cr crd.Interface,
 
 	return &DatabaseRoleBinding{
 		CredentialGetter: p,
+		kubeClient:       k,
+		vaultClient:      v,
+		path:             "database",
+	}, nil
+}
+
+func NewDatabaseRoleBindingForMysql(k kubernetes.Interface, cr crd.Interface, roleBinding *api.MysqlRoleBinding) (DatabaseRoleBindingInterface, error) {
+	mRole, err := cr.AuthorizationV1alpha1().MysqlRoles(roleBinding.Namespace).Get(roleBinding.Spec.RoleRef, metav1.GetOptions{})
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to get mysql role(%s/%s)", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+	}
+
+	v, err := vault.NewClient(k, roleBinding.Namespace, mRole.Spec.Provider.Vault)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to create vault client from mysql role(%s/%s) spec.provider.vault", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+	}
+
+	m := mysql.NewMysqlRoleBinding(k, v, roleBinding, "database")
+
+	return &DatabaseRoleBinding{
+		CredentialGetter: m,
 		kubeClient:       k,
 		vaultClient:      v,
 		path:             "database",

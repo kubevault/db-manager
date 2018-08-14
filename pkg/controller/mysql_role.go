@@ -22,16 +22,16 @@ const (
 	MysqlRolePhaseSuccess api.MysqlRolePhase = "Success"
 )
 
-func (c *UserManagerController) initMySQLRoleWatcher() {
+func (c *UserManagerController) initMysqlRoleWatcher() {
 	c.mysqlRoleInformer = c.dbInformerFactory.Authorization().V1alpha1().MysqlRoles().Informer()
-	c.mysqlRoleQueue = queue.New(api.ResourceKindMysqlRole, c.MaxNumRequeues, c.NumThreads, c.runMySQLRoleInjector)
+	c.mysqlRoleQueue = queue.New(api.ResourceKindMysqlRole, c.MaxNumRequeues, c.NumThreads, c.runMysqlRoleInjector)
 
 	// TODO: add custom event handler?
 	c.mysqlRoleInformer.AddEventHandler(queue.DefaultEventHandler(c.mysqlRoleQueue.GetQueue()))
 	c.mysqlRoleLister = c.dbInformerFactory.Authorization().V1alpha1().MysqlRoles().Lister()
 }
 
-func (c *UserManagerController) runMySQLRoleInjector(key string) error {
+func (c *UserManagerController) runMysqlRoleInjector(key string) error {
 	obj, exist, err := c.mysqlRoleInformer.GetIndexer().GetByKey(key)
 	if err != nil {
 		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)

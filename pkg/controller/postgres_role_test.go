@@ -128,14 +128,14 @@ func TestUserManagerController_reconcilePostgresRole(t *testing.T) {
 		},
 		{
 			testName:           "update role, successfully updated database role",
-			pRole:              func(p api.PostgresRole) api.PostgresRole { p.Generation = 2; return p }(pRole),
+			pRole:              func(p api.PostgresRole) api.PostgresRole { p.Generation = 2; p.Status.ObservedGeneration = 1; return p }(pRole),
 			dbRClient:          &fakeDRole{},
 			expectedErr:        false,
 			hasStatusCondition: false,
 		},
 		{
 			testName: "update role, failed to update database role",
-			pRole:    func(p api.PostgresRole) api.PostgresRole { p.Generation = 2; return p }(pRole),
+			pRole:    func(p api.PostgresRole) api.PostgresRole { p.Generation = 2; p.Status.ObservedGeneration = 1; return p }(pRole),
 			dbRClient: &fakeDRole{
 				errorOccurredInCreateRole: true,
 			},
@@ -152,7 +152,7 @@ func TestUserManagerController_reconcilePostgresRole(t *testing.T) {
 			}
 
 			_, err := c.dbClient.AuthorizationV1alpha1().PostgresRoles(test.pRole.Namespace).Create(&test.pRole)
-			if assert.Nil(t, err) {
+			if !assert.Nil(t, err) {
 				return
 			}
 

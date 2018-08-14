@@ -19,23 +19,27 @@ func (u *UserManagerController) LeaseRenewer(duration time.Duration) {
 	for {
 		select {
 		case <-time.After(duration):
-			pgRBList, err := u.postgresRoleBindingLister.List(labels.SelectorFromSet(map[string]string{}))
-			if err != nil {
-				glog.Errorln("Postgres credential lease renewer: ", err)
-			} else {
-				for _, p := range pgRBList {
-					err = u.RenewLease(p, duration)
-					if err != nil {
-						glog.Errorf("Postgres credential lease renewer: for PostgresRoleBinding(%s/%s): %v", p.Namespace, p.Name, err)
-					}
-				}
-			}
-
+			go u.runLeaseRenewerForPostgres(duration)
+			go u.runLeaseRenewerForMysql(duration)
 		}
 	}
 }
 
-func (u *UserManagerController) RenewLease(p *api.PostgresRoleBinding, duration time.Duration) error {
+func (u *UserManagerController) runLeaseRenewerForPostgres(duration time.Duration) {
+	pgRBList, err := u.postgresRoleBindingLister.List(labels.SelectorFromSet(map[string]string{}))
+	if err != nil {
+		glog.Errorln("Postgres credential lease renewer: ", err)
+	} else {
+		for _, p := range pgRBList {
+			err = u.RenewLeaseForPostgres(p, duration)
+			if err != nil {
+				glog.Errorf("Postgres credential lease renewer: for PostgresRoleBinding(%s/%s): %v", p.Namespace, p.Name, err)
+			}
+		}
+	}
+}
+
+func (u *UserManagerController) RenewLeaseForPostgres(p *api.PostgresRoleBinding, duration time.Duration) error {
 	if p.Status.Lease.ID == "" {
 		return nil
 	}
@@ -67,6 +71,58 @@ func (u *UserManagerController) RenewLease(p *api.PostgresRoleBinding, duration 
 	status.Lease.RenewDeadline = time.Now().Unix()
 
 	err = u.updatePostgresRoleBindingStatus(&status, p)
+	if err != nil {
+		return errors.Wrap(err, "failed to update renew deadline")
+	}
+	return nil
+}
+
+func (u *UserManagerController) runLeaseRenewerForMysql(duration time.Duration) {
+	mRBList, err := u.mysqlRoleBindingLister.List(labels.SelectorFromSet(map[string]string{}))
+	if err != nil {
+		glog.Errorln("Mysql credential lease renewer: ", err)
+	} else {
+		for _, m := range mRBList {
+			err = u.RenewLeaseForMysql(m, duration)
+			if err != nil {
+				glog.Errorf("Mysql credential lease renewer: for PostgresRoleBinding(%s/%s): %v", m.Namespace, m.Name, err)
+			}
+		}
+	}
+}
+
+func (u *UserManagerController) RenewLeaseForMysql(m *api.MysqlRoleBinding, duration time.Duration) error {
+	if m.Status.Lease.ID == "" {
+		return nil
+	}
+
+	remaining := m.Status.Lease.RenewDeadline - time.Now().Unix()
+	threshold := duration + renewThreshold
+
+	if remaining > int64(threshold.Seconds()) {
+		// has enough time to renew it in next time
+		return nil
+	}
+
+	mRole, err := u.dbClient.AuthorizationV1alpha1().MysqlRoles(m.Namespace).Get(m.Spec.RoleRef, metav1.GetOptions{})
+	if err != nil {
+		return errors.Wrapf(err, "failed to get mysql role(%s/%s)", m.Namespace, m.Spec.RoleRef)
+	}
+
+	v, err := vault.NewClient(u.kubeClient, m.Namespace, mRole.Spec.Provider.Vault)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create vault client from mysql role(%s/%s) spec.provider.vault", m.Namespace, m.Spec.RoleRef)
+	}
+
+	_, err = v.Sys().Renew(m.Status.Lease.ID, 0)
+	if err != nil {
+		return errors.Wrap(err, "failed to renew the lease")
+	}
+
+	status := m.Status
+	status.Lease.RenewDeadline = time.Now().Unix()
+
+	err = u.updateMysqlRoleBindingStatus(&status, m)
 	if err != nil {
 		return errors.Wrap(err, "failed to update renew deadline")
 	}

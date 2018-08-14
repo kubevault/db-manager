@@ -26,6 +26,8 @@ import (
 type Interface interface {
 	// MysqlRoles returns a MysqlRoleInformer.
 	MysqlRoles() MysqlRoleInformer
+	// MysqlRoleBindings returns a MysqlRoleBindingInformer.
+	MysqlRoleBindings() MysqlRoleBindingInformer
 	// PostgresRoles returns a PostgresRoleInformer.
 	PostgresRoles() PostgresRoleInformer
 	// PostgresRoleBindings returns a PostgresRoleBindingInformer.
@@ -46,6 +48,11 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // MysqlRoles returns a MysqlRoleInformer.
 func (v *version) MysqlRoles() MysqlRoleInformer {
 	return &mysqlRoleInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// MysqlRoleBindings returns a MysqlRoleBindingInformer.
+func (v *version) MysqlRoleBindings() MysqlRoleBindingInformer {
+	return &mysqlRoleBindingInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // PostgresRoles returns a PostgresRoleInformer.

@@ -340,16 +340,26 @@ func TestUserManagerController_reconcilePostgresRoleBinding(t *testing.T) {
 			expectedPhase:      PhaseSuccess,
 		},
 		{
-			testName:           "update stage, no error",
-			pRBinding:          func(p api.PostgresRoleBinding) api.PostgresRoleBinding { p.Generation = 1; return p }(pRBinding),
+			testName: "update stage, no error",
+			pRBinding: func(p api.PostgresRoleBinding) api.PostgresRoleBinding {
+				p.Generation = 2
+				p.Status.ObservedGeneration = 1
+				p.Status.Phase = PhaseSuccess
+				return p
+			}(pRBinding),
 			dbRBClient:         &fakeDRB{},
 			expectedErr:        false,
 			hasStatusCondition: false,
 			expectedPhase:      PhaseSuccess,
 		},
 		{
-			testName:  "update stage, failed to update rbac role binding",
-			pRBinding: func(p api.PostgresRoleBinding) api.PostgresRoleBinding { p.Generation = 1; return p }(pRBinding),
+			testName: "update stage, failed to update rbac role binding",
+			pRBinding: func(p api.PostgresRoleBinding) api.PostgresRoleBinding {
+				p.Generation = 2
+				p.Status.ObservedGeneration = 1
+				p.Status.Phase = PhaseSuccess
+				return p
+			}(pRBinding),
 			dbRBClient: &fakeDRB{
 				errorOccurredInUpdateRoleBinding: true,
 			},
@@ -367,7 +377,7 @@ func TestUserManagerController_reconcilePostgresRoleBinding(t *testing.T) {
 			}
 
 			_, err := c.dbClient.AuthorizationV1alpha1().PostgresRoleBindings(test.pRBinding.Namespace).Create(&test.pRBinding)
-			if assert.Nil(t, err) {
+			if !assert.Nil(t, err) {
 				return
 			}
 
@@ -375,7 +385,7 @@ func TestUserManagerController_reconcilePostgresRoleBinding(t *testing.T) {
 			if test.expectedErr {
 				if assert.NotNil(t, err) {
 					if test.hasStatusCondition {
-						p, err2 := c.dbClient.AuthorizationV1alpha1().PostgresRoles(test.pRBinding.Namespace).Get(test.pRBinding.Name, metav1.GetOptions{})
+						p, err2 := c.dbClient.AuthorizationV1alpha1().PostgresRoleBindings(test.pRBinding.Namespace).Get(test.pRBinding.Name, metav1.GetOptions{})
 						if assert.Nil(t, err2) {
 							assert.Condition(t, func() (success bool) {
 								if len(p.Status.Conditions) == 0 {
@@ -395,7 +405,7 @@ func TestUserManagerController_reconcilePostgresRoleBinding(t *testing.T) {
 				}
 			} else {
 				if assert.Nil(t, err) {
-					p, err2 := c.dbClient.AuthorizationV1alpha1().PostgresRoles(test.pRBinding.Namespace).Get(test.pRBinding.Name, metav1.GetOptions{})
+					p, err2 := c.dbClient.AuthorizationV1alpha1().PostgresRoleBindings(test.pRBinding.Namespace).Get(test.pRBinding.Name, metav1.GetOptions{})
 					if assert.Nil(t, err2) {
 						assert.Condition(t, func() (success bool) {
 							if len(p.Status.Conditions) != 0 {

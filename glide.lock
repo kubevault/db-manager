@@ -1,5 +1,5 @@
 hash: 8e0c5d8367c81ef91fe14ae70e8e676039da9931e69521951aafe88b8f6d3535
-updated: 2018-07-31T10:32:44.258260979+06:00
+updated: 2018-08-14T17:37:21.044742138+06:00
 imports:
 - name: bitbucket.org/ww/goautoneg
   version: 75cd24fc2f2c2a2088577d12123ddee5f54e0675
@@ -33,7 +33,7 @@ imports:
   - admission/v1beta1
   - registry/admissionreview/v1beta1
 - name: github.com/appscode/kutil
-  version: c9b929cfcab96c233c1b0ab59cd4a5ab6a4ff96a
+  version: b50ebf9375ccfa41b08350da68618fee6bc6de4b
   subpackages:
   - apiextensions/v1beta1
   - core/v1
@@ -277,6 +277,10 @@ imports:
   version: 14b04e0594ef6a9fd943363b135656f0ec8c9d0e
 - name: github.com/json-iterator/go
   version: ab8a2e0c74be9d3be70b3184d9acc634935ded82
+- name: github.com/lib/pq
+  version: 90697d60dd844d5ef6ff15135d0203f65d2f53b8
+  subpackages:
+  - oid
 - name: github.com/mailru/easyjson
   version: 2f5df55504ebc322e4d52d34df6a1f5b503bf26d
   subpackages:
@@ -288,7 +292,7 @@ imports:
   subpackages:
   - pbutil
 - name: github.com/mitchellh/go-homedir
-  version: 3864e76763d94a6df2f9960b16a20a33da9f9a66
+  version: 58046073cbffe2f25d425fe1331102f55cf719de
 - name: github.com/mitchellh/mapstructure
   version: 53818660ed4955e899c0bcafa97299a388bd7c8e
 - name: github.com/modern-go/concurrent
@@ -594,7 +598,7 @@ imports:
   - third_party/forked/golang/json
   - third_party/forked/golang/reflect
 - name: k8s.io/apiserver
-  version: e3b61b75fc6378abb4af53e15cb9590fc4041b9f
+  version: 413d6c435277570ff1866384c518002dcf3bf8e1
   repo: https://github.com/pharmer/apiserver.git
   vcs: git
   subpackages:
@@ -863,7 +867,7 @@ imports:
   - pkg/client/clientset_generated/clientset/typed/apiregistration/v1
   - pkg/client/clientset_generated/clientset/typed/apiregistration/v1beta1
 - name: k8s.io/kube-openapi
-  version: d8ea2fe547a448256204cfc68dfee7b26c720acb
+  version: e3762e86a74c878ffed47484592986685639c2cd
   subpackages:
   - pkg/builder
   - pkg/common

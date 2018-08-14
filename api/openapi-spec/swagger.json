@@ -2117,6 +2117,27 @@
         }
       }
     },
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.PostgresRoleCondition": {
+      "description": "PostgresRoleCondition describes the state of a PostgresRole at a certain point.",
+      "properties": {
+        "message": {
+          "description": "A human readable message indicating details about the transition.",
+          "type": "string"
+        },
+        "reason": {
+          "description": "The reason for the condition's.",
+          "type": "string"
+        },
+        "status": {
+          "description": "Status of the condition, one of True, False, Unknown.",
+          "type": "string"
+        },
+        "type": {
+          "description": "Type of PostgresRole condition.",
+          "type": "string"
+        }
+      }
+    },
     "com.github.kubedb.user-manager.apis.authorization.v1alpha1.PostgresRoleList": {
       "properties": {
         "apiVersion": {
@@ -2204,10 +2225,21 @@
     },
     "com.github.kubedb.user-manager.apis.authorization.v1alpha1.PostgresRoleStatus": {
       "properties": {
+        "conditions": {
+          "description": "Represents the latest available observations of a PostgresRoleBinding current state.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.PostgresRoleCondition"
+          }
+        },
         "observedGeneration": {
           "description": "observedGeneration is the most recent generation observed for this PostgresROle. It corresponds to the PostgresROle's generation, which is updated on mutation by the API Server.",
           "type": "integer",
           "format": "int64"
+        },
+        "phase": {
+          "description": "Specifies the phase of the PostgresRole",
+          "type": "string"
         }
       }
     },

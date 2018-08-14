@@ -34,6 +34,12 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.DatabaseSpec":                 schema_user_manager_apis_authorization_v1alpha1_DatabaseSpec(ref),
 		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.LeaseData":                    schema_user_manager_apis_authorization_v1alpha1_LeaseData(ref),
 		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRole":                    schema_user_manager_apis_authorization_v1alpha1_MysqlRole(ref),
+		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleBinding":             schema_user_manager_apis_authorization_v1alpha1_MysqlRoleBinding(ref),
+		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleBindingCondition":    schema_user_manager_apis_authorization_v1alpha1_MysqlRoleBindingCondition(ref),
+		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleBindingList":         schema_user_manager_apis_authorization_v1alpha1_MysqlRoleBindingList(ref),
+		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleBindingSpec":         schema_user_manager_apis_authorization_v1alpha1_MysqlRoleBindingSpec(ref),
+		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleBindingStatus":       schema_user_manager_apis_authorization_v1alpha1_MysqlRoleBindingStatus(ref),
+		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleCondition":           schema_user_manager_apis_authorization_v1alpha1_MysqlRoleCondition(ref),
 		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleList":                schema_user_manager_apis_authorization_v1alpha1_MysqlRoleList(ref),
 		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleSpec":                schema_user_manager_apis_authorization_v1alpha1_MysqlRoleSpec(ref),
 		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleStatus":              schema_user_manager_apis_authorization_v1alpha1_MysqlRoleStatus(ref),
@@ -43,6 +49,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.PostgresRoleBindingList":      schema_user_manager_apis_authorization_v1alpha1_PostgresRoleBindingList(ref),
 		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.PostgresRoleBindingSpec":      schema_user_manager_apis_authorization_v1alpha1_PostgresRoleBindingSpec(ref),
 		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.PostgresRoleBindingStatus":    schema_user_manager_apis_authorization_v1alpha1_PostgresRoleBindingStatus(ref),
+		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.PostgresRoleCondition":        schema_user_manager_apis_authorization_v1alpha1_PostgresRoleCondition(ref),
 		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.PostgresRoleList":             schema_user_manager_apis_authorization_v1alpha1_PostgresRoleList(ref),
 		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.PostgresRoleSpec":             schema_user_manager_apis_authorization_v1alpha1_PostgresRoleSpec(ref),
 		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.PostgresRoleStatus":           schema_user_manager_apis_authorization_v1alpha1_PostgresRoleStatus(ref),
@@ -447,6 +454,260 @@ func schema_user_manager_apis_authorization_v1alpha1_MysqlRole(ref common.Refere
 	}
 }
 
+func schema_user_manager_apis_authorization_v1alpha1_MysqlRoleBinding(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MysqlRoleBinding binds mysql credential to user",
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleBindingSpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleBindingStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleBindingSpec", "github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleBindingStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_user_manager_apis_authorization_v1alpha1_MysqlRoleBindingCondition(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MysqlRoleBindingCondition describes the state of a MysqlRoleBinding at a certain point.",
+				Properties: map[string]spec.Schema{
+					"type": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Type of MysqlRoleBinding condition.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Status of the condition, one of True, False, Unknown.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"reason": {
+						SchemaProps: spec.SchemaProps{
+							Description: "The reason for the condition's.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"message": {
+						SchemaProps: spec.SchemaProps{
+							Description: "A human readable message indicating details about the transition.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{},
+	}
+}
+
+func schema_user_manager_apis_authorization_v1alpha1_MysqlRoleBindingList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+						},
+					},
+					"items": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Items is a list of PostgresRoleBinding objects",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.PostgresRoleBinding"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/kubedb/user-manager/apis/authorization/v1alpha1.PostgresRoleBinding", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+	}
+}
+
+func schema_user_manager_apis_authorization_v1alpha1_MysqlRoleBindingSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Properties: map[string]spec.Schema{
+					"roleRef": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specifies the name of the MysqlRole",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"subjects": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("k8s.io/api/rbac/v1.Subject"),
+									},
+								},
+							},
+						},
+					},
+					"store": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.Store"),
+						},
+					},
+				},
+				Required: []string{"roleRef", "subjects", "store"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/kubedb/user-manager/apis/authorization/v1alpha1.Store", "k8s.io/api/rbac/v1.Subject"},
+	}
+}
+
+func schema_user_manager_apis_authorization_v1alpha1_MysqlRoleBindingStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Properties: map[string]spec.Schema{
+					"observedGeneration": {
+						SchemaProps: spec.SchemaProps{
+							Description: "observedGeneration is the most recent generation observed for this MysqlRoleBinding. It corresponds to the MysqlRoleBinding's generation, which is updated on mutation by the API Server.",
+							Type:        []string{"integer"},
+							Format:      "int64",
+						},
+					},
+					"lease": {
+						SchemaProps: spec.SchemaProps{
+							Description: "contains lease info of the credentials",
+							Ref:         ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.LeaseData"),
+						},
+					},
+					"phase": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specifies the phase of the MysqlRoleBinding",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"conditions": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Represents the latest available observations of a MysqlRoleBinding current state.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleBindingCondition"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/kubedb/user-manager/apis/authorization/v1alpha1.LeaseData", "github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleBindingCondition"},
+	}
+}
+
+func schema_user_manager_apis_authorization_v1alpha1_MysqlRoleCondition(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MysqlRoleCondition describes the state of a MysqlRole at a certain point.",
+				Properties: map[string]spec.Schema{
+					"type": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Type of MysqlRole condition.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Status of the condition, one of True, False, Unknown.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"reason": {
+						SchemaProps: spec.SchemaProps{
+							Description: "The reason for the condition's.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"message": {
+						SchemaProps: spec.SchemaProps{
+							Description: "A human readable message indicating details about the transition.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{},
+	}
+}
+
 func schema_user_manager_apis_authorization_v1alpha1_MysqlRoleList(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -473,7 +734,7 @@ func schema_user_manager_apis_authorization_v1alpha1_MysqlRoleList(ref common.Re
 					},
 					"items": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Items is a list of MySQLRole objects",
+							Description: "Items is a list of MysqlRole objects",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -571,17 +832,37 @@ func schema_user_manager_apis_authorization_v1alpha1_MysqlRoleStatus(ref common.
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
 				Properties: map[string]spec.Schema{
+					"phase": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"observedGeneration": {
 						SchemaProps: spec.SchemaProps{
-							Description: "observedGeneration is the most recent generation observed for this PostgresROle. It corresponds to the PostgresROle's generation, which is updated on mutation by the API Server.",
+							Description: "observedGeneration is the most recent generation observed for this MysqlRole. It corresponds to the MysqlRole's generation, which is updated on mutation by the API Server.",
 							Type:        []string{"integer"},
 							Format:      "int64",
+						},
+					},
+					"conditions": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Represents the latest available observations of a MysqlRole current state.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleCondition"),
+									},
+								},
+							},
 						},
 					},
 				},
 			},
 		},
-		Dependencies: []string{},
+		Dependencies: []string{
+			"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleCondition"},
 	}
 }
 
@@ -841,6 +1122,47 @@ func schema_user_manager_apis_authorization_v1alpha1_PostgresRoleBindingStatus(r
 	}
 }
 
+func schema_user_manager_apis_authorization_v1alpha1_PostgresRoleCondition(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "PostgresRoleCondition describes the state of a PostgresRole at a certain point.",
+				Properties: map[string]spec.Schema{
+					"type": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Type of PostgresRole condition.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Status of the condition, one of True, False, Unknown.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"reason": {
+						SchemaProps: spec.SchemaProps{
+							Description: "The reason for the condition's.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"message": {
+						SchemaProps: spec.SchemaProps{
+							Description: "A human readable message indicating details about the transition.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{},
+	}
+}
+
 func schema_user_manager_apis_authorization_v1alpha1_PostgresRoleList(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -1000,10 +1322,31 @@ func schema_user_manager_apis_authorization_v1alpha1_PostgresRoleStatus(ref comm
 							Format:      "int64",
 						},
 					},
+					"phase": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specifies the phase of the PostgresRole",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"conditions": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Represents the latest available observations of a PostgresRoleBinding current state.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.PostgresRoleCondition"),
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
-		Dependencies: []string{},
+		Dependencies: []string{
+			"github.com/kubedb/user-manager/apis/authorization/v1alpha1.PostgresRoleCondition"},
 	}
 }
 
