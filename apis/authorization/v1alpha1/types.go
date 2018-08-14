@@ -18,6 +18,10 @@ const (
 	ResourceKindPostgresRoleBinding = "PostgresRoleBinding"
 	ResourcePostgresRoleBinding     = "postgresrolebinding"
 	ResourcePostgresRoleBindings    = "postgresrolebindings"
+
+	ResourceKindMysqlRoleBinding = "MysqlRoleBinding"
+	ResourceMysqlRoleBinding     = "mysqlrolebinding"
+	ResourceMysqlRoleBindings    = "mysqlrolebindings"
 )
 
 // +genclient
@@ -343,4 +347,67 @@ type MysqlRoleCondition struct {
 
 	// A human readable message indicating details about the transition.
 	Message string `json:"message,omitempty"`
+}
+
+// +genclient
+// +k8s:openapi-gen=true
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// MysqlRoleBinding binds mysql credential to user
+type MysqlRoleBinding struct {
+	metav1.TypeMeta   `json:",inline,omitempty"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Spec              MysqlRoleBindingSpec   `json:"spec,omitempty"`
+	Status            MysqlRoleBindingStatus `json:"status,omitempty"`
+}
+
+type MysqlRoleBindingSpec struct {
+	// Specifies the name of the MysqlRole
+	RoleRef string `json:"roleRef"`
+
+	Subjects []rbacv1.Subject `json:"subjects"`
+
+	Store Store `json:"store"`
+}
+
+type MysqlRoleBindingPhase string
+
+type MysqlRoleBindingStatus struct {
+	// observedGeneration is the most recent generation observed for this MysqlRoleBinding. It corresponds to the
+	// MysqlRoleBinding's generation, which is updated on mutation by the API Server.
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
+	// contains lease info of the credentials
+	Lease LeaseData `json:"lease,omitempty"`
+
+	// Specifies the phase of the MysqlRoleBinding
+	Phase MysqlRoleBindingPhase `json:"phase,omitempty"`
+
+	// Represents the latest available observations of a MysqlRoleBinding current state.
+	Conditions []MysqlRoleBindingCondition `json:"conditions,omitempty"`
+}
+
+// MysqlRoleBindingCondition describes the state of a MysqlRoleBinding at a certain point.
+type MysqlRoleBindingCondition struct {
+	// Type of MysqlRoleBinding condition.
+	Type string `json:"type,omitempty"`
+
+	// Status of the condition, one of True, False, Unknown.
+	Status v1.ConditionStatus `json:"status,omitempty"`
+
+	// The reason for the condition's.
+	Reason string `json:"reason,omitempty"`
+
+	// A human readable message indicating details about the transition.
+	Message string `json:"message,omitempty"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type MysqlRoleBindingList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+
+	// Items is a list of PostgresRoleBinding objects
+	Items []PostgresRoleBinding `json:"items,omitempty"`
 }

@@ -65,7 +65,8 @@ func (c *Config) New() (*UserManagerController, error) {
 	ctrl.initPostgresRoleWatcher()
 	ctrl.initPostgresRoleBindingWatcher()
 
-	ctrl.initMySQLRoleWatcher()
+	ctrl.initMysqlRoleWatcher()
+	ctrl.initMysqlRoleBindingWatcher()
 
 	return ctrl, nil
 }

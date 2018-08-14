@@ -427,12 +427,36 @@ spec:
           - creationStatements
         status:
           properties:
+            conditions:
+              description: Represents the latest available observations of a PostgresRoleBinding
+                current state.
+              items:
+                description: PostgresRoleCondition describes the state of a PostgresRole
+                  at a certain point.
+                properties:
+                  message:
+                    description: A human readable message indicating details about
+                      the transition.
+                    type: string
+                  reason:
+                    description: The reason for the condition's.
+                    type: string
+                  status:
+                    description: Status of the condition, one of True, False, Unknown.
+                    type: string
+                  type:
+                    description: Type of PostgresRole condition.
+                    type: string
+              type: array
             observedGeneration:
               description: observedGeneration is the most recent generation observed
                 for this PostgresROle. It corresponds to the PostgresROle's generation,
                 which is updated on mutation by the API Server.
               format: int64
               type: integer
+            phase:
+              description: Specifies the phase of the PostgresRole
+              type: string
   version: v1alpha1
   versions:
   - name: v1alpha1

@@ -26,6 +26,14 @@ type MysqlRoleListerExpansion interface{}
 // MysqlRoleNamespaceLister.
 type MysqlRoleNamespaceListerExpansion interface{}
 
+// MysqlRoleBindingListerExpansion allows custom methods to be added to
+// MysqlRoleBindingLister.
+type MysqlRoleBindingListerExpansion interface{}
+
+// MysqlRoleBindingNamespaceListerExpansion allows custom methods to be added to
+// MysqlRoleBindingNamespaceLister.
+type MysqlRoleBindingNamespaceListerExpansion interface{}
+
 // PostgresRoleListerExpansion allows custom methods to be added to
 // PostgresRoleLister.
 type PostgresRoleListerExpansion interface{}

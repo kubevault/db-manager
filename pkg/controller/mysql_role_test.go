@@ -221,14 +221,14 @@ func TestUserManagerController_reconcileMysqlRole(t *testing.T) {
 		},
 		{
 			testName:           "update role, successfully updated database role",
-			mRole:              func(p api.MysqlRole) api.MysqlRole { p.Generation = 2; return p }(mRole),
+			mRole:              func(p api.MysqlRole) api.MysqlRole { p.Generation = 2; p.Status.ObservedGeneration = 1; return p }(mRole),
 			dbRClient:          &fakeDRole{},
 			expectedErr:        false,
 			hasStatusCondition: false,
 		},
 		{
 			testName: "update role, failed to update database role",
-			mRole:    func(p api.MysqlRole) api.MysqlRole { p.Generation = 2; return p }(mRole),
+			mRole:    func(p api.MysqlRole) api.MysqlRole { p.Generation = 2; p.Status.ObservedGeneration = 1; return p }(mRole),
 			dbRClient: &fakeDRole{
 				errorOccurredInCreateRole: true,
 			},
@@ -245,7 +245,7 @@ func TestUserManagerController_reconcileMysqlRole(t *testing.T) {
 			}
 
 			_, err := c.dbClient.AuthorizationV1alpha1().MysqlRoles(test.mRole.Namespace).Create(&test.mRole)
-			if assert.Nil(t, err) {
+			if !assert.Nil(t, err) {
 				return
 			}
 

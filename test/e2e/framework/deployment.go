@@ -4,6 +4,7 @@ import (
 	. "github.com/onsi/gomega"
 	apps "k8s.io/api/apps/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kerr "k8s.io/apimachinery/pkg/api/errors"
 )
 
 func (f *Framework) CreateDeployment(obj apps.Deployment) (*apps.Deployment, error) {
@@ -11,6 +12,10 @@ func (f *Framework) CreateDeployment(obj apps.Deployment) (*apps.Deployment, err
 }
 
 func (f *Framework) DeleteDeployment(name, namespace string) error {
+	_, err := f.KubeClient.AppsV1().Deployments(namespace).Get(name, metav1.GetOptions{})
+	if kerr.IsNotFound(err) {
+		return nil
+	}
 	return f.KubeClient.AppsV1beta1().Deployments(namespace).Delete(name, deleteInBackground())
 }
 
