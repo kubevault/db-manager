@@ -28,6 +28,10 @@ type FakeAuthorizationV1alpha1 struct {
 	*testing.Fake
 }
 
+func (c *FakeAuthorizationV1alpha1) MysqlRoles(namespace string) v1alpha1.MysqlRoleInterface {
+	return &FakeMysqlRoles{c, namespace}
+}
+
 func (c *FakeAuthorizationV1alpha1) PostgresRoles(namespace string) v1alpha1.PostgresRoleInterface {
 	return &FakePostgresRoles{c, namespace}
 }

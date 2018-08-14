@@ -33,6 +33,10 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 	return map[string]common.OpenAPIDefinition{
 		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.DatabaseSpec":                 schema_user_manager_apis_authorization_v1alpha1_DatabaseSpec(ref),
 		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.LeaseData":                    schema_user_manager_apis_authorization_v1alpha1_LeaseData(ref),
+		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRole":                    schema_user_manager_apis_authorization_v1alpha1_MysqlRole(ref),
+		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleList":                schema_user_manager_apis_authorization_v1alpha1_MysqlRoleList(ref),
+		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleSpec":                schema_user_manager_apis_authorization_v1alpha1_MysqlRoleSpec(ref),
+		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleStatus":              schema_user_manager_apis_authorization_v1alpha1_MysqlRoleStatus(ref),
 		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.PostgresRole":                 schema_user_manager_apis_authorization_v1alpha1_PostgresRole(ref),
 		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.PostgresRoleBinding":          schema_user_manager_apis_authorization_v1alpha1_PostgresRoleBinding(ref),
 		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.PostgresRoleBindingCondition": schema_user_manager_apis_authorization_v1alpha1_PostgresRoleBindingCondition(ref),
@@ -309,6 +313,13 @@ func schema_user_manager_apis_authorization_v1alpha1_DatabaseSpec(ref common.Ref
 							Format:      "",
 						},
 					},
+					"pluginName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specifies the name of the plugin to use for this connection. Default plugin:\n\t- for postgres: postgresql-database-plugin\n - for mysql: mysql-database-plugin",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"connectionUrl": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Specifies the PostgreSQL DSN. This field can be templated and supports passing the username and password parameters in the following format {{field_name}}. A templated connection URL is required when using root credential rotation. e.g. postgresql://{{username}}:{{password}}@localhost:5432/postgres?sslmode=disable",
@@ -382,6 +393,187 @@ func schema_user_manager_apis_authorization_v1alpha1_LeaseData(ref common.Refere
 					"renewDeadline": {
 						SchemaProps: spec.SchemaProps{
 							Description: "lease renew deadline in Unix time",
+							Type:        []string{"integer"},
+							Format:      "int64",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{},
+	}
+}
+
+func schema_user_manager_apis_authorization_v1alpha1_MysqlRole(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MysqlRole",
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleSpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleSpec", "github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_user_manager_apis_authorization_v1alpha1_MysqlRoleList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+						},
+					},
+					"items": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Items is a list of MySQLRole objects",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRole"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRole", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+	}
+}
+
+func schema_user_manager_apis_authorization_v1alpha1_MysqlRoleSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MysqlRoleSpec contains connection information, mysql role info etc",
+				Properties: map[string]spec.Schema{
+					"provider": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.ProviderSpec"),
+						},
+					},
+					"database": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.DatabaseSpec"),
+						},
+					},
+					"dbName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "The name of the database connection to use for this role.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"defaultTTL": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specifies the TTL for the leases associated with this role. Accepts time suffixed strings (\"1h\") or an integer number of seconds. Defaults to system/engine default TTL time",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"maxTTL": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specifies the maximum TTL for the leases associated with this role. Accepts time suffixed strings (\"1h\") or an integer number of seconds. Defaults to system/engine default TTL time.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"creationStatements": {
+						SchemaProps: spec.SchemaProps{
+							Description: "https://www.vaultproject.io/api/secret/databases/mysql-maria.html#creation_statements Specifies the database statements executed to create and configure a user.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
+					"revocationStatements": {
+						SchemaProps: spec.SchemaProps{
+							Description: "https://www.vaultproject.io/api/secret/databases/mysql-maria.html#revocation_statements Specifies the database statements to be executed to revoke a user.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"provider", "dbName", "creationStatements"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/kubedb/user-manager/apis/authorization/v1alpha1.DatabaseSpec", "github.com/kubedb/user-manager/apis/authorization/v1alpha1.ProviderSpec"},
+	}
+}
+
+func schema_user_manager_apis_authorization_v1alpha1_MysqlRoleStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Properties: map[string]spec.Schema{
+					"observedGeneration": {
+						SchemaProps: spec.SchemaProps{
+							Description: "observedGeneration is the most recent generation observed for this PostgresROle. It corresponds to the PostgresROle's generation, which is updated on mutation by the API Server.",
 							Type:        []string{"integer"},
 							Format:      "int64",
 						},

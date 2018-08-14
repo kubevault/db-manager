@@ -53,6 +53,8 @@ func (f *genericInformer) Lister() cache.GenericLister {
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
 	// Group=authorization.kubedb.com, Version=v1alpha1
+	case v1alpha1.SchemeGroupVersion.WithResource("mysqlroles"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Authorization().V1alpha1().MysqlRoles().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("postgresroles"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Authorization().V1alpha1().PostgresRoles().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("postgresrolebindings"):

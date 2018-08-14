@@ -18,6 +18,14 @@ limitations under the License.
 
 package v1alpha1
 
+// MysqlRoleListerExpansion allows custom methods to be added to
+// MysqlRoleLister.
+type MysqlRoleListerExpansion interface{}
+
+// MysqlRoleNamespaceListerExpansion allows custom methods to be added to
+// MysqlRoleNamespaceLister.
+type MysqlRoleNamespaceListerExpansion interface{}
+
 // PostgresRoleListerExpansion allows custom methods to be added to
 // PostgresRoleLister.
 type PostgresRoleListerExpansion interface{}

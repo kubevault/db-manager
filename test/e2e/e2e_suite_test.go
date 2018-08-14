@@ -54,7 +54,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	By("Using test namespace " + root.Namespace() + "...")
 
-	By("Deploying postgres, vault...")
+	By("Deploying postgres, mysql, vault...")
 	err = root.InitialSetup()
 	Expect(err).NotTo(HaveOccurred())
 

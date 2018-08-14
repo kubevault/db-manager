@@ -8,10 +8,8 @@ import (
 	"github.com/kubedb/user-manager/test/e2e/framework"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	kerrors "k8s.io/apimachinery/pkg/api/errors"
-	//corev1 "k8s.io/api/core/v1"
-	//"k8s.io/apimachinery/pkg/labels"
 	rbacv1 "k8s.io/api/rbac/v1"
+	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

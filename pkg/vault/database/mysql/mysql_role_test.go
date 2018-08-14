@@ -1,4 +1,4 @@
-package postgres
+package mysql
 
 import (
 	"encoding/json"
@@ -18,7 +18,7 @@ import (
 func setupVaultServer() *httptest.Server {
 	m := pat.New()
 
-	m.Post("/v1/database/config/postgres", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	m.Post("/v1/database/config/mysql", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 		var data interface{}
 		err := json.NewDecoder(r.Body).Decode(&data)
@@ -57,7 +57,7 @@ func setupVaultServer() *httptest.Server {
 			w.WriteHeader(http.StatusOK)
 		}
 	}))
-	m.Post("/v1/database/roles/pg-read", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	m.Post("/v1/database/roles/m-read", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 		var data interface{}
 		err := json.NewDecoder(r.Body).Decode(&data)
@@ -75,7 +75,7 @@ func setupVaultServer() *httptest.Server {
 			w.WriteHeader(http.StatusOK)
 		}
 	}))
-	m.Del("/v1/database/roles/pg-read", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	m.Del("/v1/database/roles/m-read", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
 	m.Del("/v1/database/roles/error", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -86,7 +86,7 @@ func setupVaultServer() *httptest.Server {
 	return httptest.NewServer(m)
 }
 
-func TestPostgresRole_CreateConfig(t *testing.T) {
+func TestMysqlRole_CreateConfig(t *testing.T) {
 	srv := setupVaultServer()
 	defer srv.Close()
 
@@ -98,18 +98,18 @@ func TestPostgresRole_CreateConfig(t *testing.T) {
 		return
 	}
 
-	pg := &PostgresRole{
-		pgRole: &api.PostgresRole{
+	mySql := &MysqlRole{
+		mRole: &api.MysqlRole{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "pg-role",
-				Namespace: "pg",
+				Name:      "m-role",
+				Namespace: "m",
 			},
-			Spec: api.PostgresRoleSpec{
+			Spec: api.MysqlRoleSpec{
 				Database: &api.DatabaseSpec{
-					Name:             "postgres",
+					Name:             "mysql",
 					AllowedRoles:     "*",
 					ConnectionUrl:    "hi.com",
-					CredentialSecret: "pg-cred",
+					CredentialSecret: "m-cred",
 				},
 			},
 		},
@@ -119,37 +119,37 @@ func TestPostgresRole_CreateConfig(t *testing.T) {
 
 	testData := []struct {
 		testName               string
-		pgClient               *PostgresRole
+		mClient                *MysqlRole
 		createCredentialSecret bool
 		expectedErr            bool
 	}{
 		{
 			testName:               "Create Config successful",
-			pgClient:               pg,
+			mClient:                mySql,
 			createCredentialSecret: true,
 			expectedErr:            false,
 		},
 		{
 			testName:               "Create Config failed, secret not found",
-			pgClient:               pg,
+			mClient:                mySql,
 			createCredentialSecret: false,
 			expectedErr:            true,
 		},
 		{
 			testName: "Create Config failed, connection_url not provided",
-			pgClient: func() *PostgresRole {
-				p := &PostgresRole{
-					pgRole: &api.PostgresRole{
+			mClient: func() *MysqlRole {
+				p := &MysqlRole{
+					mRole: &api.MysqlRole{
 						ObjectMeta: metav1.ObjectMeta{
-							Name:      "pg-role",
-							Namespace: "pg",
+							Name:      "m-role",
+							Namespace: "m",
 						},
-						Spec: api.PostgresRoleSpec{
+						Spec: api.MysqlRoleSpec{
 							Database: &api.DatabaseSpec{
-								Name:             "postgres",
+								Name:             "mysql",
 								AllowedRoles:     "*",
 								ConnectionUrl:    "",
-								CredentialSecret: "pg-cred",
+								CredentialSecret: "m-cred",
 							},
 						},
 					},
@@ -164,14 +164,14 @@ func TestPostgresRole_CreateConfig(t *testing.T) {
 
 	for _, test := range testData {
 		t.Run(test.testName, func(t *testing.T) {
-			p := test.pgClient
-			p.kubeClient = kfake.NewSimpleClientset()
+			m := test.mClient
+			m.kubeClient = kfake.NewSimpleClientset()
 
 			if test.createCredentialSecret {
-				_, err := p.kubeClient.CoreV1().Secrets(p.pgRole.Namespace).Create(&corev1.Secret{
+				_, err := m.kubeClient.CoreV1().Secrets(m.mRole.Namespace).Create(&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:      p.pgRole.Spec.Database.CredentialSecret,
-						Namespace: p.pgRole.Namespace,
+						Name:      m.mRole.Spec.Database.CredentialSecret,
+						Namespace: m.mRole.Namespace,
 					},
 					Data: map[string][]byte{
 						"username": []byte("nahid"),
@@ -182,7 +182,7 @@ func TestPostgresRole_CreateConfig(t *testing.T) {
 				assert.Nil(t, err)
 			}
 
-			err := p.CreateConfig()
+			err := m.CreateConfig()
 			if test.expectedErr {
 				assert.NotNil(t, err)
 			} else {
@@ -192,7 +192,7 @@ func TestPostgresRole_CreateConfig(t *testing.T) {
 	}
 }
 
-func TestPostgresRole_CreateRole(t *testing.T) {
+func TestMysqlRole_CreateRole(t *testing.T) {
 	srv := setupVaultServer()
 	defer srv.Close()
 
@@ -206,19 +206,19 @@ func TestPostgresRole_CreateRole(t *testing.T) {
 
 	testData := []struct {
 		testName    string
-		pgClient    *PostgresRole
+		mClient     *MysqlRole
 		expectedErr bool
 	}{
 		{
 			testName: "Create Role successful",
-			pgClient: &PostgresRole{
-				pgRole: &api.PostgresRole{
+			mClient: &MysqlRole{
+				mRole: &api.MysqlRole{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:      "pg-read",
-						Namespace: "pg",
+						Name:      "m-read",
+						Namespace: "m",
 					},
-					Spec: api.PostgresRoleSpec{
-						DBName:             "postgres",
+					Spec: api.MysqlRoleSpec{
+						DBName:             "mysql",
 						CreationStatements: []string{"create table"},
 					},
 				},
@@ -229,13 +229,13 @@ func TestPostgresRole_CreateRole(t *testing.T) {
 		},
 		{
 			testName: "Create Role failed",
-			pgClient: &PostgresRole{
-				pgRole: &api.PostgresRole{
+			mClient: &MysqlRole{
+				mRole: &api.MysqlRole{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:      "pg-read",
-						Namespace: "pg",
+						Name:      "m-read",
+						Namespace: "m",
 					},
-					Spec: api.PostgresRoleSpec{
+					Spec: api.MysqlRoleSpec{
 						CreationStatements: []string{"create table"},
 					},
 				},
@@ -248,9 +248,9 @@ func TestPostgresRole_CreateRole(t *testing.T) {
 
 	for _, test := range testData {
 		t.Run(test.testName, func(t *testing.T) {
-			p := test.pgClient
+			m := test.mClient
 
-			err := p.CreateRole()
+			err := m.CreateRole()
 			if test.expectedErr {
 				assert.NotNil(t, err)
 			} else {

@@ -18,6 +18,8 @@ limitations under the License.
 
 package v1alpha1
 
+type MysqlRoleExpansion interface{}
+
 type PostgresRoleExpansion interface{}
 
 type PostgresRoleBindingExpansion interface{}

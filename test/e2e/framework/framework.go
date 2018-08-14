@@ -29,6 +29,7 @@ type Framework struct {
 	ClientConfig *rest.Config
 
 	PostgresUrl string
+	MysqlUrl string
 	VaultUrl    string
 }
 
@@ -60,6 +61,11 @@ func (f *Framework) InitialSetup() error {
 		return err
 	}
 
+	f.MysqlUrl, err = f.DeployMysql()
+	if err != nil {
+		return err
+	}
+
 	f.VaultUrl, err = f.DeployVault()
 	if err != nil {
 		return err
@@ -72,6 +78,11 @@ func (f *Framework) InitialSetup() error {
 
 func (f *Framework) Cleanup() error {
 	err := f.DeletePostgres()
+	if err != nil {
+		return err
+	}
+
+	err = f.DeleteMysql()
 	if err != nil {
 		return err
 	}
