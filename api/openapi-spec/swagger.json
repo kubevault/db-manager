@@ -1900,8 +1900,8 @@
     }
   },
   "definitions": {
-    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.DatabaseSpec": {
-      "description": "vault doc:\n\t- https://www.vaultproject.io/api/secret/databases/postgresql.html\n\t- https://www.vaultproject.io/api/secret/databases/index.html\nDatabaseSpec contains connection url, connection settings, credential information",
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.DatabaseConfigForPostgres": {
+      "description": "https://www.vaultproject.io/api/secret/databases/index.html https://www.vaultproject.io/api/secret/databases/postgresql.html#configure-connection DatabaseConfigForPostgres contains database connection config",
       "required": [
         "name",
         "connectionUrl",
@@ -2183,7 +2183,7 @@
           }
         },
         "database": {
-          "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.DatabaseSpec"
+          "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.DatabaseConfigForPostgres"
         },
         "dbName": {
           "description": "The name of the database connection to use for this role.",

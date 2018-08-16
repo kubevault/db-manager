@@ -68,5 +68,7 @@ func (c *Config) New() (*UserManagerController, error) {
 	ctrl.initMysqlRoleWatcher()
 	ctrl.initMysqlRoleBindingWatcher()
 
+	ctrl.initMongodbRoleWatcher()
+
 	return ctrl, nil
 }

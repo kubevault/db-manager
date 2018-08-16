@@ -40,6 +40,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&MysqlRoleList{},
 		&MysqlRoleBinding{},
 		&MysqlRoleBindingList{},
+		&MongodbRole{},
+		&MongodbRoleList{},
 	)
 
 	scheme.AddKnownTypes(SchemeGroupVersion,

@@ -105,7 +105,7 @@ func TestMysqlRole_CreateConfig(t *testing.T) {
 				Namespace: "m",
 			},
 			Spec: api.MysqlRoleSpec{
-				Database: &api.DatabaseSpec{
+				Database: &api.DatabaseConfigForMysql{
 					Name:             "mysql",
 					AllowedRoles:     "*",
 					ConnectionUrl:    "hi.com",
@@ -145,7 +145,7 @@ func TestMysqlRole_CreateConfig(t *testing.T) {
 							Namespace: "m",
 						},
 						Spec: api.MysqlRoleSpec{
-							Database: &api.DatabaseSpec{
+							Database: &api.DatabaseConfigForMysql{
 								Name:             "mysql",
 								AllowedRoles:     "*",
 								ConnectionUrl:    "",

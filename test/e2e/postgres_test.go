@@ -178,7 +178,7 @@ var _ = Describe("Postgres role and role binding", func() {
 							SkipTLSVerification: true,
 						},
 					},
-					Database: &api.DatabaseSpec{
+					Database: &api.DatabaseConfigForPostgres{
 						Name:             "postgres-test1",
 						CredentialSecret: framework.PostgresCredentialSecret,
 						ConnectionUrl:    fmt.Sprintf("postgresql://{{username}}:{{password}}@%s/postgres?sslmode=disable", f.PostgresUrl),
@@ -261,7 +261,7 @@ var _ = Describe("Postgres role and role binding", func() {
 							SkipTLSVerification: true,
 						},
 					},
-					Database: &api.DatabaseSpec{
+					Database: &api.DatabaseConfigForPostgres{
 						Name:             "postgres-test1",
 						CredentialSecret: framework.PostgresCredentialSecret,
 						ConnectionUrl:    fmt.Sprintf("postgresql://{{username}}:{{password}}@%s/postgres?sslmode=disable", f.PostgresUrl),

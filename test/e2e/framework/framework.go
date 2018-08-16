@@ -10,6 +10,7 @@ import (
 	"k8s.io/client-go/rest"
 	ka "k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset"
 	"fmt"
+	aggregator "github.com/appscode/go/util/errors"
 )
 
 const (
@@ -30,6 +31,7 @@ type Framework struct {
 
 	PostgresUrl string
 	MysqlUrl string
+	MongodbUrl string
 	VaultUrl    string
 }
 
@@ -66,6 +68,11 @@ func (f *Framework) InitialSetup() error {
 		return err
 	}
 
+	f.MongodbUrl, err = f.DeployMongodb()
+	if err != nil {
+		return err
+	}
+
 	f.VaultUrl, err = f.DeployVault()
 	if err != nil {
 		return err
@@ -77,19 +84,30 @@ func (f *Framework) InitialSetup() error {
 }
 
 func (f *Framework) Cleanup() error {
+	errs := []error{}
+
 	err := f.DeletePostgres()
 	if err != nil {
-		return err
+		errs = append(errs, err)
 	}
 
 	err = f.DeleteMysql()
 	if err != nil {
-		return err
+		errs = append(errs, err)
+	}
+
+	err = f.DeleteMongodb()
+	if err != nil {
+		errs = append(errs, err)
 	}
 
 	err = f.DeleteVault()
 	if err != nil {
-		return err
+		errs = append(errs, err)
+	}
+
+	if len(errs) != 0 {
+		return aggregator.NewAggregate(errs)
 	}
 	return nil
 }
