@@ -1,4 +1,4 @@
-package mysql
+package mongodb
 
 import (
 	"fmt"
@@ -10,16 +10,16 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-type MysqlRole struct {
-	mRole        *api.MysqlRole
+type MongodbRole struct {
+	mdbRole      *api.MongodbRole
 	vaultClient  *vaultapi.Client
 	kubeClient   kubernetes.Interface
 	databasePath string
 }
 
-func NewMysqlRole(k kubernetes.Interface, v *vaultapi.Client, mRole *api.MysqlRole, databasePath string) *MysqlRole {
-	return &MysqlRole{
-		mRole:        mRole,
+func NewMongodbRole(k kubernetes.Interface, v *vaultapi.Client, mdbRole *api.MongodbRole, databasePath string) *MongodbRole {
+	return &MongodbRole{
+		mdbRole:      mdbRole,
 		vaultClient:  v,
 		kubeClient:   k,
 		databasePath: databasePath,
@@ -27,27 +27,32 @@ func NewMysqlRole(k kubernetes.Interface, v *vaultapi.Client, mRole *api.MysqlRo
 }
 
 // https://www.vaultproject.io/api/secret/databases/index.html#configure-connection
-// https:https://www.vaultproject.io/api/secret/databases/mysql-maria.html#configure-connection
+// https://www.vaultproject.io/api/secret/databases/mongodb.html#configure-connection
 //
 // CreateConfig creates database configuration
-func (m *MysqlRole) CreateConfig() error {
-	if m.mRole.Spec.Database == nil {
+func (m *MongodbRole) CreateConfig() error {
+	if m.mdbRole.Spec.Database == nil {
 		return errors.New("spec.database is not provided")
 	}
 
-	cfg := m.mRole.Spec.Database
-	ns := m.mRole.Namespace
+	cfg := m.mdbRole.Spec.Database
+	ns := m.mdbRole.Namespace
 
 	path := fmt.Sprintf("/v1/%s/config/%s", m.databasePath, cfg.Name)
 	req := m.vaultClient.NewRequest("POST", path)
+
 	payload := map[string]interface{}{
-		"plugin_name":    "mysql-database-plugin",
+		"plugin_name":    "mongodb-database-plugin",
 		"allowed_roles":  cfg.AllowedRoles,
 		"connection_url": cfg.ConnectionUrl,
 	}
 
 	if cfg.PluginName != "" {
 		payload["plugin_name"] = cfg.PluginName
+	}
+
+	if cfg.WriteConcern != "" {
+		payload["write_concern"] = cfg.WriteConcern
 	}
 
 	sr, err := m.kubeClient.CoreV1().Secrets(ns).Get(cfg.CredentialSecret, metav1.GetOptions{})
@@ -57,16 +62,6 @@ func (m *MysqlRole) CreateConfig() error {
 
 	payload["username"] = string(sr.Data["username"])
 	payload["password"] = string(sr.Data["password"])
-
-	if cfg.MaxOpenConnections > 0 {
-		payload["max_open_connections"] = cfg.MaxOpenConnections
-	}
-	if cfg.MaxIdleConnections > 0 {
-		payload["max_idle_connections"] = cfg.MaxIdleConnections
-	}
-	if cfg.MaxConnectionLifetime != "" {
-		payload["max_connection_lifetime"] = cfg.MaxConnectionLifetime
-	}
 
 	err = req.SetJSONBody(payload)
 	if err != nil {
@@ -83,9 +78,9 @@ func (m *MysqlRole) CreateConfig() error {
 // https://www.vaultproject.io/api/secret/databases/index.html#create-role
 //
 // CreateRole creates role
-func (m *MysqlRole) CreateRole() error {
-	name := m.mRole.Name
-	pg := m.mRole.Spec
+func (m *MongodbRole) CreateRole() error {
+	name := m.mdbRole.Name
+	pg := m.mdbRole.Spec
 
 	path := fmt.Sprintf("/v1/%s/roles/%s", m.databasePath, name)
 	req := m.vaultClient.NewRequest("POST", path)

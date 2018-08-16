@@ -18,6 +18,14 @@ limitations under the License.
 
 package v1alpha1
 
+// MongodbRoleListerExpansion allows custom methods to be added to
+// MongodbRoleLister.
+type MongodbRoleListerExpansion interface{}
+
+// MongodbRoleNamespaceListerExpansion allows custom methods to be added to
+// MongodbRoleNamespaceLister.
+type MongodbRoleNamespaceListerExpansion interface{}
+
 // MysqlRoleListerExpansion allows custom methods to be added to
 // MysqlRoleLister.
 type MysqlRoleListerExpansion interface{}

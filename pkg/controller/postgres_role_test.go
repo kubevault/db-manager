@@ -75,7 +75,7 @@ func TestUserManagerController_reconcilePostgresRole(t *testing.T) {
 			Generation: 0,
 		},
 		Spec: api.PostgresRoleSpec{
-			Database: &api.DatabaseSpec{
+			Database: &api.DatabaseConfigForPostgres{
 				Name: "test",
 			},
 			Provider: &api.ProviderSpec{

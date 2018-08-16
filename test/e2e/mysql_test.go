@@ -174,7 +174,7 @@ var _ = Describe("Mysql role and role binding", func() {
 							SkipTLSVerification: true,
 						},
 					},
-					Database: &api.DatabaseSpec{
+					Database: &api.DatabaseConfigForMysql{
 						Name:             "mysql-test1",
 						CredentialSecret: framework.MysqlCredentialSecret,
 						ConnectionUrl:    fmt.Sprintf("{{username}}:{{password}}@tcp(%s)/", f.MysqlUrl),
@@ -257,7 +257,7 @@ var _ = Describe("Mysql role and role binding", func() {
 							SkipTLSVerification: true,
 						},
 					},
-					Database: &api.DatabaseSpec{
+					Database: &api.DatabaseConfigForMysql{
 						Name:             "mysql-test1",
 						PluginName: "mysql-rds-database-plugin",
 						CredentialSecret: framework.MysqlCredentialSecret,

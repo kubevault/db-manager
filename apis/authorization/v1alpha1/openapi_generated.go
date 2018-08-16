@@ -31,8 +31,15 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.DatabaseSpec":                 schema_user_manager_apis_authorization_v1alpha1_DatabaseSpec(ref),
+		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.DatabaseConfigForMongodb":     schema_user_manager_apis_authorization_v1alpha1_DatabaseConfigForMongodb(ref),
+		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.DatabaseConfigForMysql":       schema_user_manager_apis_authorization_v1alpha1_DatabaseConfigForMysql(ref),
+		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.DatabaseConfigForPostgres":    schema_user_manager_apis_authorization_v1alpha1_DatabaseConfigForPostgres(ref),
 		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.LeaseData":                    schema_user_manager_apis_authorization_v1alpha1_LeaseData(ref),
+		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRole":                  schema_user_manager_apis_authorization_v1alpha1_MongodbRole(ref),
+		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRoleCondition":         schema_user_manager_apis_authorization_v1alpha1_MongodbRoleCondition(ref),
+		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRoleList":              schema_user_manager_apis_authorization_v1alpha1_MongodbRoleList(ref),
+		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRoleSpec":              schema_user_manager_apis_authorization_v1alpha1_MongodbRoleSpec(ref),
+		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRoleStatus":            schema_user_manager_apis_authorization_v1alpha1_MongodbRoleStatus(ref),
 		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRole":                    schema_user_manager_apis_authorization_v1alpha1_MysqlRole(ref),
 		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleBinding":             schema_user_manager_apis_authorization_v1alpha1_MysqlRoleBinding(ref),
 		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleBindingCondition":    schema_user_manager_apis_authorization_v1alpha1_MysqlRoleBindingCondition(ref),
@@ -307,11 +314,137 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 	}
 }
 
-func schema_user_manager_apis_authorization_v1alpha1_DatabaseSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_user_manager_apis_authorization_v1alpha1_DatabaseConfigForMongodb(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "vault doc:\n\t- https://www.vaultproject.io/api/secret/databases/postgresql.html\n\t- https://www.vaultproject.io/api/secret/databases/index.html\nDatabaseSpec contains connection url, connection settings, credential information",
+				Description: "https://www.vaultproject.io/api/secret/databases/index.html https://www.vaultproject.io/api/secret/databases/mongodb.html#configure-connection DatabaseConfigForMongodb contains database connection config",
+				Properties: map[string]spec.Schema{
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specifies the name for this database connection",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"pluginName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specifies the name of the plugin to use for this connection. Default plugin:\n\t- for postgres: postgresql-database-plugin\n - for mysql: mysql-database-plugin",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"connectionUrl": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specifies the PostgreSQL DSN. This field can be templated and supports passing the username and password parameters in the following format {{field_name}}. A templated connection URL is required when using root credential rotation. e.g. postgresql://{{username}}:{{password}}@localhost:5432/postgres?sslmode=disable",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"credentialSecret": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name of secret containing the username and password secret data:\n\t- username: <value>\n\t- password: <value>",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"allowedRoles": {
+						SchemaProps: spec.SchemaProps{
+							Description: "List of the roles allowed to use this connection. Defaults to empty (no roles), if contains a \"*\" any role can use this connection.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"writeConcern": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specifies the MongoDB write concern. This is set for the entirety of the session, maintained for the lifecycle of the plugin process.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"name", "connectionUrl", "credentialSecret"},
+			},
+		},
+		Dependencies: []string{},
+	}
+}
+
+func schema_user_manager_apis_authorization_v1alpha1_DatabaseConfigForMysql(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "https://www.vaultproject.io/api/secret/databases/index.html https://www.vaultproject.io/api/secret/databases/mysql-maria.html#configure-connection DatabaseConfigForMysql contains database connection config",
+				Properties: map[string]spec.Schema{
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specifies the name for this database connection",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"pluginName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specifies the name of the plugin to use for this connection. Default plugin:\n\t- for postgres: postgresql-database-plugin\n - for mysql: mysql-database-plugin",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"connectionUrl": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specifies the PostgreSQL DSN. This field can be templated and supports passing the username and password parameters in the following format {{field_name}}. A templated connection URL is required when using root credential rotation. e.g. postgresql://{{username}}:{{password}}@localhost:5432/postgres?sslmode=disable",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"credentialSecret": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name of secret containing the username and password secret data:\n\t- username: <value>\n\t- password: <value>",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"allowedRoles": {
+						SchemaProps: spec.SchemaProps{
+							Description: "List of the roles allowed to use this connection. Defaults to empty (no roles), if contains a \"*\" any role can use this connection.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"maxOpenConnections": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specifies the maximum number of open connections to the database.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"maxIdleConnections": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specifies the maximum number of idle connections to the database. A zero uses the value of max_open_connections and a negative value disables idle connections. If larger than max_open_connections it will be reduced to be equal.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"maxConnectionLifetime": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specifies the maximum amount of time a connection may be reused. If <= 0s connections are reused forever.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"name", "connectionUrl", "credentialSecret"},
+			},
+		},
+		Dependencies: []string{},
+	}
+}
+
+func schema_user_manager_apis_authorization_v1alpha1_DatabaseConfigForPostgres(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "https://www.vaultproject.io/api/secret/databases/index.html https://www.vaultproject.io/api/secret/databases/postgresql.html#configure-connection DatabaseConfigForPostgres contains database connection config",
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
@@ -408,6 +541,248 @@ func schema_user_manager_apis_authorization_v1alpha1_LeaseData(ref common.Refere
 			},
 		},
 		Dependencies: []string{},
+	}
+}
+
+func schema_user_manager_apis_authorization_v1alpha1_MongodbRole(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MongodbRole",
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRoleSpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRoleStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRoleSpec", "github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRoleStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_user_manager_apis_authorization_v1alpha1_MongodbRoleCondition(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MongodbRoleCondition describes the state of a MongodbRole at a certain point.",
+				Properties: map[string]spec.Schema{
+					"type": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Type of MongodbRole condition.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Status of the condition, one of True, False, Unknown.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"reason": {
+						SchemaProps: spec.SchemaProps{
+							Description: "The reason for the condition's.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"message": {
+						SchemaProps: spec.SchemaProps{
+							Description: "A human readable message indicating details about the transition.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{},
+	}
+}
+
+func schema_user_manager_apis_authorization_v1alpha1_MongodbRoleList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+						},
+					},
+					"items": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Items is a list of MongodbRole objects",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRole"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRole", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+	}
+}
+
+func schema_user_manager_apis_authorization_v1alpha1_MongodbRoleSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MongodbRoleSpec contains connection information, Mongodb role info etc",
+				Properties: map[string]spec.Schema{
+					"provider": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.ProviderSpec"),
+						},
+					},
+					"database": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.DatabaseConfigForMongodb"),
+						},
+					},
+					"dbName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "The name of the database connection to use for this role.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"defaultTTL": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specifies the TTL for the leases associated with this role. Accepts time suffixed strings (\"1h\") or an integer number of seconds. Defaults to system/engine default TTL time",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"maxTTL": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specifies the maximum TTL for the leases associated with this role. Accepts time suffixed strings (\"1h\") or an integer number of seconds. Defaults to system/engine default TTL time.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"creationStatements": {
+						SchemaProps: spec.SchemaProps{
+							Description: "https://www.vaultproject.io/api/secret/databases/Mongodb-maria.html#creation_statements Specifies the database statements executed to create and configure a user.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
+					"revocationStatements": {
+						SchemaProps: spec.SchemaProps{
+							Description: "https://www.vaultproject.io/api/secret/databases/Mongodb-maria.html#revocation_statements Specifies the database statements to be executed to revoke a user.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"provider", "dbName", "creationStatements"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/kubedb/user-manager/apis/authorization/v1alpha1.DatabaseConfigForMongodb", "github.com/kubedb/user-manager/apis/authorization/v1alpha1.ProviderSpec"},
+	}
+}
+
+func schema_user_manager_apis_authorization_v1alpha1_MongodbRoleStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Properties: map[string]spec.Schema{
+					"phase": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"observedGeneration": {
+						SchemaProps: spec.SchemaProps{
+							Description: "observedGeneration is the most recent generation observed for this MongodbRole. It corresponds to the MongodbRole's generation, which is updated on mutation by the API Server.",
+							Type:        []string{"integer"},
+							Format:      "int64",
+						},
+					},
+					"conditions": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Represents the latest available observations of a MongodbRole current state.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRoleCondition"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRoleCondition"},
 	}
 }
 
@@ -766,7 +1141,7 @@ func schema_user_manager_apis_authorization_v1alpha1_MysqlRoleSpec(ref common.Re
 					},
 					"database": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.DatabaseSpec"),
+							Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.DatabaseConfigForMysql"),
 						},
 					},
 					"dbName": {
@@ -823,7 +1198,7 @@ func schema_user_manager_apis_authorization_v1alpha1_MysqlRoleSpec(ref common.Re
 			},
 		},
 		Dependencies: []string{
-			"github.com/kubedb/user-manager/apis/authorization/v1alpha1.DatabaseSpec", "github.com/kubedb/user-manager/apis/authorization/v1alpha1.ProviderSpec"},
+			"github.com/kubedb/user-manager/apis/authorization/v1alpha1.DatabaseConfigForMysql", "github.com/kubedb/user-manager/apis/authorization/v1alpha1.ProviderSpec"},
 	}
 }
 
@@ -1221,7 +1596,7 @@ func schema_user_manager_apis_authorization_v1alpha1_PostgresRoleSpec(ref common
 					},
 					"database": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.DatabaseSpec"),
+							Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.DatabaseConfigForPostgres"),
 						},
 					},
 					"dbName": {
@@ -1306,7 +1681,7 @@ func schema_user_manager_apis_authorization_v1alpha1_PostgresRoleSpec(ref common
 			},
 		},
 		Dependencies: []string{
-			"github.com/kubedb/user-manager/apis/authorization/v1alpha1.DatabaseSpec", "github.com/kubedb/user-manager/apis/authorization/v1alpha1.ProviderSpec"},
+			"github.com/kubedb/user-manager/apis/authorization/v1alpha1.DatabaseConfigForPostgres", "github.com/kubedb/user-manager/apis/authorization/v1alpha1.ProviderSpec"},
 	}
 }
 

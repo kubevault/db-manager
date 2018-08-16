@@ -28,6 +28,10 @@ type FakeAuthorizationV1alpha1 struct {
 	*testing.Fake
 }
 
+func (c *FakeAuthorizationV1alpha1) MongodbRoles(namespace string) v1alpha1.MongodbRoleInterface {
+	return &FakeMongodbRoles{c, namespace}
+}
+
 func (c *FakeAuthorizationV1alpha1) MysqlRoles(namespace string) v1alpha1.MysqlRoleInterface {
 	return &FakeMysqlRoles{c, namespace}
 }

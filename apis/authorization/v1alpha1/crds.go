@@ -120,3 +120,31 @@ func (m MysqlRoleBinding) CustomResourceDefinition() *apiextensions.CustomResour
 func (m MysqlRoleBinding) IsValid() error {
 	return nil
 }
+
+func (m MongodbRole) CustomResourceDefinition() *apiextensions.CustomResourceDefinition {
+	return crdutils.NewCustomResourceDefinition(crdutils.Config{
+		Group:         SchemeGroupVersion.Group,
+		Plural:        ResourceMongodbRoles,
+		Singular:      ResourceMongodbRole,
+		Kind:          ResourceKindMongodbRole,
+		ResourceScope: string(apiextensions.NamespaceScoped),
+		Versions: []apiextensions.CustomResourceDefinitionVersion{
+			{
+				Name:    SchemeGroupVersion.Version,
+				Served:  true,
+				Storage: true,
+			},
+		},
+		Labels: crdutils.Labels{
+			LabelsMap: map[string]string{"app": "user-manager"},
+		},
+		SpecDefinitionName:      "github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRole",
+		EnableValidation:        true,
+		GetOpenAPIDefinitions:   GetOpenAPIDefinitions,
+		EnableStatusSubresource: EnableStatusSubresource,
+	})
+}
+
+func (m MongodbRole) IsValid() error {
+	return nil
+}

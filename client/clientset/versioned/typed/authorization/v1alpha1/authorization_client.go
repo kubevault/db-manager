@@ -27,6 +27,7 @@ import (
 
 type AuthorizationV1alpha1Interface interface {
 	RESTClient() rest.Interface
+	MongodbRolesGetter
 	MysqlRolesGetter
 	MysqlRoleBindingsGetter
 	PostgresRolesGetter
@@ -36,6 +37,10 @@ type AuthorizationV1alpha1Interface interface {
 // AuthorizationV1alpha1Client is used to interact with features provided by the authorization.kubedb.com group.
 type AuthorizationV1alpha1Client struct {
 	restClient rest.Interface
+}
+
+func (c *AuthorizationV1alpha1Client) MongodbRoles(namespace string) MongodbRoleInterface {
+	return newMongodbRoles(c, namespace)
 }
 
 func (c *AuthorizationV1alpha1Client) MysqlRoles(namespace string) MysqlRoleInterface {

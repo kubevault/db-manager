@@ -315,9 +315,9 @@ spec:
                 type: string
               type: array
             database:
-              description: "vault doc:\n\t- https://www.vaultproject.io/api/secret/databases/postgresql.html\n\t-
-                https://www.vaultproject.io/api/secret/databases/index.html\nDatabaseSpec
-                contains connection url, connection settings, credential information"
+              description: https://www.vaultproject.io/api/secret/databases/index.html
+                https://www.vaultproject.io/api/secret/databases/postgresql.html#configure-connection
+                DatabaseConfigForPostgres contains database connection config
               properties:
                 allowedRoles:
                   description: List of the roles allowed to use this connection. Defaults

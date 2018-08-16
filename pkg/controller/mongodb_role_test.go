@@ -17,7 +17,7 @@ import (
 	kfake "k8s.io/client-go/kubernetes/fake"
 )
 
-func setupVaultServerForMysql() *httptest.Server {
+func setupVaultServerForMongodb() *httptest.Server {
 	m := pat.New()
 
 	m.Del("/v1/database/roles/m-read", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -31,8 +31,8 @@ func setupVaultServerForMysql() *httptest.Server {
 	return httptest.NewServer(m)
 }
 
-func TestUserManagerController_runMysqlFinalizer(t *testing.T) {
-	srv := setupVaultServerForMysql()
+func TestUserManagerController_runMongodbFinalizer(t *testing.T) {
+	srv := setupVaultServerForMongodb()
 	defer srv.Close()
 
 	vaultCredentialSecret := &corev1.Secret{
@@ -61,7 +61,7 @@ func TestUserManagerController_runMysqlFinalizer(t *testing.T) {
 	testData := []struct {
 		testName            string
 		userManger          *UserManagerController
-		mRole               *api.MysqlRole
+		mRole               *api.MongodbRole
 		createVaultCred     bool
 		timeout             time.Duration
 		interval            time.Duration
@@ -70,14 +70,14 @@ func TestUserManagerController_runMysqlFinalizer(t *testing.T) {
 		{
 			testName:   "remove finalizer",
 			userManger: userManager,
-			mRole: &api.MysqlRole{
+			mRole: &api.MongodbRole{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "m-read",
 					Finalizers: []string{
 						MysqlRoleFinalizer,
 					},
 				},
-				Spec: api.MysqlRoleSpec{
+				Spec: api.MongodbRoleSpec{
 					Provider: provider,
 				},
 			},
@@ -89,14 +89,14 @@ func TestUserManagerController_runMysqlFinalizer(t *testing.T) {
 		{
 			testName:   "run until timeout, remove finalizer",
 			userManger: userManager,
-			mRole: &api.MysqlRole{
+			mRole: &api.MongodbRole{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "m-read",
 					Finalizers: []string{
 						MysqlRoleFinalizer,
 					},
 				},
-				Spec: api.MysqlRoleSpec{
+				Spec: api.MongodbRoleSpec{
 					Provider: provider,
 				},
 			},
@@ -119,10 +119,10 @@ func TestUserManagerController_runMysqlFinalizer(t *testing.T) {
 				assert.Nil(t, err)
 			}
 
-			_, err := test.userManger.dbClient.AuthorizationV1alpha1().MysqlRoles(namespace).Create(test.mRole)
+			_, err := test.userManger.dbClient.AuthorizationV1alpha1().MongodbRoles(namespace).Create(test.mRole)
 			if assert.Nil(t, err) {
 				start := time.Now().Unix()
-				test.userManger.runMysqlRoleFinalizer(test.mRole, test.timeout, test.interval)
+				test.userManger.runMongodbRoleFinalizer(test.mRole, test.timeout, test.interval)
 
 				if test.finishBeforeTimeout {
 					assert.Condition(t, func() (success bool) {
@@ -133,7 +133,7 @@ func TestUserManagerController_runMysqlFinalizer(t *testing.T) {
 					})
 
 					assert.Condition(t, func() (success bool) {
-						if _, ok := test.userManger.processingFinalizer[getMysqlRoleId(test.mRole)]; !ok {
+						if _, ok := test.userManger.processingFinalizer[getMongodbRoleId(test.mRole)]; !ok {
 							return true
 						}
 						return false
@@ -148,7 +148,7 @@ func TestUserManagerController_runMysqlFinalizer(t *testing.T) {
 					})
 
 					assert.Condition(t, func() (success bool) {
-						if _, ok := test.userManger.processingFinalizer[getMysqlRoleId(test.mRole)]; !ok {
+						if _, ok := test.userManger.processingFinalizer[getMongodbRoleId(test.mRole)]; !ok {
 							return true
 						}
 						return false
@@ -160,15 +160,15 @@ func TestUserManagerController_runMysqlFinalizer(t *testing.T) {
 	}
 }
 
-func TestUserManagerController_reconcileMysqlRole(t *testing.T) {
-	mRole := api.MysqlRole{
+func TestUserManagerController_reconcileMongodbRole(t *testing.T) {
+	mRole := api.MongodbRole{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:       "pg-role",
-			Namespace:  "pg",
+			Name:       "m-role",
+			Namespace:  "m",
 			Generation: 0,
 		},
-		Spec: api.MysqlRoleSpec{
-			Database: &api.DatabaseConfigForMysql{
+		Spec: api.MongodbRoleSpec{
+			Database: &api.DatabaseConfigForMongodb{
 				Name: "test",
 			},
 			Provider: &api.ProviderSpec{
@@ -180,7 +180,7 @@ func TestUserManagerController_reconcileMysqlRole(t *testing.T) {
 
 	testData := []struct {
 		testName           string
-		mRole              api.MysqlRole
+		mRole              api.MongodbRole
 		dbRClient          database.DatabaseRoleInterface
 		hasStatusCondition bool
 		expectedErr        bool
@@ -221,14 +221,14 @@ func TestUserManagerController_reconcileMysqlRole(t *testing.T) {
 		},
 		{
 			testName:           "update role, successfully updated database role",
-			mRole:              func(p api.MysqlRole) api.MysqlRole { p.Generation = 2; p.Status.ObservedGeneration = 1; return p }(mRole),
+			mRole:              func(p api.MongodbRole) api.MongodbRole { p.Generation = 2; p.Status.ObservedGeneration = 1; return p }(mRole),
 			dbRClient:          &fakeDRole{},
 			expectedErr:        false,
 			hasStatusCondition: false,
 		},
 		{
 			testName: "update role, failed to update database role",
-			mRole:    func(p api.MysqlRole) api.MysqlRole { p.Generation = 2; p.Status.ObservedGeneration = 1; return p }(mRole),
+			mRole:    func(p api.MongodbRole) api.MongodbRole { p.Generation = 2; p.Status.ObservedGeneration = 1; return p }(mRole),
 			dbRClient: &fakeDRole{
 				errorOccurredInCreateRole: true,
 			},
@@ -244,16 +244,16 @@ func TestUserManagerController_reconcileMysqlRole(t *testing.T) {
 				dbClient:   dbfake.NewSimpleClientset(),
 			}
 
-			_, err := c.dbClient.AuthorizationV1alpha1().MysqlRoles(test.mRole.Namespace).Create(&test.mRole)
+			_, err := c.dbClient.AuthorizationV1alpha1().MongodbRoles(test.mRole.Namespace).Create(&test.mRole)
 			if !assert.Nil(t, err) {
 				return
 			}
 
-			err = c.reconcileMysqlRole(test.dbRClient, &test.mRole)
+			err = c.reconcileMongodbRole(test.dbRClient, &test.mRole)
 			if test.expectedErr {
 				if assert.NotNil(t, err) {
 					if test.hasStatusCondition {
-						p, err2 := c.dbClient.AuthorizationV1alpha1().MysqlRoles(test.mRole.Namespace).Get(test.mRole.Name, metav1.GetOptions{})
+						p, err2 := c.dbClient.AuthorizationV1alpha1().MongodbRoles(test.mRole.Namespace).Get(test.mRole.Name, metav1.GetOptions{})
 						if assert.Nil(t, err2) {
 							assert.Condition(t, func() (success bool) {
 								if len(p.Status.Conditions) == 0 {
@@ -266,7 +266,7 @@ func TestUserManagerController_reconcileMysqlRole(t *testing.T) {
 				}
 			} else {
 				if assert.Nil(t, err) {
-					p, err2 := c.dbClient.AuthorizationV1alpha1().MysqlRoles(test.mRole.Namespace).Get(test.mRole.Name, metav1.GetOptions{})
+					p, err2 := c.dbClient.AuthorizationV1alpha1().MongodbRoles(test.mRole.Namespace).Get(test.mRole.Name, metav1.GetOptions{})
 					if assert.Nil(t, err2) {
 						assert.Condition(t, func() (success bool) {
 							if len(p.Status.Conditions) != 0 {

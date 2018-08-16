@@ -24,6 +24,8 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
+	// MongodbRoles returns a MongodbRoleInformer.
+	MongodbRoles() MongodbRoleInformer
 	// MysqlRoles returns a MysqlRoleInformer.
 	MysqlRoles() MysqlRoleInformer
 	// MysqlRoleBindings returns a MysqlRoleBindingInformer.
@@ -43,6 +45,11 @@ type version struct {
 // New returns a new Interface.
 func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakListOptions internalinterfaces.TweakListOptionsFunc) Interface {
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
+}
+
+// MongodbRoles returns a MongodbRoleInformer.
+func (v *version) MongodbRoles() MongodbRoleInformer {
+	return &mongodbRoleInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // MysqlRoles returns a MysqlRoleInformer.

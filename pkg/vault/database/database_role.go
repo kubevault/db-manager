@@ -6,6 +6,7 @@ import (
 	vaultapi "github.com/hashicorp/vault/api"
 	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
 	"github.com/kubedb/user-manager/pkg/vault"
+	"github.com/kubedb/user-manager/pkg/vault/database/mongodb"
 	"github.com/kubedb/user-manager/pkg/vault/database/mysql"
 	"github.com/kubedb/user-manager/pkg/vault/database/postgres"
 	"github.com/pkg/errors"
@@ -55,6 +56,28 @@ func NewDatabaseRoleForMysql(kClient kubernetes.Interface, role *api.MysqlRole) 
 
 	d := &DatabaseRole{
 		RoleInterface: mysql.NewMysqlRole(kClient, vClient, role, "database"),
+		path:          "database",
+		vaultClient:   vClient,
+	}
+
+	return d, nil
+}
+
+func NewDatabaseRoleForMongodb(kClient kubernetes.Interface, role *api.MongodbRole) (DatabaseRoleInterface, error) {
+	if role.Spec.Provider == nil {
+		return nil, errors.New("spec.provider is not provided")
+	}
+	if role.Spec.Provider.Vault == nil {
+		return nil, errors.New("spec.provider.vault is not provided")
+	}
+
+	vClient, err := vault.NewClient(kClient, role.Namespace, role.Spec.Provider.Vault)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create vault client")
+	}
+
+	d := &DatabaseRole{
+		RoleInterface: mongodb.NewMongodbRole(kClient, vClient, role, "database"),
 		path:          "database",
 		vaultClient:   vClient,
 	}

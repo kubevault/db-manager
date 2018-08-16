@@ -1,5 +1,5 @@
 hash: 8e0c5d8367c81ef91fe14ae70e8e676039da9931e69521951aafe88b8f6d3535
-updated: 2018-08-14T17:37:21.044742138+06:00
+updated: 2018-08-16T13:49:22.362525323+06:00
 imports:
 - name: bitbucket.org/ww/goautoneg
   version: 75cd24fc2f2c2a2088577d12123ddee5f54e0675
@@ -22,6 +22,7 @@ imports:
   - log/golog
   - runtime
   - types
+  - util/errors
   - version
 - name: github.com/appscode/go-notify
   version: 17078f08a5bafdaaa93a7bdef2d689326bd57b3a
@@ -33,7 +34,7 @@ imports:
   - admission/v1beta1
   - registry/admissionreview/v1beta1
 - name: github.com/appscode/kutil
-  version: b50ebf9375ccfa41b08350da68618fee6bc6de4b
+  version: 266e2ad77d953e86893aa1abba587d3f29bbdc92
   subpackages:
   - apiextensions/v1beta1
   - core/v1
