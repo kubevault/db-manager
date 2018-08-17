@@ -26,6 +26,10 @@ const (
 	ResourceKindMysqlRoleBinding = "MysqlRoleBinding"
 	ResourceMysqlRoleBinding     = "mysqlrolebinding"
 	ResourceMysqlRoleBindings    = "mysqlrolebindings"
+
+	ResourceKindMongodbRoleBinding = "MongodbRoleBinding"
+	ResourceMongodbRoleBinding     = "mongodbrolebinding"
+	ResourceMongodbRoleBindings    = "mongodbrolebindings"
 )
 
 // +genclient
@@ -453,8 +457,8 @@ type MysqlRoleBindingList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 
-	// Items is a list of PostgresRoleBinding objects
-	Items []PostgresRoleBinding `json:"items,omitempty"`
+	// Items is a list of MysqlRoleBinding objects
+	Items []MysqlRoleBinding `json:"items,omitempty"`
 }
 
 // +genclient
@@ -570,4 +574,67 @@ type MongodbRoleCondition struct {
 
 	// A human readable message indicating details about the transition.
 	Message string `json:"message,omitempty"`
+}
+
+// +genclient
+// +k8s:openapi-gen=true
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// MongodbRoleBinding binds mongodb credential to user
+type MongodbRoleBinding struct {
+	metav1.TypeMeta   `json:",inline,omitempty"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Spec              MongodbRoleBindingSpec   `json:"spec,omitempty"`
+	Status            MongodbRoleBindingStatus `json:"status,omitempty"`
+}
+
+type MongodbRoleBindingSpec struct {
+	// Specifies the name of the MongodbRole
+	RoleRef string `json:"roleRef"`
+
+	Subjects []rbacv1.Subject `json:"subjects"`
+
+	Store Store `json:"store"`
+}
+
+type MongodbRoleBindingPhase string
+
+type MongodbRoleBindingStatus struct {
+	// observedGeneration is the most recent generation observed for this MongodbRoleBinding. It corresponds to the
+	// MongodbRoleBinding's generation, which is updated on mutation by the API Server.
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
+	// contains lease info of the credentials
+	Lease LeaseData `json:"lease,omitempty"`
+
+	// Specifies the phase of the MongodbRoleBinding
+	Phase MongodbRoleBindingPhase `json:"phase,omitempty"`
+
+	// Represents the latest available observations of a MongodbRoleBinding current state.
+	Conditions []MongodbRoleBindingCondition `json:"conditions,omitempty"`
+}
+
+// MongodbRoleBindingCondition describes the state of a MongodbRoleBinding at a certain point.
+type MongodbRoleBindingCondition struct {
+	// Type of MongodbRoleBinding condition.
+	Type string `json:"type,omitempty"`
+
+	// Status of the condition, one of True, False, Unknown.
+	Status v1.ConditionStatus `json:"status,omitempty"`
+
+	// The reason for the condition's.
+	Reason string `json:"reason,omitempty"`
+
+	// A human readable message indicating details about the transition.
+	Message string `json:"message,omitempty"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type MongodbRoleBindingList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+
+	// Items is a list of MongodbRoleBinding objects
+	Items []MongodbRoleBinding `json:"items,omitempty"`
 }

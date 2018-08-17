@@ -26,6 +26,8 @@ import (
 type Interface interface {
 	// MongodbRoles returns a MongodbRoleInformer.
 	MongodbRoles() MongodbRoleInformer
+	// MongodbRoleBindings returns a MongodbRoleBindingInformer.
+	MongodbRoleBindings() MongodbRoleBindingInformer
 	// MysqlRoles returns a MysqlRoleInformer.
 	MysqlRoles() MysqlRoleInformer
 	// MysqlRoleBindings returns a MysqlRoleBindingInformer.
@@ -50,6 +52,11 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // MongodbRoles returns a MongodbRoleInformer.
 func (v *version) MongodbRoles() MongodbRoleInformer {
 	return &mongodbRoleInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// MongodbRoleBindings returns a MongodbRoleBindingInformer.
+func (v *version) MongodbRoleBindings() MongodbRoleBindingInformer {
+	return &mongodbRoleBindingInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // MysqlRoles returns a MysqlRoleInformer.

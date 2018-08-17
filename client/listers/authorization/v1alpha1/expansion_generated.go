@@ -26,6 +26,14 @@ type MongodbRoleListerExpansion interface{}
 // MongodbRoleNamespaceLister.
 type MongodbRoleNamespaceListerExpansion interface{}
 
+// MongodbRoleBindingListerExpansion allows custom methods to be added to
+// MongodbRoleBindingLister.
+type MongodbRoleBindingListerExpansion interface{}
+
+// MongodbRoleBindingNamespaceListerExpansion allows custom methods to be added to
+// MongodbRoleBindingNamespaceLister.
+type MongodbRoleBindingNamespaceListerExpansion interface{}
+
 // MysqlRoleListerExpansion allows custom methods to be added to
 // MysqlRoleLister.
 type MysqlRoleListerExpansion interface{}

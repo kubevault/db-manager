@@ -20,6 +20,8 @@ package v1alpha1
 
 type MongodbRoleExpansion interface{}
 
+type MongodbRoleBindingExpansion interface{}
+
 type MysqlRoleExpansion interface{}
 
 type MysqlRoleBindingExpansion interface{}

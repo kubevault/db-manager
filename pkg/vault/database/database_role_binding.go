@@ -8,6 +8,7 @@ import (
 	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
 	crd "github.com/kubedb/user-manager/client/clientset/versioned"
 	"github.com/kubedb/user-manager/pkg/vault"
+	"github.com/kubedb/user-manager/pkg/vault/database/mongodb"
 	"github.com/kubedb/user-manager/pkg/vault/database/mysql"
 	"github.com/kubedb/user-manager/pkg/vault/database/postgres"
 	"github.com/pkg/errors"
@@ -57,6 +58,27 @@ func NewDatabaseRoleBindingForMysql(k kubernetes.Interface, cr crd.Interface, ro
 	}
 
 	m := mysql.NewMysqlRoleBinding(k, v, roleBinding, "database")
+
+	return &DatabaseRoleBinding{
+		CredentialGetter: m,
+		kubeClient:       k,
+		vaultClient:      v,
+		path:             "database",
+	}, nil
+}
+
+func NewDatabaseRoleBindingForMongodb(k kubernetes.Interface, cr crd.Interface, roleBinding *api.MongodbRoleBinding) (DatabaseRoleBindingInterface, error) {
+	mRole, err := cr.AuthorizationV1alpha1().MongodbRoles(roleBinding.Namespace).Get(roleBinding.Spec.RoleRef, metav1.GetOptions{})
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to get mongodb role(%s/%s)", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+	}
+
+	v, err := vault.NewClient(k, roleBinding.Namespace, mRole.Spec.Provider.Vault)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to create vault client from mongodb role(%s/%s) spec.provider.vault", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+	}
+
+	m := mongodb.NewMongodbRoleBinding(k, v, roleBinding, "database")
 
 	return &DatabaseRoleBinding{
 		CredentialGetter: m,

@@ -28,6 +28,7 @@ import (
 type AuthorizationV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	MongodbRolesGetter
+	MongodbRoleBindingsGetter
 	MysqlRolesGetter
 	MysqlRoleBindingsGetter
 	PostgresRolesGetter
@@ -41,6 +42,10 @@ type AuthorizationV1alpha1Client struct {
 
 func (c *AuthorizationV1alpha1Client) MongodbRoles(namespace string) MongodbRoleInterface {
 	return newMongodbRoles(c, namespace)
+}
+
+func (c *AuthorizationV1alpha1Client) MongodbRoleBindings(namespace string) MongodbRoleBindingInterface {
+	return newMongodbRoleBindings(c, namespace)
 }
 
 func (c *AuthorizationV1alpha1Client) MysqlRoles(namespace string) MysqlRoleInterface {

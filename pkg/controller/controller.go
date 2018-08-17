@@ -55,6 +55,11 @@ type UserManagerController struct {
 	mongodbRoleInformer cache.SharedIndexInformer
 	mongodbRoleLister   dblisters.MongodbRoleLister
 
+	// MongodbRoleBinding
+	mongodbRoleBindingQueue    *queue.Worker
+	mongodbRoleBindingInformer cache.SharedIndexInformer
+	mongodbRoleBindingLister   dblisters.MongodbRoleBindingLister
+
 	// Contain the currently processing finalizer
 	processingFinalizer map[string]bool
 }
@@ -66,6 +71,7 @@ func (c *UserManagerController) ensureCustomResourceDefinitions() error {
 		api.MysqlRole{}.CustomResourceDefinition(),
 		api.MysqlRoleBinding{}.CustomResourceDefinition(),
 		api.MongodbRole{}.CustomResourceDefinition(),
+		api.MongodbRoleBinding{}.CustomResourceDefinition(),
 	}
 	return crdutils.RegisterCRDs(c.crdClient, crds)
 }
@@ -99,6 +105,7 @@ func (c *UserManagerController) RunInformers(stopCh <-chan struct{}) {
 	go c.mysqlRoleBindingQueue.Run(stopCh)
 
 	go c.mongodbRoleQueue.Run(stopCh)
+	go c.mongodbRoleBindingQueue.Run(stopCh)
 
 	go c.LeaseRenewer(c.LeaseRenewTime)
 
