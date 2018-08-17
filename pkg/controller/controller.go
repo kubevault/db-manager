@@ -31,34 +31,34 @@ type UserManagerController struct {
 	dbInformerFactory   dbinformers.SharedInformerFactory
 
 	// PostgresRole
-	postgresRoleQueue    *queue.Worker
-	postgresRoleInformer cache.SharedIndexInformer
-	postgresRoleLister   dblisters.PostgresRoleLister
+	pgRoleQueue    *queue.Worker
+	pgRoleInformer cache.SharedIndexInformer
+	pgRoleLister   dblisters.PostgresRoleLister
 
 	// PostgresRoleBinding
-	postgresRoleBindingQueue    *queue.Worker
-	postgresRoleBindingInformer cache.SharedIndexInformer
-	postgresRoleBindingLister   dblisters.PostgresRoleBindingLister
+	pgRoleBindingQueue    *queue.Worker
+	pgRoleBindingInformer cache.SharedIndexInformer
+	pgRoleBindingLister   dblisters.PostgresRoleBindingLister
 
 	// MysqlRole
-	mysqlRoleQueue    *queue.Worker
-	mysqlRoleInformer cache.SharedIndexInformer
-	mysqlRoleLister   dblisters.MysqlRoleLister
+	myRoleQueue    *queue.Worker
+	myRoleInformer cache.SharedIndexInformer
+	myRoleLister   dblisters.MysqlRoleLister
 
 	// MysqlRoleBinding
-	mysqlRoleBindingQueue    *queue.Worker
-	mysqlRoleBindingInformer cache.SharedIndexInformer
-	mysqlRoleBindingLister   dblisters.MysqlRoleBindingLister
+	myRoleBindingQueue    *queue.Worker
+	myRoleBindingInformer cache.SharedIndexInformer
+	myRoleBindingLister   dblisters.MysqlRoleBindingLister
 
 	// MongodbRole
-	mongodbRoleQueue    *queue.Worker
-	mongodbRoleInformer cache.SharedIndexInformer
-	mongodbRoleLister   dblisters.MongodbRoleLister
+	mgRoleQueue       *queue.Worker
+	mgRoleInformer    cache.SharedIndexInformer
+	mongodbRoleLister dblisters.MongodbRoleLister
 
 	// MongodbRoleBinding
-	mongodbRoleBindingQueue    *queue.Worker
-	mongodbRoleBindingInformer cache.SharedIndexInformer
-	mongodbRoleBindingLister   dblisters.MongodbRoleBindingLister
+	mgRoleBindingQueue    *queue.Worker
+	mgRoleBindingInformer cache.SharedIndexInformer
+	mgRoleBindingLister   dblisters.MongodbRoleBindingLister
 
 	// Contain the currently processing finalizer
 	processingFinalizer map[string]bool
@@ -98,14 +98,14 @@ func (c *UserManagerController) RunInformers(stopCh <-chan struct{}) {
 		}
 	}
 
-	go c.postgresRoleQueue.Run(stopCh)
-	go c.postgresRoleBindingQueue.Run(stopCh)
+	go c.pgRoleQueue.Run(stopCh)
+	go c.pgRoleBindingQueue.Run(stopCh)
 
-	go c.mysqlRoleQueue.Run(stopCh)
-	go c.mysqlRoleBindingQueue.Run(stopCh)
+	go c.myRoleQueue.Run(stopCh)
+	go c.myRoleBindingQueue.Run(stopCh)
 
-	go c.mongodbRoleQueue.Run(stopCh)
-	go c.mongodbRoleBindingQueue.Run(stopCh)
+	go c.mgRoleQueue.Run(stopCh)
+	go c.mgRoleBindingQueue.Run(stopCh)
 
 	go c.LeaseRenewer(c.LeaseRenewTime)
 

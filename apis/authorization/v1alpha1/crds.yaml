@@ -4,11 +4,16 @@ kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
   labels:
-    app: user-manager
+    app: kubedb
   name: postgresroles.authorization.kubedb.com
 spec:
   group: authorization.kubedb.com
   names:
+    categories:
+    - datastore
+    - kubedb
+    - appscode
+    - all
     kind: PostgresRole
     plural: postgresroles
     singular: postgresrole
@@ -354,8 +359,7 @@ spec:
                   type: string
                 pluginName:
                   description: "Specifies the name of the plugin to use for this connection.
-                    Default plugin:\n\t- for postgres: postgresql-database-plugin\n
-                    - for mysql: mysql-database-plugin"
+                    Default plugin:\n\t- for postgres: postgresql-database-plugin"
                   type: string
               required:
               - name
@@ -468,11 +472,16 @@ kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
   labels:
-    app: user-manager
+    app: kubedb
   name: postgresrolebindings.authorization.kubedb.com
 spec:
   group: authorization.kubedb.com
   names:
+    categories:
+    - datastore
+    - kubedb
+    - appscode
+    - all
     kind: PostgresRoleBinding
     plural: postgresrolebindings
     singular: postgresrolebinding

@@ -23,16 +23,18 @@ const (
 )
 
 func (c *UserManagerController) initPostgresRoleWatcher() {
-	c.postgresRoleInformer = c.dbInformerFactory.Authorization().V1alpha1().PostgresRoles().Informer()
-	c.postgresRoleQueue = queue.New(api.ResourceKindPostgresRole, c.MaxNumRequeues, c.NumThreads, c.runPostgresRoleInjector)
-
-	// TODO: add custom event handler?
-	c.postgresRoleInformer.AddEventHandler(queue.DefaultEventHandler(c.postgresRoleQueue.GetQueue()))
-	c.postgresRoleLister = c.dbInformerFactory.Authorization().V1alpha1().PostgresRoles().Lister()
+	c.pgRoleInformer = c.dbInformerFactory.Authorization().V1alpha1().PostgresRoles().Informer()
+	c.pgRoleQueue = queue.New(api.ResourceKindPostgresRole, c.MaxNumRequeues, c.NumThreads, c.runPostgresRoleInjector)
+	c.pgRoleInformer.AddEventHandler(queue.NewEventHandler(c.pgRoleQueue.GetQueue(), func(old interface{}, new interface{}) bool {
+		oldObj := old.(*api.PostgresRole)
+		newObj := new.(*api.PostgresRole)
+		return newObj.DeletionTimestamp != nil || !newObj.AlreadyObserved(oldObj)
+	}))
+	c.pgRoleLister = c.dbInformerFactory.Authorization().V1alpha1().PostgresRoles().Lister()
 }
 
 func (c *UserManagerController) runPostgresRoleInjector(key string) error {
-	obj, exist, err := c.postgresRoleInformer.GetIndexer().GetByKey(key)
+	obj, exist, err := c.pgRoleInformer.GetIndexer().GetByKey(key)
 	if err != nil {
 		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
 		return err
@@ -42,7 +44,7 @@ func (c *UserManagerController) runPostgresRoleInjector(key string) error {
 		glog.Warningf("PostgresRole %s does not exist anymore\n", key)
 
 	} else {
-		pgRole := obj.(*api.PostgresRole)
+		pgRole := obj.(*api.PostgresRole).DeepCopy()
 
 		glog.Infof("Sync/Add/Update for PostgresRole %s/%s\n", pgRole.Namespace, pgRole.Name)
 
@@ -51,16 +53,18 @@ func (c *UserManagerController) runPostgresRoleInjector(key string) error {
 				go c.runPostgresRoleFinalizer(pgRole, 1*time.Minute, 10*time.Second)
 			}
 
-		} else if !kutilcorev1.HasFinalizer(pgRole.ObjectMeta, PostgresRoleFinalizer) {
-			// Add finalizer
-			_, _, err := patchutil.PatchPostgresRole(c.dbClient.AuthorizationV1alpha1(), pgRole, func(role *api.PostgresRole) *api.PostgresRole {
-				role.ObjectMeta = kutilcorev1.AddFinalizer(role.ObjectMeta, PostgresRoleFinalizer)
-				return role
-			})
-			if err != nil {
-				return errors.Wrapf(err, "failed to set postgresRole finalizer for (%s/%s)", pgRole.Namespace, pgRole.Name)
-			}
 		} else {
+			if !kutilcorev1.HasFinalizer(pgRole.ObjectMeta, PostgresRoleFinalizer) {
+				// Add finalizer
+				_, _, err := patchutil.PatchPostgresRole(c.dbClient.AuthorizationV1alpha1(), pgRole, func(role *api.PostgresRole) *api.PostgresRole {
+					role.ObjectMeta = kutilcorev1.AddFinalizer(role.ObjectMeta, PostgresRoleFinalizer)
+					return role
+				})
+				if err != nil {
+					return errors.Wrapf(err, "failed to set postgresRole finalizer for (%s/%s)", pgRole.Namespace, pgRole.Name)
+				}
+			}
+
 			dbRClient, err := database.NewDatabaseRoleForPostgres(c.kubeClient, pgRole)
 			if err != nil {
 				return err
@@ -82,7 +86,7 @@ func (c *UserManagerController) runPostgresRoleInjector(key string) error {
 // 	  - configure a role that maps a name in Vault to an SQL statement to execute to create the database credential.
 //    - sync role
 func (c *UserManagerController) reconcilePostgresRole(dbRClient database.DatabaseRoleInterface, pgRole *api.PostgresRole) error {
-	if pgRole.Status.ObservedGeneration == 0 { // initial stage
+	if pgRole.Status.Phase == "" { // initial stage
 		name := pgRole.Name
 		namespace := pgRole.Namespace
 		status := pgRole.Status
@@ -156,38 +160,36 @@ func (c *UserManagerController) reconcilePostgresRole(dbRClient database.Databas
 
 	} else {
 		// sync role
-		if pgRole.ObjectMeta.Generation > pgRole.Status.ObservedGeneration {
-			status := pgRole.Status
-			name := pgRole.Name
-			namespace := pgRole.Namespace
+		status := pgRole.Status
+		name := pgRole.Name
+		namespace := pgRole.Namespace
 
-			// In vault create role replaces the old role
-			err := dbRClient.CreateRole()
-			if err != nil {
-				status.Conditions = []api.PostgresRoleCondition{
-					{
-						Type:    "Available",
-						Status:  corev1.ConditionFalse,
-						Reason:  "FailedToUpdateDatabaseRole",
-						Message: err.Error(),
-					},
-				}
-
-				err2 := c.updatePostgresRoleStatus(&status, pgRole)
-				if err2 != nil {
-					return errors.Wrapf(err2, "for postgresRole(%s/%s): failed to update status", namespace, name)
-				}
-
-				return errors.Wrapf(err, "for postgresRole(%s/%s): failed to update role", namespace, name)
+		// In vault create role replaces the old role
+		err := dbRClient.CreateRole()
+		if err != nil {
+			status.Conditions = []api.PostgresRoleCondition{
+				{
+					Type:    "Available",
+					Status:  corev1.ConditionFalse,
+					Reason:  "FailedToUpdateDatabaseRole",
+					Message: err.Error(),
+				},
 			}
 
-			status.ObservedGeneration = pgRole.Generation
-			status.Conditions = []api.PostgresRoleCondition{}
-
-			err = c.updatePostgresRoleStatus(&status, pgRole)
-			if err != nil {
-				return errors.Wrap(err, "failed to update postgresRole status")
+			err2 := c.updatePostgresRoleStatus(&status, pgRole)
+			if err2 != nil {
+				return errors.Wrapf(err2, "for postgresRole(%s/%s): failed to update status", namespace, name)
 			}
+
+			return errors.Wrapf(err, "for postgresRole(%s/%s): failed to update role", namespace, name)
+		}
+
+		status.ObservedGeneration = pgRole.Generation
+		status.Conditions = []api.PostgresRoleCondition{}
+
+		err = c.updatePostgresRoleStatus(&status, pgRole)
+		if err != nil {
+			return errors.Wrap(err, "failed to update postgresRole status")
 		}
 	}
 

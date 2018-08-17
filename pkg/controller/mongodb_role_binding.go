@@ -31,16 +31,18 @@ const (
 )
 
 func (c *UserManagerController) initMongodbRoleBindingWatcher() {
-	c.mongodbRoleBindingInformer = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoleBindings().Informer()
-	c.mongodbRoleBindingQueue = queue.New(api.ResourceKindMongodbRoleBinding, c.MaxNumRequeues, c.NumThreads, c.runMongodbRoleBindingInjector)
-
-	// TODO: add custom event handler?
-	c.mongodbRoleBindingInformer.AddEventHandler(queue.DefaultEventHandler(c.mongodbRoleBindingQueue.GetQueue()))
-	c.mongodbRoleBindingLister = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoleBindings().Lister()
+	c.mgRoleBindingInformer = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoleBindings().Informer()
+	c.mgRoleBindingQueue = queue.New(api.ResourceKindMongodbRoleBinding, c.MaxNumRequeues, c.NumThreads, c.runMongodbRoleBindingInjector)
+	c.mgRoleBindingInformer.AddEventHandler(queue.NewEventHandler(c.mgRoleBindingQueue.GetQueue(), func(old interface{}, new interface{}) bool {
+		oldObj := old.(*api.MongodbRoleBinding)
+		newObj := new.(*api.MongodbRoleBinding)
+		return newObj.DeletionTimestamp != nil || !newObj.AlreadyObserved(oldObj)
+	}))
+	c.mgRoleBindingLister = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoleBindings().Lister()
 }
 
 func (c *UserManagerController) runMongodbRoleBindingInjector(key string) error {
-	obj, exist, err := c.mongodbRoleBindingInformer.GetIndexer().GetByKey(key)
+	obj, exist, err := c.mgRoleBindingInformer.GetIndexer().GetByKey(key)
 	if err != nil {
 		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
 		return err
@@ -50,7 +52,7 @@ func (c *UserManagerController) runMongodbRoleBindingInjector(key string) error 
 		glog.Warningf("MongodbRoleBinding %s does not exist anymore\n", key)
 
 	} else {
-		mRoleBinding := obj.(*api.MongodbRoleBinding)
+		mRoleBinding := obj.(*api.MongodbRoleBinding).DeepCopy()
 
 		glog.Infof("Sync/Add/Update for MongodbRoleBinding %s/%s\n", mRoleBinding.Namespace, mRoleBinding.Name)
 
@@ -58,18 +60,18 @@ func (c *UserManagerController) runMongodbRoleBindingInjector(key string) error 
 			if kutilcorev1.HasFinalizer(mRoleBinding.ObjectMeta, MongodbRoleBindingFinalizer) {
 				go c.runMongodbRoleBindingFinalizer(mRoleBinding, 1*time.Minute, 10*time.Second)
 			}
-
-		} else if !kutilcorev1.HasFinalizer(mRoleBinding.ObjectMeta, MongodbRoleBindingFinalizer) {
-			// Add finalizer
-			_, _, err = patchutil.PatchMongodbRoleBinding(c.dbClient.AuthorizationV1alpha1(), mRoleBinding, func(binding *api.MongodbRoleBinding) *api.MongodbRoleBinding {
-				binding.ObjectMeta = kutilcorev1.AddFinalizer(binding.ObjectMeta, MongodbRoleBindingFinalizer)
-				return binding
-			})
-			if err != nil {
-				return errors.Wrapf(err, "failed to set MongodbRoleBinding finalizer for (%s/%s)", mRoleBinding.Namespace, mRoleBinding.Name)
+		} else {
+			if !kutilcorev1.HasFinalizer(mRoleBinding.ObjectMeta, MongodbRoleBindingFinalizer) {
+				// Add finalizer
+				_, _, err = patchutil.PatchMongodbRoleBinding(c.dbClient.AuthorizationV1alpha1(), mRoleBinding, func(binding *api.MongodbRoleBinding) *api.MongodbRoleBinding {
+					binding.ObjectMeta = kutilcorev1.AddFinalizer(binding.ObjectMeta, MongodbRoleBindingFinalizer)
+					return binding
+				})
+				if err != nil {
+					return errors.Wrapf(err, "failed to set MongodbRoleBinding finalizer for (%s/%s)", mRoleBinding.Namespace, mRoleBinding.Name)
+				}
 			}
 
-		} else {
 			dbRBClient, err := database.NewDatabaseRoleBindingForMongodb(c.kubeClient, c.dbClient, mRoleBinding)
 			if err != nil {
 				return err
@@ -219,7 +221,7 @@ func (c *UserManagerController) reconcileMongodbRoleBinding(dbRBClient database.
 
 		status.Phase = MongodbRoleBindingPhaseSuccess
 		status.Conditions = []api.MongodbRoleBindingCondition{}
-		status.ObservedGeneration = mRoleBinding.GetGeneration()
+		status.ObservedGeneration = mRoleBinding.Generation
 
 		err = c.updateMongodbRoleBindingStatus(&status, mRoleBinding)
 		if err != nil {
@@ -229,37 +231,35 @@ func (c *UserManagerController) reconcileMongodbRoleBinding(dbRBClient database.
 	} else {
 		// sync role binding
 		// - update role binding
-		if mRoleBinding.ObjectMeta.Generation > mRoleBinding.Status.ObservedGeneration {
-			name := mRoleBinding.Name
-			namespace := mRoleBinding.Namespace
-			status := mRoleBinding.Status
+		name := mRoleBinding.Name
+		namespace := mRoleBinding.Namespace
+		status := mRoleBinding.Status
 
-			err := dbRBClient.UpdateRoleBinding(getMongodbRbacRoleBindingName(name), namespace, mRoleBinding.Spec.Subjects)
-			if err != nil {
-				status.Conditions = []api.MongodbRoleBindingCondition{
-					{
-						Type:    "Available",
-						Status:  corev1.ConditionFalse,
-						Reason:  "FailedToUpdateRoleBinding",
-						Message: err.Error(),
-					},
-				}
-
-				err2 := c.updateMongodbRoleBindingStatus(&status, mRoleBinding)
-				if err2 != nil {
-					return errors.Wrapf(err2, "for mongodbRoleBinding(%s/%s): failed to update status", namespace, name)
-				}
-
-				return errors.Wrapf(err, "for MongodbRoleBinding(%s/%s)", namespace, name)
+		err := dbRBClient.UpdateRoleBinding(getMongodbRbacRoleBindingName(name), namespace, mRoleBinding.Spec.Subjects)
+		if err != nil {
+			status.Conditions = []api.MongodbRoleBindingCondition{
+				{
+					Type:    "Available",
+					Status:  corev1.ConditionFalse,
+					Reason:  "FailedToUpdateRoleBinding",
+					Message: err.Error(),
+				},
 			}
 
-			status.Conditions = []api.MongodbRoleBindingCondition{}
-			status.ObservedGeneration = mRoleBinding.ObjectMeta.Generation
-
-			err = c.updateMongodbRoleBindingStatus(&status, mRoleBinding)
-			if err != nil {
-				return errors.Wrapf(err, "for MongodbRoleBinding(%s/%s)", namespace, name)
+			err2 := c.updateMongodbRoleBindingStatus(&status, mRoleBinding)
+			if err2 != nil {
+				return errors.Wrapf(err2, "for mongodbRoleBinding(%s/%s): failed to update status", namespace, name)
 			}
+
+			return errors.Wrapf(err, "for MongodbRoleBinding(%s/%s)", namespace, name)
+		}
+
+		status.Conditions = []api.MongodbRoleBindingCondition{}
+		status.ObservedGeneration = mRoleBinding.ObjectMeta.Generation
+
+		err = c.updateMongodbRoleBindingStatus(&status, mRoleBinding)
+		if err != nil {
+			return errors.Wrapf(err, "for MongodbRoleBinding(%s/%s)", namespace, name)
 		}
 	}
 

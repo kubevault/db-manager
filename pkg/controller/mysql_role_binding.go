@@ -31,16 +31,18 @@ const (
 )
 
 func (c *UserManagerController) initMysqlRoleBindingWatcher() {
-	c.mysqlRoleBindingInformer = c.dbInformerFactory.Authorization().V1alpha1().MysqlRoleBindings().Informer()
-	c.mysqlRoleBindingQueue = queue.New(api.ResourceKindMysqlRoleBinding, c.MaxNumRequeues, c.NumThreads, c.runMysqlRoleBindingInjector)
-
-	// TODO: add custom event handler?
-	c.mysqlRoleBindingInformer.AddEventHandler(queue.DefaultEventHandler(c.mysqlRoleBindingQueue.GetQueue()))
-	c.mysqlRoleBindingLister = c.dbInformerFactory.Authorization().V1alpha1().MysqlRoleBindings().Lister()
+	c.myRoleBindingInformer = c.dbInformerFactory.Authorization().V1alpha1().MysqlRoleBindings().Informer()
+	c.myRoleBindingQueue = queue.New(api.ResourceKindMysqlRoleBinding, c.MaxNumRequeues, c.NumThreads, c.runMysqlRoleBindingInjector)
+	c.myRoleBindingInformer.AddEventHandler(queue.NewEventHandler(c.myRoleBindingQueue.GetQueue(), func(old interface{}, new interface{}) bool {
+		oldObj := old.(*api.MysqlRoleBinding)
+		newObj := new.(*api.MysqlRoleBinding)
+		return newObj.DeletionTimestamp != nil || !newObj.AlreadyObserved(oldObj)
+	}))
+	c.myRoleBindingLister = c.dbInformerFactory.Authorization().V1alpha1().MysqlRoleBindings().Lister()
 }
 
 func (c *UserManagerController) runMysqlRoleBindingInjector(key string) error {
-	obj, exist, err := c.mysqlRoleBindingInformer.GetIndexer().GetByKey(key)
+	obj, exist, err := c.myRoleBindingInformer.GetIndexer().GetByKey(key)
 	if err != nil {
 		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
 		return err
@@ -50,7 +52,7 @@ func (c *UserManagerController) runMysqlRoleBindingInjector(key string) error {
 		glog.Warningf("MysqlRoleBinding %s does not exist anymore\n", key)
 
 	} else {
-		mRoleBinding := obj.(*api.MysqlRoleBinding)
+		mRoleBinding := obj.(*api.MysqlRoleBinding).DeepCopy()
 
 		glog.Infof("Sync/Add/Update for MysqlRoleBinding %s/%s\n", mRoleBinding.Namespace, mRoleBinding.Name)
 
@@ -59,17 +61,19 @@ func (c *UserManagerController) runMysqlRoleBindingInjector(key string) error {
 				go c.runMysqlRoleBindingFinalizer(mRoleBinding, 1*time.Minute, 10*time.Second)
 			}
 
-		} else if !kutilcorev1.HasFinalizer(mRoleBinding.ObjectMeta, MysqlRoleBindingFinalizer) {
-			// Add finalizer
-			_, _, err = patchutil.PatchMysqlRoleBinding(c.dbClient.AuthorizationV1alpha1(), mRoleBinding, func(binding *api.MysqlRoleBinding) *api.MysqlRoleBinding {
-				binding.ObjectMeta = kutilcorev1.AddFinalizer(binding.ObjectMeta, MysqlRoleBindingFinalizer)
-				return binding
-			})
-			if err != nil {
-				return errors.Wrapf(err, "failed to set MysqlRoleBinding finalizer for (%s/%s)", mRoleBinding.Namespace, mRoleBinding.Name)
+		} else {
+			if !kutilcorev1.HasFinalizer(mRoleBinding.ObjectMeta, MysqlRoleBindingFinalizer) {
+				// Add finalizer
+				_, _, err = patchutil.PatchMysqlRoleBinding(c.dbClient.AuthorizationV1alpha1(), mRoleBinding, func(binding *api.MysqlRoleBinding) *api.MysqlRoleBinding {
+					binding.ObjectMeta = kutilcorev1.AddFinalizer(binding.ObjectMeta, MysqlRoleBindingFinalizer)
+					return binding
+				})
+				if err != nil {
+					return errors.Wrapf(err, "failed to set MysqlRoleBinding finalizer for (%s/%s)", mRoleBinding.Namespace, mRoleBinding.Name)
+				}
+
 			}
 
-		} else {
 			dbRBClient, err := database.NewDatabaseRoleBindingForMysql(c.kubeClient, c.dbClient, mRoleBinding)
 			if err != nil {
 				return err
@@ -219,7 +223,7 @@ func (c *UserManagerController) reconcileMysqlRoleBinding(dbRBClient database.Da
 
 		status.Phase = MysqlRoleBindingPhaseSuccess
 		status.Conditions = []api.MysqlRoleBindingCondition{}
-		status.ObservedGeneration = mRoleBinding.GetGeneration()
+		status.ObservedGeneration = mRoleBinding.Generation
 
 		err = c.updateMysqlRoleBindingStatus(&status, mRoleBinding)
 		if err != nil {
@@ -229,37 +233,35 @@ func (c *UserManagerController) reconcileMysqlRoleBinding(dbRBClient database.Da
 	} else {
 		// sync role binding
 		// - update role binding
-		if mRoleBinding.ObjectMeta.Generation > mRoleBinding.Status.ObservedGeneration {
-			name := mRoleBinding.Name
-			namespace := mRoleBinding.Namespace
-			status := mRoleBinding.Status
+		name := mRoleBinding.Name
+		namespace := mRoleBinding.Namespace
+		status := mRoleBinding.Status
 
-			err := dbRBClient.UpdateRoleBinding(getMysqlRbacRoleBindingName(name), namespace, mRoleBinding.Spec.Subjects)
-			if err != nil {
-				status.Conditions = []api.MysqlRoleBindingCondition{
-					{
-						Type:    "Available",
-						Status:  corev1.ConditionFalse,
-						Reason:  "FailedToUpdateRoleBinding",
-						Message: err.Error(),
-					},
-				}
-
-				err2 := c.updateMysqlRoleBindingStatus(&status, mRoleBinding)
-				if err2 != nil {
-					return errors.Wrapf(err2, "for mysqlRoleBinding(%s/%s): failed to update status", namespace, name)
-				}
-
-				return errors.Wrapf(err, "for MysqlRoleBinding(%s/%s)", namespace, name)
+		err := dbRBClient.UpdateRoleBinding(getMysqlRbacRoleBindingName(name), namespace, mRoleBinding.Spec.Subjects)
+		if err != nil {
+			status.Conditions = []api.MysqlRoleBindingCondition{
+				{
+					Type:    "Available",
+					Status:  corev1.ConditionFalse,
+					Reason:  "FailedToUpdateRoleBinding",
+					Message: err.Error(),
+				},
 			}
 
-			status.Conditions = []api.MysqlRoleBindingCondition{}
-			status.ObservedGeneration = mRoleBinding.ObjectMeta.Generation
-
-			err = c.updateMysqlRoleBindingStatus(&status, mRoleBinding)
-			if err != nil {
-				return errors.Wrapf(err, "for MysqlRoleBinding(%s/%s)", namespace, name)
+			err2 := c.updateMysqlRoleBindingStatus(&status, mRoleBinding)
+			if err2 != nil {
+				return errors.Wrapf(err2, "for mysqlRoleBinding(%s/%s): failed to update status", namespace, name)
 			}
+
+			return errors.Wrapf(err, "for MysqlRoleBinding(%s/%s)", namespace, name)
+		}
+
+		status.Conditions = []api.MysqlRoleBindingCondition{}
+		status.ObservedGeneration = mRoleBinding.ObjectMeta.Generation
+
+		err = c.updateMysqlRoleBindingStatus(&status, mRoleBinding)
+		if err != nil {
+			return errors.Wrapf(err, "for MysqlRoleBinding(%s/%s)", namespace, name)
 		}
 	}
 

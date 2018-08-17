@@ -23,16 +23,18 @@ const (
 )
 
 func (c *UserManagerController) initMysqlRoleWatcher() {
-	c.mysqlRoleInformer = c.dbInformerFactory.Authorization().V1alpha1().MysqlRoles().Informer()
-	c.mysqlRoleQueue = queue.New(api.ResourceKindMysqlRole, c.MaxNumRequeues, c.NumThreads, c.runMysqlRoleInjector)
-
-	// TODO: add custom event handler?
-	c.mysqlRoleInformer.AddEventHandler(queue.DefaultEventHandler(c.mysqlRoleQueue.GetQueue()))
-	c.mysqlRoleLister = c.dbInformerFactory.Authorization().V1alpha1().MysqlRoles().Lister()
+	c.myRoleInformer = c.dbInformerFactory.Authorization().V1alpha1().MysqlRoles().Informer()
+	c.myRoleQueue = queue.New(api.ResourceKindMysqlRole, c.MaxNumRequeues, c.NumThreads, c.runMysqlRoleInjector)
+	c.myRoleInformer.AddEventHandler(queue.NewEventHandler(c.myRoleQueue.GetQueue(), func(old interface{}, new interface{}) bool {
+		oldObj := old.(*api.MysqlRole)
+		newObj := new.(*api.MysqlRole)
+		return newObj.DeletionTimestamp != nil || !newObj.AlreadyObserved(oldObj)
+	}))
+	c.myRoleLister = c.dbInformerFactory.Authorization().V1alpha1().MysqlRoles().Lister()
 }
 
 func (c *UserManagerController) runMysqlRoleInjector(key string) error {
-	obj, exist, err := c.mysqlRoleInformer.GetIndexer().GetByKey(key)
+	obj, exist, err := c.myRoleInformer.GetIndexer().GetByKey(key)
 	if err != nil {
 		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
 		return err
@@ -42,7 +44,7 @@ func (c *UserManagerController) runMysqlRoleInjector(key string) error {
 		glog.Warningf("MysqlRole %s does not exist anymore\n", key)
 
 	} else {
-		mRole := obj.(*api.MysqlRole)
+		mRole := obj.(*api.MysqlRole).DeepCopy()
 
 		glog.Infof("Sync/Add/Update for MysqlRole %s/%s\n", mRole.Namespace, mRole.Name)
 
@@ -51,16 +53,18 @@ func (c *UserManagerController) runMysqlRoleInjector(key string) error {
 				go c.runMysqlRoleFinalizer(mRole, 1*time.Minute, 10*time.Second)
 			}
 
-		} else if !kutilcorev1.HasFinalizer(mRole.ObjectMeta, MysqlRoleFinalizer) {
-			// Add finalizer
-			_, _, err := patchutil.PatchMysqlRole(c.dbClient.AuthorizationV1alpha1(), mRole, func(role *api.MysqlRole) *api.MysqlRole {
-				role.ObjectMeta = kutilcorev1.AddFinalizer(role.ObjectMeta, MysqlRoleFinalizer)
-				return role
-			})
-			if err != nil {
-				return errors.Wrapf(err, "failed to set MysqlRole finalizer for (%s/%s)", mRole.Namespace, mRole.Name)
-			}
 		} else {
+			if !kutilcorev1.HasFinalizer(mRole.ObjectMeta, MysqlRoleFinalizer) {
+				// Add finalizer
+				_, _, err := patchutil.PatchMysqlRole(c.dbClient.AuthorizationV1alpha1(), mRole, func(role *api.MysqlRole) *api.MysqlRole {
+					role.ObjectMeta = kutilcorev1.AddFinalizer(role.ObjectMeta, MysqlRoleFinalizer)
+					return role
+				})
+				if err != nil {
+					return errors.Wrapf(err, "failed to set MysqlRole finalizer for (%s/%s)", mRole.Namespace, mRole.Name)
+				}
+			}
+
 			dbRClient, err := database.NewDatabaseRoleForMysql(c.kubeClient, mRole)
 			if err != nil {
 				return err
@@ -156,36 +160,34 @@ func (c *UserManagerController) reconcileMysqlRole(dbRClient database.DatabaseRo
 
 	} else {
 		// sync role
-		if mRole.ObjectMeta.Generation > mRole.Status.ObservedGeneration {
-			status := mRole.Status
+		status := mRole.Status
 
-			// In vault create role replaces the old role
-			err := dbRClient.CreateRole()
-			if err != nil {
-				status.Conditions = []api.MysqlRoleCondition{
-					{
-						Type:    "Available",
-						Status:  corev1.ConditionFalse,
-						Reason:  "FailedToUpdateRole",
-						Message: err.Error(),
-					},
-				}
-
-				err2 := c.updatedMysqlRoleStatus(&status, mRole)
-				if err2 != nil {
-					return errors.Wrapf(err2, "for MysqlRole(%s/%s): failed to update status", mRole.Namespace, mRole.Name)
-				}
-
-				return errors.Wrapf(err, "For Mysql(%s/%s): failed to update role", mRole.Namespace, mRole.Name)
+		// In vault create role replaces the old role
+		err := dbRClient.CreateRole()
+		if err != nil {
+			status.Conditions = []api.MysqlRoleCondition{
+				{
+					Type:    "Available",
+					Status:  corev1.ConditionFalse,
+					Reason:  "FailedToUpdateRole",
+					Message: err.Error(),
+				},
 			}
 
-			status.Conditions = []api.MysqlRoleCondition{}
-			status.ObservedGeneration = mRole.Generation
-
-			err = c.updatedMysqlRoleStatus(&status, mRole)
-			if err != nil {
-				return errors.Wrapf(err, "For Mysql(%s/%s): failed to update MysqlRole status", mRole.Namespace, mRole.Name)
+			err2 := c.updatedMysqlRoleStatus(&status, mRole)
+			if err2 != nil {
+				return errors.Wrapf(err2, "for MysqlRole(%s/%s): failed to update status", mRole.Namespace, mRole.Name)
 			}
+
+			return errors.Wrapf(err, "For Mysql(%s/%s): failed to update role", mRole.Namespace, mRole.Name)
+		}
+
+		status.Conditions = []api.MysqlRoleCondition{}
+		status.ObservedGeneration = mRole.Generation
+
+		err = c.updatedMysqlRoleStatus(&status, mRole)
+		if err != nil {
+			return errors.Wrapf(err, "For Mysql(%s/%s): failed to update MysqlRole status", mRole.Namespace, mRole.Name)
 		}
 	}
 

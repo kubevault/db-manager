@@ -334,14 +334,14 @@ func schema_user_manager_apis_authorization_v1alpha1_DatabaseConfigForMongodb(re
 					},
 					"pluginName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Specifies the name of the plugin to use for this connection. Default plugin:\n\t- for postgres: postgresql-database-plugin\n - for mysql: mysql-database-plugin",
+							Description: "Specifies the name of the plugin to use for this connection. Default plugin:\n - for mongodb: mongodb-database-plugin",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"connectionUrl": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Specifies the PostgreSQL DSN. This field can be templated and supports passing the username and password parameters in the following format {{field_name}}. A templated connection URL is required when using root credential rotation. e.g. postgresql://{{username}}:{{password}}@localhost:5432/postgres?sslmode=disable",
+							Description: "pecifies the MongoDB standard connection string (URI). This field can be templated and supports passing the username and password parameters in the following format {{field_name}}. A templated connection URL is required when using root credential rotation. e.g. mongodb://{{username}}:{{password}}@mongodb.acme.com:27017/admin?ssl=true",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -390,14 +390,14 @@ func schema_user_manager_apis_authorization_v1alpha1_DatabaseConfigForMysql(ref 
 					},
 					"pluginName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Specifies the name of the plugin to use for this connection. Default plugin:\n\t- for postgres: postgresql-database-plugin\n - for mysql: mysql-database-plugin",
+							Description: "Specifies the name of the plugin to use for this connection. Default plugin:\n - for mysql: mysql-database-plugin",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"connectionUrl": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Specifies the PostgreSQL DSN. This field can be templated and supports passing the username and password parameters in the following format {{field_name}}. A templated connection URL is required when using root credential rotation. e.g. postgresql://{{username}}:{{password}}@localhost:5432/postgres?sslmode=disable",
+							Description: "Specifies the MySQL DSN. This field can be templated and supports passing the username and password parameters in the following format {{field_name}}. A templated connection URL is required when using root credential rotation. e.g. {{username}}:{{password}}@tcp(127.0.0.1:3306)/",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -460,7 +460,7 @@ func schema_user_manager_apis_authorization_v1alpha1_DatabaseConfigForPostgres(r
 					},
 					"pluginName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Specifies the name of the plugin to use for this connection. Default plugin:\n\t- for postgres: postgresql-database-plugin\n - for mysql: mysql-database-plugin",
+							Description: "Specifies the name of the plugin to use for this connection. Default plugin:\n\t- for postgres: postgresql-database-plugin",
 							Type:        []string{"string"},
 							Format:      "",
 						},

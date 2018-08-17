@@ -23,16 +23,18 @@ const (
 )
 
 func (c *UserManagerController) initMongodbRoleWatcher() {
-	c.mongodbRoleInformer = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoles().Informer()
-	c.mongodbRoleQueue = queue.New(api.ResourceKindMongodbRole, c.MaxNumRequeues, c.NumThreads, c.runMongodbRoleInjector)
-
-	// TODO: add custom event handler?
-	c.mongodbRoleInformer.AddEventHandler(queue.DefaultEventHandler(c.mongodbRoleQueue.GetQueue()))
+	c.mgRoleInformer = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoles().Informer()
+	c.mgRoleQueue = queue.New(api.ResourceKindMongodbRole, c.MaxNumRequeues, c.NumThreads, c.runMongodbRoleInjector)
+	c.mgRoleInformer.AddEventHandler(queue.NewEventHandler(c.mgRoleQueue.GetQueue(), func(old interface{}, new interface{}) bool {
+		oldObj := old.(*api.MongodbRole)
+		newObj := new.(*api.MongodbRole)
+		return newObj.DeletionTimestamp != nil || !newObj.AlreadyObserved(oldObj)
+	}))
 	c.mongodbRoleLister = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoles().Lister()
 }
 
 func (c *UserManagerController) runMongodbRoleInjector(key string) error {
-	obj, exist, err := c.mongodbRoleInformer.GetIndexer().GetByKey(key)
+	obj, exist, err := c.mgRoleInformer.GetIndexer().GetByKey(key)
 	if err != nil {
 		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
 		return err
@@ -42,7 +44,7 @@ func (c *UserManagerController) runMongodbRoleInjector(key string) error {
 		glog.Warningf("MongodbRole %s does not exist anymore\n", key)
 
 	} else {
-		mRole := obj.(*api.MongodbRole)
+		mRole := obj.(*api.MongodbRole).DeepCopy()
 
 		glog.Infof("Sync/Add/Update for MongodbRole %s/%s\n", mRole.Namespace, mRole.Name)
 
@@ -50,17 +52,18 @@ func (c *UserManagerController) runMongodbRoleInjector(key string) error {
 			if kutilcorev1.HasFinalizer(mRole.ObjectMeta, MongodbRoleFinalizer) {
 				go c.runMongodbRoleFinalizer(mRole, 1*time.Minute, 10*time.Second)
 			}
-
-		} else if !kutilcorev1.HasFinalizer(mRole.ObjectMeta, MongodbRoleFinalizer) {
-			// Add finalizer
-			_, _, err := patchutil.PatchMongodbRole(c.dbClient.AuthorizationV1alpha1(), mRole, func(role *api.MongodbRole) *api.MongodbRole {
-				role.ObjectMeta = kutilcorev1.AddFinalizer(role.ObjectMeta, MongodbRoleFinalizer)
-				return role
-			})
-			if err != nil {
-				return errors.Wrapf(err, "failed to set MongodbRole finalizer for (%s/%s)", mRole.Namespace, mRole.Name)
-			}
 		} else {
+			if !kutilcorev1.HasFinalizer(mRole.ObjectMeta, MongodbRoleFinalizer) {
+				// Add finalizer
+				_, _, err := patchutil.PatchMongodbRole(c.dbClient.AuthorizationV1alpha1(), mRole, func(role *api.MongodbRole) *api.MongodbRole {
+					role.ObjectMeta = kutilcorev1.AddFinalizer(role.ObjectMeta, MongodbRoleFinalizer)
+					return role
+				})
+				if err != nil {
+					return errors.Wrapf(err, "failed to set MongodbRole finalizer for (%s/%s)", mRole.Namespace, mRole.Name)
+				}
+			}
+
 			dbRClient, err := database.NewDatabaseRoleForMongodb(c.kubeClient, mRole)
 			if err != nil {
 				return err
@@ -156,36 +159,34 @@ func (c *UserManagerController) reconcileMongodbRole(dbRClient database.Database
 
 	} else {
 		// sync role
-		if mRole.ObjectMeta.Generation > mRole.Status.ObservedGeneration {
-			status := mRole.Status
+		status := mRole.Status
 
-			// In vault create role replaces the old role
-			err := dbRClient.CreateRole()
-			if err != nil {
-				status.Conditions = []api.MongodbRoleCondition{
-					{
-						Type:    "Available",
-						Status:  corev1.ConditionFalse,
-						Reason:  "FailedToUpdateRole",
-						Message: err.Error(),
-					},
-				}
-
-				err2 := c.updatedMongodbRoleStatus(&status, mRole)
-				if err2 != nil {
-					return errors.Wrapf(err2, "for MongodbRole(%s/%s): failed to update status", mRole.Namespace, mRole.Name)
-				}
-
-				return errors.Wrapf(err, "For Mongodb(%s/%s): failed to update role", mRole.Namespace, mRole.Name)
+		// In vault create role replaces the old role
+		err := dbRClient.CreateRole()
+		if err != nil {
+			status.Conditions = []api.MongodbRoleCondition{
+				{
+					Type:    "Available",
+					Status:  corev1.ConditionFalse,
+					Reason:  "FailedToUpdateRole",
+					Message: err.Error(),
+				},
 			}
 
-			status.Conditions = []api.MongodbRoleCondition{}
-			status.ObservedGeneration = mRole.Generation
-
-			err = c.updatedMongodbRoleStatus(&status, mRole)
-			if err != nil {
-				return errors.Wrapf(err, "For Mongodb(%s/%s): failed to update MongodbRole status", mRole.Namespace, mRole.Name)
+			err2 := c.updatedMongodbRoleStatus(&status, mRole)
+			if err2 != nil {
+				return errors.Wrapf(err2, "for MongodbRole(%s/%s): failed to update status", mRole.Namespace, mRole.Name)
 			}
+
+			return errors.Wrapf(err, "For Mongodb(%s/%s): failed to update role", mRole.Namespace, mRole.Name)
+		}
+
+		status.Conditions = []api.MongodbRoleCondition{}
+		status.ObservedGeneration = mRole.Generation
+
+		err = c.updatedMongodbRoleStatus(&status, mRole)
+		if err != nil {
+			return errors.Wrapf(err, "For Mongodb(%s/%s): failed to update MongodbRole status", mRole.Namespace, mRole.Name)
 		}
 	}
 
