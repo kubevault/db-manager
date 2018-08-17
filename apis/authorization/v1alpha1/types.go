@@ -6,32 +6,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const (
-	ResourceKindPostgresRole = "PostgresRole"
-	ResourcePostgresRole     = "postgresrole"
-	ResourcePostgresRoles    = "postgresroles"
-
-	ResourceKindMysqlRole = "MysqlRole"
-	ResourceMysqlRole     = "mysqlrole"
-	ResourceMysqlRoles    = "mysqlroles"
-
-	ResourceKindMongodbRole = "MongodbRole"
-	ResourceMongodbRole     = "mongodbrole"
-	ResourceMongodbRoles    = "mongodbroles"
-
-	ResourceKindPostgresRoleBinding = "PostgresRoleBinding"
-	ResourcePostgresRoleBinding     = "postgresrolebinding"
-	ResourcePostgresRoleBindings    = "postgresrolebindings"
-
-	ResourceKindMysqlRoleBinding = "MysqlRoleBinding"
-	ResourceMysqlRoleBinding     = "mysqlrolebinding"
-	ResourceMysqlRoleBindings    = "mysqlrolebindings"
-
-	ResourceKindMongodbRoleBinding = "MongodbRoleBinding"
-	ResourceMongodbRoleBinding     = "mongodbrolebinding"
-	ResourceMongodbRoleBindings    = "mongodbrolebindings"
-)
-
 // +genclient
 // +k8s:openapi-gen=true
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -4,11 +4,16 @@ kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
   labels:
-    app: user-manager
+    app: kubedb
   name: postgresroles.authorization.kubedb.com
 spec:
   group: authorization.kubedb.com
   names:
+    categories:
+    - datastore
+    - kubedb
+    - appscode
+    - all
     kind: PostgresRole
     plural: postgresroles
     singular: postgresrole
@@ -468,11 +473,16 @@ kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
   labels:
-    app: user-manager
+    app: kubedb
   name: postgresrolebindings.authorization.kubedb.com
 spec:
   group: authorization.kubedb.com
   names:
+    categories:
+    - datastore
+    - kubedb
+    - appscode
+    - all
     kind: PostgresRoleBinding
     plural: postgresrolebindings
     singular: postgresrolebinding
