@@ -31,16 +31,16 @@ const (
 )
 
 func (c *UserManagerController) initMongodbRoleBindingWatcher() {
-	c.mongodbRoleBindingInformer = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoleBindings().Informer()
-	c.mongodbRoleBindingQueue = queue.New(api.ResourceKindMongodbRoleBinding, c.MaxNumRequeues, c.NumThreads, c.runMongodbRoleBindingInjector)
+	c.mgRoleBindingInformer = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoleBindings().Informer()
+	c.mgRoleBindingQueue = queue.New(api.ResourceKindMongodbRoleBinding, c.MaxNumRequeues, c.NumThreads, c.runMongodbRoleBindingInjector)
 
 	// TODO: add custom event handler?
-	c.mongodbRoleBindingInformer.AddEventHandler(queue.DefaultEventHandler(c.mongodbRoleBindingQueue.GetQueue()))
-	c.mongodbRoleBindingLister = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoleBindings().Lister()
+	c.mgRoleBindingInformer.AddEventHandler(queue.DefaultEventHandler(c.mgRoleBindingQueue.GetQueue()))
+	c.mgRoleBindingLister = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoleBindings().Lister()
 }
 
 func (c *UserManagerController) runMongodbRoleBindingInjector(key string) error {
-	obj, exist, err := c.mongodbRoleBindingInformer.GetIndexer().GetByKey(key)
+	obj, exist, err := c.mgRoleBindingInformer.GetIndexer().GetByKey(key)
 	if err != nil {
 		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
 		return err

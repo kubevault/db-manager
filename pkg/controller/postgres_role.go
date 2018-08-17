@@ -23,16 +23,16 @@ const (
 )
 
 func (c *UserManagerController) initPostgresRoleWatcher() {
-	c.postgresRoleInformer = c.dbInformerFactory.Authorization().V1alpha1().PostgresRoles().Informer()
-	c.postgresRoleQueue = queue.New(api.ResourceKindPostgresRole, c.MaxNumRequeues, c.NumThreads, c.runPostgresRoleInjector)
+	c.pgRoleInformer = c.dbInformerFactory.Authorization().V1alpha1().PostgresRoles().Informer()
+	c.pgRoleQueue = queue.New(api.ResourceKindPostgresRole, c.MaxNumRequeues, c.NumThreads, c.runPostgresRoleInjector)
 
 	// TODO: add custom event handler?
-	c.postgresRoleInformer.AddEventHandler(queue.DefaultEventHandler(c.postgresRoleQueue.GetQueue()))
-	c.postgresRoleLister = c.dbInformerFactory.Authorization().V1alpha1().PostgresRoles().Lister()
+	c.pgRoleInformer.AddEventHandler(queue.DefaultEventHandler(c.pgRoleQueue.GetQueue()))
+	c.pgRoleLister = c.dbInformerFactory.Authorization().V1alpha1().PostgresRoles().Lister()
 }
 
 func (c *UserManagerController) runPostgresRoleInjector(key string) error {
-	obj, exist, err := c.postgresRoleInformer.GetIndexer().GetByKey(key)
+	obj, exist, err := c.pgRoleInformer.GetIndexer().GetByKey(key)
 	if err != nil {
 		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
 		return err

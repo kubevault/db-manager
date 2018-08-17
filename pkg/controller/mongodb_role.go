@@ -23,16 +23,19 @@ const (
 )
 
 func (c *UserManagerController) initMongodbRoleWatcher() {
-	c.mongodbRoleInformer = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoles().Informer()
-	c.mongodbRoleQueue = queue.New(api.ResourceKindMongodbRole, c.MaxNumRequeues, c.NumThreads, c.runMongodbRoleInjector)
+	c.mgRoleInformer = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoles().Informer()
+	c.mgRoleQueue = queue.New(api.ResourceKindMongodbRole, c.MaxNumRequeues, c.NumThreads, c.runMongodbRoleInjector)
 
-	// TODO: add custom event handler?
-	c.mongodbRoleInformer.AddEventHandler(queue.DefaultEventHandler(c.mongodbRoleQueue.GetQueue()))
+	c.mgRoleInformer.AddEventHandler(queue.NewEventHandler(c.mgRoleQueue.GetQueue(), func(old interface{}, new interface{}) bool {
+		oldObj := old.(*api.MongodbRole)
+		newObj := new.(*api.MongodbRole)
+		return !newObj.AlreadyObserved(oldObj)
+	}))
 	c.mongodbRoleLister = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoles().Lister()
 }
 
 func (c *UserManagerController) runMongodbRoleInjector(key string) error {
-	obj, exist, err := c.mongodbRoleInformer.GetIndexer().GetByKey(key)
+	obj, exist, err := c.mgRoleInformer.GetIndexer().GetByKey(key)
 	if err != nil {
 		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
 		return err

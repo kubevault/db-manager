@@ -27,7 +27,7 @@ func (u *UserManagerController) LeaseRenewer(duration time.Duration) {
 }
 
 func (u *UserManagerController) runLeaseRenewerForPostgres(duration time.Duration) {
-	pgRBList, err := u.postgresRoleBindingLister.List(labels.SelectorFromSet(map[string]string{}))
+	pgRBList, err := u.pgRoleBindingLister.List(labels.SelectorFromSet(map[string]string{}))
 	if err != nil {
 		glog.Errorln("Postgres credential lease renewer: ", err)
 	} else {
@@ -79,7 +79,7 @@ func (u *UserManagerController) RenewLeaseForPostgres(p *api.PostgresRoleBinding
 }
 
 func (u *UserManagerController) runLeaseRenewerForMysql(duration time.Duration) {
-	mRBList, err := u.mysqlRoleBindingLister.List(labels.SelectorFromSet(map[string]string{}))
+	mRBList, err := u.myRoleBindingLister.List(labels.SelectorFromSet(map[string]string{}))
 	if err != nil {
 		glog.Errorln("Mysql credential lease renewer: ", err)
 	} else {
@@ -131,7 +131,7 @@ func (u *UserManagerController) RenewLeaseForMysql(m *api.MysqlRoleBinding, dura
 }
 
 func (u *UserManagerController) runLeaseRenewerForMongodb(duration time.Duration) {
-	mRBList, err := u.mongodbRoleBindingLister.List(labels.SelectorFromSet(map[string]string{}))
+	mRBList, err := u.mgRoleBindingLister.List(labels.SelectorFromSet(map[string]string{}))
 	if err != nil {
 		glog.Errorln("Mongodb credential lease renewer: ", err)
 	} else {

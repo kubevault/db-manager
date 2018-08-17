@@ -31,16 +31,16 @@ const (
 )
 
 func (c *UserManagerController) initMysqlRoleBindingWatcher() {
-	c.mysqlRoleBindingInformer = c.dbInformerFactory.Authorization().V1alpha1().MysqlRoleBindings().Informer()
-	c.mysqlRoleBindingQueue = queue.New(api.ResourceKindMysqlRoleBinding, c.MaxNumRequeues, c.NumThreads, c.runMysqlRoleBindingInjector)
+	c.myRoleBindingInformer = c.dbInformerFactory.Authorization().V1alpha1().MysqlRoleBindings().Informer()
+	c.myRoleBindingQueue = queue.New(api.ResourceKindMysqlRoleBinding, c.MaxNumRequeues, c.NumThreads, c.runMysqlRoleBindingInjector)
 
 	// TODO: add custom event handler?
-	c.mysqlRoleBindingInformer.AddEventHandler(queue.DefaultEventHandler(c.mysqlRoleBindingQueue.GetQueue()))
-	c.mysqlRoleBindingLister = c.dbInformerFactory.Authorization().V1alpha1().MysqlRoleBindings().Lister()
+	c.myRoleBindingInformer.AddEventHandler(queue.DefaultEventHandler(c.myRoleBindingQueue.GetQueue()))
+	c.myRoleBindingLister = c.dbInformerFactory.Authorization().V1alpha1().MysqlRoleBindings().Lister()
 }
 
 func (c *UserManagerController) runMysqlRoleBindingInjector(key string) error {
-	obj, exist, err := c.mysqlRoleBindingInformer.GetIndexer().GetByKey(key)
+	obj, exist, err := c.myRoleBindingInformer.GetIndexer().GetByKey(key)
 	if err != nil {
 		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
 		return err

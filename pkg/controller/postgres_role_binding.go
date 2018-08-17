@@ -31,16 +31,16 @@ const (
 )
 
 func (c *UserManagerController) initPostgresRoleBindingWatcher() {
-	c.postgresRoleBindingInformer = c.dbInformerFactory.Authorization().V1alpha1().PostgresRoleBindings().Informer()
-	c.postgresRoleBindingQueue = queue.New(api.ResourceKindPostgresRoleBinding, c.MaxNumRequeues, c.NumThreads, c.runPostgresRoleBindingInjector)
+	c.pgRoleBindingInformer = c.dbInformerFactory.Authorization().V1alpha1().PostgresRoleBindings().Informer()
+	c.pgRoleBindingQueue = queue.New(api.ResourceKindPostgresRoleBinding, c.MaxNumRequeues, c.NumThreads, c.runPostgresRoleBindingInjector)
 
 	// TODO: add custom event handler?
-	c.postgresRoleBindingInformer.AddEventHandler(queue.DefaultEventHandler(c.postgresRoleBindingQueue.GetQueue()))
-	c.postgresRoleBindingLister = c.dbInformerFactory.Authorization().V1alpha1().PostgresRoleBindings().Lister()
+	c.pgRoleBindingInformer.AddEventHandler(queue.DefaultEventHandler(c.pgRoleBindingQueue.GetQueue()))
+	c.pgRoleBindingLister = c.dbInformerFactory.Authorization().V1alpha1().PostgresRoleBindings().Lister()
 }
 
 func (c *UserManagerController) runPostgresRoleBindingInjector(key string) error {
-	obj, exist, err := c.postgresRoleBindingInformer.GetIndexer().GetByKey(key)
+	obj, exist, err := c.pgRoleBindingInformer.GetIndexer().GetByKey(key)
 	if err != nil {
 		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
 		return err
