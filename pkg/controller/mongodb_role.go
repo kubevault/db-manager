@@ -29,7 +29,7 @@ func (c *UserManagerController) initMongodbRoleWatcher() {
 	c.mgRoleInformer.AddEventHandler(queue.NewEventHandler(c.mgRoleQueue.GetQueue(), func(old interface{}, new interface{}) bool {
 		oldObj := old.(*api.MongodbRole)
 		newObj := new.(*api.MongodbRole)
-		return !newObj.AlreadyObserved(oldObj)
+		return newObj.DeletionTimestamp != nil || !newObj.AlreadyObserved(oldObj)
 	}))
 	c.mongodbRoleLister = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoles().Lister()
 }
@@ -45,7 +45,7 @@ func (c *UserManagerController) runMongodbRoleInjector(key string) error {
 		glog.Warningf("MongodbRole %s does not exist anymore\n", key)
 
 	} else {
-		mRole := obj.(*api.MongodbRole)
+		mRole := obj.(*api.MongodbRole).DeepCopy()
 
 		glog.Infof("Sync/Add/Update for MongodbRole %s/%s\n", mRole.Namespace, mRole.Name)
 
@@ -53,17 +53,17 @@ func (c *UserManagerController) runMongodbRoleInjector(key string) error {
 			if kutilcorev1.HasFinalizer(mRole.ObjectMeta, MongodbRoleFinalizer) {
 				go c.runMongodbRoleFinalizer(mRole, 1*time.Minute, 10*time.Second)
 			}
-
-		} else if !kutilcorev1.HasFinalizer(mRole.ObjectMeta, MongodbRoleFinalizer) {
-			// Add finalizer
-			_, _, err := patchutil.PatchMongodbRole(c.dbClient.AuthorizationV1alpha1(), mRole, func(role *api.MongodbRole) *api.MongodbRole {
-				role.ObjectMeta = kutilcorev1.AddFinalizer(role.ObjectMeta, MongodbRoleFinalizer)
-				return role
-			})
-			if err != nil {
-				return errors.Wrapf(err, "failed to set MongodbRole finalizer for (%s/%s)", mRole.Namespace, mRole.Name)
-			}
 		} else {
+			if !kutilcorev1.HasFinalizer(mRole.ObjectMeta, MongodbRoleFinalizer) {
+				// Add finalizer
+				_, _, err := patchutil.PatchMongodbRole(c.dbClient.AuthorizationV1alpha1(), mRole, func(role *api.MongodbRole) *api.MongodbRole {
+					role.ObjectMeta = kutilcorev1.AddFinalizer(role.ObjectMeta, MongodbRoleFinalizer)
+					return role
+				})
+				if err != nil {
+					return errors.Wrapf(err, "failed to set MongodbRole finalizer for (%s/%s)", mRole.Namespace, mRole.Name)
+				}
+			}
 			dbRClient, err := database.NewDatabaseRoleForMongodb(c.kubeClient, mRole)
 			if err != nil {
 				return err

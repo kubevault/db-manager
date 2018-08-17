@@ -2,6 +2,7 @@ package util
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/appscode/kutil"
 	"github.com/evanphx/json-patch"
@@ -81,22 +82,55 @@ func TryUpdateMongodbRole(c cs.AuthorizationV1alpha1Interface, meta metav1.Objec
 	return
 }
 
-func UpdateMongodbRoleStatus(c cs.AuthorizationV1alpha1Interface, cur *api.MongodbRole, transform func(*api.MongodbRoleStatus) *api.MongodbRoleStatus, useSubresource ...bool) (*api.MongodbRole, error) {
+func UpdateMongodbRoleStatus(
+	c cs.AuthorizationV1alpha1Interface,
+	in *api.MongodbRole,
+	transform func(*api.MongodbRoleStatus) *api.MongodbRoleStatus,
+	useSubresource ...bool,
+) (result *api.MongodbRole, err error) {
 	if len(useSubresource) > 1 {
 		return nil, errors.Errorf("invalid value passed for useSubresource: %v", useSubresource)
 	}
 
-	mod := &api.MongodbRole{
-		TypeMeta:   cur.TypeMeta,
-		ObjectMeta: cur.ObjectMeta,
-		Spec:       cur.Spec,
-		Status:     *transform(cur.Status.DeepCopy()),
+	apply := func(x *api.MongodbRole) *api.MongodbRole {
+		return &api.MongodbRole{
+			TypeMeta:   x.TypeMeta,
+			ObjectMeta: x.ObjectMeta,
+			Spec:       x.Spec,
+			Status:     *transform(in.Status.DeepCopy()),
+		}
 	}
 
 	if len(useSubresource) == 1 && useSubresource[0] {
-		return c.MongodbRoles(cur.Namespace).UpdateStatus(mod)
+		attempt := 0
+		cur := in.DeepCopy()
+		err = wait.PollImmediate(kutil.RetryInterval, kutil.RetryTimeout, func() (bool, error) {
+			attempt++
+			var e2 error
+			result, e2 = c.MongodbRoles(in.Namespace).UpdateStatus(apply(cur))
+			if kerr.IsConflict(e2) {
+				latest, e3 := c.MongodbRoles(in.Namespace).Get(in.Name, metav1.GetOptions{})
+				switch {
+				case e3 == nil:
+					cur = latest
+					return false, nil
+				case kutil.IsRequestRetryable(e3):
+					return false, nil
+				default:
+					return false, e3
+				}
+			} else if err != nil && !kutil.IsRequestRetryable(e2) {
+				return false, e2
+			}
+			return e2 == nil, nil
+		})
+
+		if err != nil {
+			err = fmt.Errorf("failed to update status of MongodbRole %s/%s after %d attempts due to %v", in.Namespace, in.Name, attempt, err)
+		}
+		return
 	}
 
-	out, _, err := PatchMongodbRoleObject(c, cur, mod)
-	return out, err
+	result, _, err = PatchMongodbRoleObject(c, in, apply(in))
+	return
 }

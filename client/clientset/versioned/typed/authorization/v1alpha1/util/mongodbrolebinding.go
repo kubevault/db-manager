@@ -2,6 +2,7 @@ package util
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/appscode/kutil"
 	"github.com/evanphx/json-patch"
@@ -81,22 +82,55 @@ func TryUpdateMongodbRoleBinding(c cs.AuthorizationV1alpha1Interface, meta metav
 	return
 }
 
-func UpdateMongodbRoleBindingStatus(c cs.AuthorizationV1alpha1Interface, cur *api.MongodbRoleBinding, transform func(*api.MongodbRoleBindingStatus) *api.MongodbRoleBindingStatus, useSubresource ...bool) (*api.MongodbRoleBinding, error) {
+func UpdateMongodbRoleBindingStatus(
+	c cs.AuthorizationV1alpha1Interface,
+	in *api.MongodbRoleBinding,
+	transform func(*api.MongodbRoleBindingStatus) *api.MongodbRoleBindingStatus,
+	useSubresource ...bool,
+) (result *api.MongodbRoleBinding, err error) {
 	if len(useSubresource) > 1 {
 		return nil, errors.Errorf("invalid value passed for useSubresource: %v", useSubresource)
 	}
 
-	mod := &api.MongodbRoleBinding{
-		TypeMeta:   cur.TypeMeta,
-		ObjectMeta: cur.ObjectMeta,
-		Spec:       cur.Spec,
-		Status:     *transform(cur.Status.DeepCopy()),
+	apply := func(x *api.MongodbRoleBinding) *api.MongodbRoleBinding {
+		return &api.MongodbRoleBinding{
+			TypeMeta:   x.TypeMeta,
+			ObjectMeta: x.ObjectMeta,
+			Spec:       x.Spec,
+			Status:     *transform(in.Status.DeepCopy()),
+		}
 	}
 
 	if len(useSubresource) == 1 && useSubresource[0] {
-		return c.MongodbRoleBindings(cur.Namespace).UpdateStatus(mod)
+		attempt := 0
+		cur := in.DeepCopy()
+		err = wait.PollImmediate(kutil.RetryInterval, kutil.RetryTimeout, func() (bool, error) {
+			attempt++
+			var e2 error
+			result, e2 = c.MongodbRoleBindings(in.Namespace).UpdateStatus(apply(cur))
+			if kerr.IsConflict(e2) {
+				latest, e3 := c.MongodbRoleBindings(in.Namespace).Get(in.Name, metav1.GetOptions{})
+				switch {
+				case e3 == nil:
+					cur = latest
+					return false, nil
+				case kutil.IsRequestRetryable(e3):
+					return false, nil
+				default:
+					return false, e3
+				}
+			} else if err != nil && !kutil.IsRequestRetryable(e2) {
+				return false, e2
+			}
+			return e2 == nil, nil
+		})
+
+		if err != nil {
+			err = fmt.Errorf("failed to update status of MongodbRoleBinding %s/%s after %d attempts due to %v", in.Namespace, in.Name, attempt, err)
+		}
+		return
 	}
 
-	out, _, err := PatchMongodbRoleBindingObject(c, cur, mod)
-	return out, err
+	result, _, err = PatchMongodbRoleBindingObject(c, in, apply(in))
+	return
 }
