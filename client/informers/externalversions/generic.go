@@ -55,6 +55,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=authorization.kubedb.com, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("mongodbroles"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Authorization().V1alpha1().MongodbRoles().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("mongodbrolebindings"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Authorization().V1alpha1().MongodbRoleBindings().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("mysqlroles"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Authorization().V1alpha1().MysqlRoles().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("mysqlrolebindings"):

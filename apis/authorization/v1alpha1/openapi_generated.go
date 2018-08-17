@@ -36,6 +36,11 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.DatabaseConfigForPostgres":    schema_user_manager_apis_authorization_v1alpha1_DatabaseConfigForPostgres(ref),
 		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.LeaseData":                    schema_user_manager_apis_authorization_v1alpha1_LeaseData(ref),
 		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRole":                  schema_user_manager_apis_authorization_v1alpha1_MongodbRole(ref),
+		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRoleBinding":           schema_user_manager_apis_authorization_v1alpha1_MongodbRoleBinding(ref),
+		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRoleBindingCondition":  schema_user_manager_apis_authorization_v1alpha1_MongodbRoleBindingCondition(ref),
+		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRoleBindingList":       schema_user_manager_apis_authorization_v1alpha1_MongodbRoleBindingList(ref),
+		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRoleBindingSpec":       schema_user_manager_apis_authorization_v1alpha1_MongodbRoleBindingSpec(ref),
+		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRoleBindingStatus":     schema_user_manager_apis_authorization_v1alpha1_MongodbRoleBindingStatus(ref),
 		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRoleCondition":         schema_user_manager_apis_authorization_v1alpha1_MongodbRoleCondition(ref),
 		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRoleList":              schema_user_manager_apis_authorization_v1alpha1_MongodbRoleList(ref),
 		"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRoleSpec":              schema_user_manager_apis_authorization_v1alpha1_MongodbRoleSpec(ref),
@@ -587,6 +592,219 @@ func schema_user_manager_apis_authorization_v1alpha1_MongodbRole(ref common.Refe
 	}
 }
 
+func schema_user_manager_apis_authorization_v1alpha1_MongodbRoleBinding(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MongodbRoleBinding binds mongodb credential to user",
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRoleBindingSpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRoleBindingStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRoleBindingSpec", "github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRoleBindingStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_user_manager_apis_authorization_v1alpha1_MongodbRoleBindingCondition(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MongodbRoleBindingCondition describes the state of a MongodbRoleBinding at a certain point.",
+				Properties: map[string]spec.Schema{
+					"type": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Type of MongodbRoleBinding condition.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Status of the condition, one of True, False, Unknown.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"reason": {
+						SchemaProps: spec.SchemaProps{
+							Description: "The reason for the condition's.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"message": {
+						SchemaProps: spec.SchemaProps{
+							Description: "A human readable message indicating details about the transition.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{},
+	}
+}
+
+func schema_user_manager_apis_authorization_v1alpha1_MongodbRoleBindingList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+						},
+					},
+					"items": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Items is a list of MongodbRoleBinding objects",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRoleBinding"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRoleBinding", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+	}
+}
+
+func schema_user_manager_apis_authorization_v1alpha1_MongodbRoleBindingSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Properties: map[string]spec.Schema{
+					"roleRef": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specifies the name of the MongodbRole",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"subjects": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("k8s.io/api/rbac/v1.Subject"),
+									},
+								},
+							},
+						},
+					},
+					"store": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.Store"),
+						},
+					},
+				},
+				Required: []string{"roleRef", "subjects", "store"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/kubedb/user-manager/apis/authorization/v1alpha1.Store", "k8s.io/api/rbac/v1.Subject"},
+	}
+}
+
+func schema_user_manager_apis_authorization_v1alpha1_MongodbRoleBindingStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Properties: map[string]spec.Schema{
+					"observedGeneration": {
+						SchemaProps: spec.SchemaProps{
+							Description: "observedGeneration is the most recent generation observed for this MongodbRoleBinding. It corresponds to the MongodbRoleBinding's generation, which is updated on mutation by the API Server.",
+							Type:        []string{"integer"},
+							Format:      "int64",
+						},
+					},
+					"lease": {
+						SchemaProps: spec.SchemaProps{
+							Description: "contains lease info of the credentials",
+							Ref:         ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.LeaseData"),
+						},
+					},
+					"phase": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specifies the phase of the MongodbRoleBinding",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"conditions": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Represents the latest available observations of a MongodbRoleBinding current state.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRoleBindingCondition"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/kubedb/user-manager/apis/authorization/v1alpha1.LeaseData", "github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRoleBindingCondition"},
+	}
+}
+
 func schema_user_manager_apis_authorization_v1alpha1_MongodbRoleCondition(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -939,12 +1157,12 @@ func schema_user_manager_apis_authorization_v1alpha1_MysqlRoleBindingList(ref co
 					},
 					"items": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Items is a list of PostgresRoleBinding objects",
+							Description: "Items is a list of MysqlRoleBinding objects",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
-										Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.PostgresRoleBinding"),
+										Ref: ref("github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleBinding"),
 									},
 								},
 							},
@@ -954,7 +1172,7 @@ func schema_user_manager_apis_authorization_v1alpha1_MysqlRoleBindingList(ref co
 			},
 		},
 		Dependencies: []string{
-			"github.com/kubedb/user-manager/apis/authorization/v1alpha1.PostgresRoleBinding", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleBinding", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
