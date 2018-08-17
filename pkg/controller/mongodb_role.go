@@ -31,6 +31,7 @@ func (c *UserManagerController) initMongodbRoleWatcher() {
 		newObj := new.(*api.MongodbRole)
 		return newObj.DeletionTimestamp != nil || !newObj.AlreadyObserved(oldObj)
 	}))
+
 	c.mongodbRoleLister = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoles().Lister()
 }
 
@@ -64,6 +65,7 @@ func (c *UserManagerController) runMongodbRoleInjector(key string) error {
 					return errors.Wrapf(err, "failed to set MongodbRole finalizer for (%s/%s)", mRole.Namespace, mRole.Name)
 				}
 			}
+
 			dbRClient, err := database.NewDatabaseRoleForMongodb(c.kubeClient, mRole)
 			if err != nil {
 				return err

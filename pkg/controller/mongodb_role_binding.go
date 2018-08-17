@@ -34,8 +34,12 @@ func (c *UserManagerController) initMongodbRoleBindingWatcher() {
 	c.mgRoleBindingInformer = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoleBindings().Informer()
 	c.mgRoleBindingQueue = queue.New(api.ResourceKindMongodbRoleBinding, c.MaxNumRequeues, c.NumThreads, c.runMongodbRoleBindingInjector)
 
-	// TODO: add custom event handler?
-	c.mgRoleBindingInformer.AddEventHandler(queue.DefaultEventHandler(c.mgRoleBindingQueue.GetQueue()))
+	c.mgRoleBindingInformer.AddEventHandler(queue.NewEventHandler(c.mgRoleBindingQueue.GetQueue(), func(old interface{}, new interface{}) bool {
+		oldObj := old.(*api.MongodbRoleBinding)
+		newObj := new.(*api.MongodbRoleBinding)
+		return newObj.DeletionTimestamp != nil || !newObj.AlreadyObserved(oldObj)
+	}))
+
 	c.mgRoleBindingLister = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoleBindings().Lister()
 }
 
@@ -50,7 +54,7 @@ func (c *UserManagerController) runMongodbRoleBindingInjector(key string) error 
 		glog.Warningf("MongodbRoleBinding %s does not exist anymore\n", key)
 
 	} else {
-		mRoleBinding := obj.(*api.MongodbRoleBinding)
+		mRoleBinding := obj.(*api.MongodbRoleBinding).DeepCopy()
 
 		glog.Infof("Sync/Add/Update for MongodbRoleBinding %s/%s\n", mRoleBinding.Namespace, mRoleBinding.Name)
 
@@ -58,18 +62,18 @@ func (c *UserManagerController) runMongodbRoleBindingInjector(key string) error 
 			if kutilcorev1.HasFinalizer(mRoleBinding.ObjectMeta, MongodbRoleBindingFinalizer) {
 				go c.runMongodbRoleBindingFinalizer(mRoleBinding, 1*time.Minute, 10*time.Second)
 			}
-
-		} else if !kutilcorev1.HasFinalizer(mRoleBinding.ObjectMeta, MongodbRoleBindingFinalizer) {
-			// Add finalizer
-			_, _, err = patchutil.PatchMongodbRoleBinding(c.dbClient.AuthorizationV1alpha1(), mRoleBinding, func(binding *api.MongodbRoleBinding) *api.MongodbRoleBinding {
-				binding.ObjectMeta = kutilcorev1.AddFinalizer(binding.ObjectMeta, MongodbRoleBindingFinalizer)
-				return binding
-			})
-			if err != nil {
-				return errors.Wrapf(err, "failed to set MongodbRoleBinding finalizer for (%s/%s)", mRoleBinding.Namespace, mRoleBinding.Name)
+		} else {
+			if !kutilcorev1.HasFinalizer(mRoleBinding.ObjectMeta, MongodbRoleBindingFinalizer) {
+				// Add finalizer
+				_, _, err = patchutil.PatchMongodbRoleBinding(c.dbClient.AuthorizationV1alpha1(), mRoleBinding, func(binding *api.MongodbRoleBinding) *api.MongodbRoleBinding {
+					binding.ObjectMeta = kutilcorev1.AddFinalizer(binding.ObjectMeta, MongodbRoleBindingFinalizer)
+					return binding
+				})
+				if err != nil {
+					return errors.Wrapf(err, "failed to set MongodbRoleBinding finalizer for (%s/%s)", mRoleBinding.Namespace, mRoleBinding.Name)
+				}
 			}
 
-		} else {
 			dbRBClient, err := database.NewDatabaseRoleBindingForMongodb(c.kubeClient, c.dbClient, mRoleBinding)
 			if err != nil {
 				return err

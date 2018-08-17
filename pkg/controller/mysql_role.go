@@ -26,8 +26,12 @@ func (c *UserManagerController) initMysqlRoleWatcher() {
 	c.myRoleInformer = c.dbInformerFactory.Authorization().V1alpha1().MysqlRoles().Informer()
 	c.myRoleQueue = queue.New(api.ResourceKindMysqlRole, c.MaxNumRequeues, c.NumThreads, c.runMysqlRoleInjector)
 
-	// TODO: add custom event handler?
-	c.myRoleInformer.AddEventHandler(queue.DefaultEventHandler(c.myRoleQueue.GetQueue()))
+	c.myRoleInformer.AddEventHandler(queue.NewEventHandler(c.myRoleQueue.GetQueue(), func(old interface{}, new interface{}) bool {
+		oldObj := old.(*api.MysqlRole)
+		newObj := new.(*api.MysqlRole)
+		return newObj.DeletionTimestamp != nil || !newObj.AlreadyObserved(oldObj)
+	}))
+
 	c.myRoleLister = c.dbInformerFactory.Authorization().V1alpha1().MysqlRoles().Lister()
 }
 
@@ -42,7 +46,7 @@ func (c *UserManagerController) runMysqlRoleInjector(key string) error {
 		glog.Warningf("MysqlRole %s does not exist anymore\n", key)
 
 	} else {
-		mRole := obj.(*api.MysqlRole)
+		mRole := obj.(*api.MysqlRole).DeepCopy()
 
 		glog.Infof("Sync/Add/Update for MysqlRole %s/%s\n", mRole.Namespace, mRole.Name)
 
@@ -51,16 +55,18 @@ func (c *UserManagerController) runMysqlRoleInjector(key string) error {
 				go c.runMysqlRoleFinalizer(mRole, 1*time.Minute, 10*time.Second)
 			}
 
-		} else if !kutilcorev1.HasFinalizer(mRole.ObjectMeta, MysqlRoleFinalizer) {
-			// Add finalizer
-			_, _, err := patchutil.PatchMysqlRole(c.dbClient.AuthorizationV1alpha1(), mRole, func(role *api.MysqlRole) *api.MysqlRole {
-				role.ObjectMeta = kutilcorev1.AddFinalizer(role.ObjectMeta, MysqlRoleFinalizer)
-				return role
-			})
-			if err != nil {
-				return errors.Wrapf(err, "failed to set MysqlRole finalizer for (%s/%s)", mRole.Namespace, mRole.Name)
-			}
 		} else {
+			if !kutilcorev1.HasFinalizer(mRole.ObjectMeta, MysqlRoleFinalizer) {
+				// Add finalizer
+				_, _, err := patchutil.PatchMysqlRole(c.dbClient.AuthorizationV1alpha1(), mRole, func(role *api.MysqlRole) *api.MysqlRole {
+					role.ObjectMeta = kutilcorev1.AddFinalizer(role.ObjectMeta, MysqlRoleFinalizer)
+					return role
+				})
+				if err != nil {
+					return errors.Wrapf(err, "failed to set MysqlRole finalizer for (%s/%s)", mRole.Namespace, mRole.Name)
+				}
+			}
+
 			dbRClient, err := database.NewDatabaseRoleForMysql(c.kubeClient, mRole)
 			if err != nil {
 				return err

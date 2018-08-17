@@ -34,8 +34,11 @@ func (c *UserManagerController) initPostgresRoleBindingWatcher() {
 	c.pgRoleBindingInformer = c.dbInformerFactory.Authorization().V1alpha1().PostgresRoleBindings().Informer()
 	c.pgRoleBindingQueue = queue.New(api.ResourceKindPostgresRoleBinding, c.MaxNumRequeues, c.NumThreads, c.runPostgresRoleBindingInjector)
 
-	// TODO: add custom event handler?
-	c.pgRoleBindingInformer.AddEventHandler(queue.DefaultEventHandler(c.pgRoleBindingQueue.GetQueue()))
+	c.pgRoleBindingInformer.AddEventHandler(queue.NewEventHandler(c.pgRoleBindingQueue.GetQueue(), func(old interface{}, new interface{}) bool {
+		oldObj := old.(*api.PostgresRoleBinding)
+		newObj := new.(*api.PostgresRoleBinding)
+		return newObj.DeletionTimestamp != nil || !newObj.AlreadyObserved(oldObj)
+	}))
 	c.pgRoleBindingLister = c.dbInformerFactory.Authorization().V1alpha1().PostgresRoleBindings().Lister()
 }
 
@@ -50,7 +53,7 @@ func (c *UserManagerController) runPostgresRoleBindingInjector(key string) error
 		glog.Warningf("PostgresRoleBinding %s does not exist anymore\n", key)
 
 	} else {
-		pgRoleBinding := obj.(*api.PostgresRoleBinding)
+		pgRoleBinding := obj.(*api.PostgresRoleBinding).DeepCopy()
 
 		glog.Infof("Sync/Add/Update for PostgresRoleBinding %s/%s\n", pgRoleBinding.Namespace, pgRoleBinding.Name)
 
@@ -59,17 +62,19 @@ func (c *UserManagerController) runPostgresRoleBindingInjector(key string) error
 				go c.runPostgresRoleBindingFinalizer(pgRoleBinding, 1*time.Minute, 10*time.Second)
 			}
 
-		} else if !kutilcorev1.HasFinalizer(pgRoleBinding.ObjectMeta, PostgresRoleBindingFinalizer) {
-			// Add finalizer
-			_, _, err = patchutil.PatchPostgresRoleBinding(c.dbClient.AuthorizationV1alpha1(), pgRoleBinding, func(binding *api.PostgresRoleBinding) *api.PostgresRoleBinding {
-				binding.ObjectMeta = kutilcorev1.AddFinalizer(binding.ObjectMeta, PostgresRoleBindingFinalizer)
-				return binding
-			})
-			if err != nil {
-				return errors.Wrapf(err, "failed to set postgresRoleBinding finalizer for (%s/%s)", pgRoleBinding.Namespace, pgRoleBinding.Name)
+		} else {
+			if !kutilcorev1.HasFinalizer(pgRoleBinding.ObjectMeta, PostgresRoleBindingFinalizer) {
+				// Add finalizer
+				_, _, err = patchutil.PatchPostgresRoleBinding(c.dbClient.AuthorizationV1alpha1(), pgRoleBinding, func(binding *api.PostgresRoleBinding) *api.PostgresRoleBinding {
+					binding.ObjectMeta = kutilcorev1.AddFinalizer(binding.ObjectMeta, PostgresRoleBindingFinalizer)
+					return binding
+				})
+				if err != nil {
+					return errors.Wrapf(err, "failed to set postgresRoleBinding finalizer for (%s/%s)", pgRoleBinding.Namespace, pgRoleBinding.Name)
+				}
+
 			}
 
-		} else {
 			dbRBClient, err := database.NewDatabaseRoleBindingForPostgres(c.kubeClient, c.dbClient, pgRoleBinding)
 			if err != nil {
 				return err
