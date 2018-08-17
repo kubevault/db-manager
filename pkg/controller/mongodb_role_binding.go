@@ -33,13 +33,11 @@ const (
 func (c *UserManagerController) initMongodbRoleBindingWatcher() {
 	c.mgRoleBindingInformer = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoleBindings().Informer()
 	c.mgRoleBindingQueue = queue.New(api.ResourceKindMongodbRoleBinding, c.MaxNumRequeues, c.NumThreads, c.runMongodbRoleBindingInjector)
-
 	c.mgRoleBindingInformer.AddEventHandler(queue.NewEventHandler(c.mgRoleBindingQueue.GetQueue(), func(old interface{}, new interface{}) bool {
 		oldObj := old.(*api.MongodbRoleBinding)
 		newObj := new.(*api.MongodbRoleBinding)
 		return newObj.DeletionTimestamp != nil || !newObj.AlreadyObserved(oldObj)
 	}))
-
 	c.mgRoleBindingLister = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoleBindings().Lister()
 }
 
@@ -223,7 +221,7 @@ func (c *UserManagerController) reconcileMongodbRoleBinding(dbRBClient database.
 
 		status.Phase = MongodbRoleBindingPhaseSuccess
 		status.Conditions = []api.MongodbRoleBindingCondition{}
-		status.ObservedGeneration = mRoleBinding.GetGeneration()
+		status.ObservedGeneration = mRoleBinding.Generation
 
 		err = c.updateMongodbRoleBindingStatus(&status, mRoleBinding)
 		if err != nil {
@@ -233,37 +231,35 @@ func (c *UserManagerController) reconcileMongodbRoleBinding(dbRBClient database.
 	} else {
 		// sync role binding
 		// - update role binding
-		if mRoleBinding.ObjectMeta.Generation > mRoleBinding.Status.ObservedGeneration {
-			name := mRoleBinding.Name
-			namespace := mRoleBinding.Namespace
-			status := mRoleBinding.Status
+		name := mRoleBinding.Name
+		namespace := mRoleBinding.Namespace
+		status := mRoleBinding.Status
 
-			err := dbRBClient.UpdateRoleBinding(getMongodbRbacRoleBindingName(name), namespace, mRoleBinding.Spec.Subjects)
-			if err != nil {
-				status.Conditions = []api.MongodbRoleBindingCondition{
-					{
-						Type:    "Available",
-						Status:  corev1.ConditionFalse,
-						Reason:  "FailedToUpdateRoleBinding",
-						Message: err.Error(),
-					},
-				}
-
-				err2 := c.updateMongodbRoleBindingStatus(&status, mRoleBinding)
-				if err2 != nil {
-					return errors.Wrapf(err2, "for mongodbRoleBinding(%s/%s): failed to update status", namespace, name)
-				}
-
-				return errors.Wrapf(err, "for MongodbRoleBinding(%s/%s)", namespace, name)
+		err := dbRBClient.UpdateRoleBinding(getMongodbRbacRoleBindingName(name), namespace, mRoleBinding.Spec.Subjects)
+		if err != nil {
+			status.Conditions = []api.MongodbRoleBindingCondition{
+				{
+					Type:    "Available",
+					Status:  corev1.ConditionFalse,
+					Reason:  "FailedToUpdateRoleBinding",
+					Message: err.Error(),
+				},
 			}
 
-			status.Conditions = []api.MongodbRoleBindingCondition{}
-			status.ObservedGeneration = mRoleBinding.ObjectMeta.Generation
-
-			err = c.updateMongodbRoleBindingStatus(&status, mRoleBinding)
-			if err != nil {
-				return errors.Wrapf(err, "for MongodbRoleBinding(%s/%s)", namespace, name)
+			err2 := c.updateMongodbRoleBindingStatus(&status, mRoleBinding)
+			if err2 != nil {
+				return errors.Wrapf(err2, "for mongodbRoleBinding(%s/%s): failed to update status", namespace, name)
 			}
+
+			return errors.Wrapf(err, "for MongodbRoleBinding(%s/%s)", namespace, name)
+		}
+
+		status.Conditions = []api.MongodbRoleBindingCondition{}
+		status.ObservedGeneration = mRoleBinding.ObjectMeta.Generation
+
+		err = c.updateMongodbRoleBindingStatus(&status, mRoleBinding)
+		if err != nil {
+			return errors.Wrapf(err, "for MongodbRoleBinding(%s/%s)", namespace, name)
 		}
 	}
 

@@ -25,13 +25,11 @@ const (
 func (c *UserManagerController) initMongodbRoleWatcher() {
 	c.mgRoleInformer = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoles().Informer()
 	c.mgRoleQueue = queue.New(api.ResourceKindMongodbRole, c.MaxNumRequeues, c.NumThreads, c.runMongodbRoleInjector)
-
 	c.mgRoleInformer.AddEventHandler(queue.NewEventHandler(c.mgRoleQueue.GetQueue(), func(old interface{}, new interface{}) bool {
 		oldObj := old.(*api.MongodbRole)
 		newObj := new.(*api.MongodbRole)
 		return newObj.DeletionTimestamp != nil || !newObj.AlreadyObserved(oldObj)
 	}))
-
 	c.mongodbRoleLister = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoles().Lister()
 }
 
@@ -161,36 +159,34 @@ func (c *UserManagerController) reconcileMongodbRole(dbRClient database.Database
 
 	} else {
 		// sync role
-		if mRole.ObjectMeta.Generation > mRole.Status.ObservedGeneration {
-			status := mRole.Status
+		status := mRole.Status
 
-			// In vault create role replaces the old role
-			err := dbRClient.CreateRole()
-			if err != nil {
-				status.Conditions = []api.MongodbRoleCondition{
-					{
-						Type:    "Available",
-						Status:  corev1.ConditionFalse,
-						Reason:  "FailedToUpdateRole",
-						Message: err.Error(),
-					},
-				}
-
-				err2 := c.updatedMongodbRoleStatus(&status, mRole)
-				if err2 != nil {
-					return errors.Wrapf(err2, "for MongodbRole(%s/%s): failed to update status", mRole.Namespace, mRole.Name)
-				}
-
-				return errors.Wrapf(err, "For Mongodb(%s/%s): failed to update role", mRole.Namespace, mRole.Name)
+		// In vault create role replaces the old role
+		err := dbRClient.CreateRole()
+		if err != nil {
+			status.Conditions = []api.MongodbRoleCondition{
+				{
+					Type:    "Available",
+					Status:  corev1.ConditionFalse,
+					Reason:  "FailedToUpdateRole",
+					Message: err.Error(),
+				},
 			}
 
-			status.Conditions = []api.MongodbRoleCondition{}
-			status.ObservedGeneration = mRole.Generation
-
-			err = c.updatedMongodbRoleStatus(&status, mRole)
-			if err != nil {
-				return errors.Wrapf(err, "For Mongodb(%s/%s): failed to update MongodbRole status", mRole.Namespace, mRole.Name)
+			err2 := c.updatedMongodbRoleStatus(&status, mRole)
+			if err2 != nil {
+				return errors.Wrapf(err2, "for MongodbRole(%s/%s): failed to update status", mRole.Namespace, mRole.Name)
 			}
+
+			return errors.Wrapf(err, "For Mongodb(%s/%s): failed to update role", mRole.Namespace, mRole.Name)
+		}
+
+		status.Conditions = []api.MongodbRoleCondition{}
+		status.ObservedGeneration = mRole.Generation
+
+		err = c.updatedMongodbRoleStatus(&status, mRole)
+		if err != nil {
+			return errors.Wrapf(err, "For Mongodb(%s/%s): failed to update MongodbRole status", mRole.Namespace, mRole.Name)
 		}
 	}
 

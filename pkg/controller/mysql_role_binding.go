@@ -33,13 +33,11 @@ const (
 func (c *UserManagerController) initMysqlRoleBindingWatcher() {
 	c.myRoleBindingInformer = c.dbInformerFactory.Authorization().V1alpha1().MysqlRoleBindings().Informer()
 	c.myRoleBindingQueue = queue.New(api.ResourceKindMysqlRoleBinding, c.MaxNumRequeues, c.NumThreads, c.runMysqlRoleBindingInjector)
-
 	c.myRoleBindingInformer.AddEventHandler(queue.NewEventHandler(c.myRoleBindingQueue.GetQueue(), func(old interface{}, new interface{}) bool {
 		oldObj := old.(*api.MysqlRoleBinding)
 		newObj := new.(*api.MysqlRoleBinding)
 		return newObj.DeletionTimestamp != nil || !newObj.AlreadyObserved(oldObj)
 	}))
-
 	c.myRoleBindingLister = c.dbInformerFactory.Authorization().V1alpha1().MysqlRoleBindings().Lister()
 }
 
@@ -225,7 +223,7 @@ func (c *UserManagerController) reconcileMysqlRoleBinding(dbRBClient database.Da
 
 		status.Phase = MysqlRoleBindingPhaseSuccess
 		status.Conditions = []api.MysqlRoleBindingCondition{}
-		status.ObservedGeneration = mRoleBinding.GetGeneration()
+		status.ObservedGeneration = mRoleBinding.Generation
 
 		err = c.updateMysqlRoleBindingStatus(&status, mRoleBinding)
 		if err != nil {
@@ -235,37 +233,35 @@ func (c *UserManagerController) reconcileMysqlRoleBinding(dbRBClient database.Da
 	} else {
 		// sync role binding
 		// - update role binding
-		if mRoleBinding.ObjectMeta.Generation > mRoleBinding.Status.ObservedGeneration {
-			name := mRoleBinding.Name
-			namespace := mRoleBinding.Namespace
-			status := mRoleBinding.Status
+		name := mRoleBinding.Name
+		namespace := mRoleBinding.Namespace
+		status := mRoleBinding.Status
 
-			err := dbRBClient.UpdateRoleBinding(getMysqlRbacRoleBindingName(name), namespace, mRoleBinding.Spec.Subjects)
-			if err != nil {
-				status.Conditions = []api.MysqlRoleBindingCondition{
-					{
-						Type:    "Available",
-						Status:  corev1.ConditionFalse,
-						Reason:  "FailedToUpdateRoleBinding",
-						Message: err.Error(),
-					},
-				}
-
-				err2 := c.updateMysqlRoleBindingStatus(&status, mRoleBinding)
-				if err2 != nil {
-					return errors.Wrapf(err2, "for mysqlRoleBinding(%s/%s): failed to update status", namespace, name)
-				}
-
-				return errors.Wrapf(err, "for MysqlRoleBinding(%s/%s)", namespace, name)
+		err := dbRBClient.UpdateRoleBinding(getMysqlRbacRoleBindingName(name), namespace, mRoleBinding.Spec.Subjects)
+		if err != nil {
+			status.Conditions = []api.MysqlRoleBindingCondition{
+				{
+					Type:    "Available",
+					Status:  corev1.ConditionFalse,
+					Reason:  "FailedToUpdateRoleBinding",
+					Message: err.Error(),
+				},
 			}
 
-			status.Conditions = []api.MysqlRoleBindingCondition{}
-			status.ObservedGeneration = mRoleBinding.ObjectMeta.Generation
-
-			err = c.updateMysqlRoleBindingStatus(&status, mRoleBinding)
-			if err != nil {
-				return errors.Wrapf(err, "for MysqlRoleBinding(%s/%s)", namespace, name)
+			err2 := c.updateMysqlRoleBindingStatus(&status, mRoleBinding)
+			if err2 != nil {
+				return errors.Wrapf(err2, "for mysqlRoleBinding(%s/%s): failed to update status", namespace, name)
 			}
+
+			return errors.Wrapf(err, "for MysqlRoleBinding(%s/%s)", namespace, name)
+		}
+
+		status.Conditions = []api.MysqlRoleBindingCondition{}
+		status.ObservedGeneration = mRoleBinding.ObjectMeta.Generation
+
+		err = c.updateMysqlRoleBindingStatus(&status, mRoleBinding)
+		if err != nil {
+			return errors.Wrapf(err, "for MysqlRoleBinding(%s/%s)", namespace, name)
 		}
 	}
 

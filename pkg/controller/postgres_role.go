@@ -25,13 +25,11 @@ const (
 func (c *UserManagerController) initPostgresRoleWatcher() {
 	c.pgRoleInformer = c.dbInformerFactory.Authorization().V1alpha1().PostgresRoles().Informer()
 	c.pgRoleQueue = queue.New(api.ResourceKindPostgresRole, c.MaxNumRequeues, c.NumThreads, c.runPostgresRoleInjector)
-
 	c.pgRoleInformer.AddEventHandler(queue.NewEventHandler(c.pgRoleQueue.GetQueue(), func(old interface{}, new interface{}) bool {
 		oldObj := old.(*api.PostgresRole)
 		newObj := new.(*api.PostgresRole)
 		return newObj.DeletionTimestamp != nil || !newObj.AlreadyObserved(oldObj)
 	}))
-
 	c.pgRoleLister = c.dbInformerFactory.Authorization().V1alpha1().PostgresRoles().Lister()
 }
 
@@ -162,38 +160,36 @@ func (c *UserManagerController) reconcilePostgresRole(dbRClient database.Databas
 
 	} else {
 		// sync role
-		if pgRole.ObjectMeta.Generation > pgRole.Status.ObservedGeneration {
-			status := pgRole.Status
-			name := pgRole.Name
-			namespace := pgRole.Namespace
+		status := pgRole.Status
+		name := pgRole.Name
+		namespace := pgRole.Namespace
 
-			// In vault create role replaces the old role
-			err := dbRClient.CreateRole()
-			if err != nil {
-				status.Conditions = []api.PostgresRoleCondition{
-					{
-						Type:    "Available",
-						Status:  corev1.ConditionFalse,
-						Reason:  "FailedToUpdateDatabaseRole",
-						Message: err.Error(),
-					},
-				}
-
-				err2 := c.updatePostgresRoleStatus(&status, pgRole)
-				if err2 != nil {
-					return errors.Wrapf(err2, "for postgresRole(%s/%s): failed to update status", namespace, name)
-				}
-
-				return errors.Wrapf(err, "for postgresRole(%s/%s): failed to update role", namespace, name)
+		// In vault create role replaces the old role
+		err := dbRClient.CreateRole()
+		if err != nil {
+			status.Conditions = []api.PostgresRoleCondition{
+				{
+					Type:    "Available",
+					Status:  corev1.ConditionFalse,
+					Reason:  "FailedToUpdateDatabaseRole",
+					Message: err.Error(),
+				},
 			}
 
-			status.ObservedGeneration = pgRole.Generation
-			status.Conditions = []api.PostgresRoleCondition{}
-
-			err = c.updatePostgresRoleStatus(&status, pgRole)
-			if err != nil {
-				return errors.Wrap(err, "failed to update postgresRole status")
+			err2 := c.updatePostgresRoleStatus(&status, pgRole)
+			if err2 != nil {
+				return errors.Wrapf(err2, "for postgresRole(%s/%s): failed to update status", namespace, name)
 			}
+
+			return errors.Wrapf(err, "for postgresRole(%s/%s): failed to update role", namespace, name)
+		}
+
+		status.ObservedGeneration = pgRole.Generation
+		status.Conditions = []api.PostgresRoleCondition{}
+
+		err = c.updatePostgresRoleStatus(&status, pgRole)
+		if err != nil {
+			return errors.Wrap(err, "failed to update postgresRole status")
 		}
 	}
 

@@ -33,7 +33,6 @@ const (
 func (c *UserManagerController) initPostgresRoleBindingWatcher() {
 	c.pgRoleBindingInformer = c.dbInformerFactory.Authorization().V1alpha1().PostgresRoleBindings().Informer()
 	c.pgRoleBindingQueue = queue.New(api.ResourceKindPostgresRoleBinding, c.MaxNumRequeues, c.NumThreads, c.runPostgresRoleBindingInjector)
-
 	c.pgRoleBindingInformer.AddEventHandler(queue.NewEventHandler(c.pgRoleBindingQueue.GetQueue(), func(old interface{}, new interface{}) bool {
 		oldObj := old.(*api.PostgresRoleBinding)
 		newObj := new.(*api.PostgresRoleBinding)
@@ -224,7 +223,7 @@ func (c *UserManagerController) reconcilePostgresRoleBinding(dbRBClient database
 
 		status.Phase = PhaseSuccess
 		status.Conditions = []api.PostgresRoleBindingCondition{}
-		status.ObservedGeneration = pgRoleBinding.GetGeneration()
+		status.ObservedGeneration = pgRoleBinding.Generation
 
 		err = c.updatePostgresRoleBindingStatus(&status, pgRoleBinding)
 		if err != nil {
@@ -234,37 +233,35 @@ func (c *UserManagerController) reconcilePostgresRoleBinding(dbRBClient database
 	} else {
 		// sync role binding
 		// - update role binding
-		if pgRoleBinding.ObjectMeta.Generation > pgRoleBinding.Status.ObservedGeneration {
-			name := pgRoleBinding.Name
-			namespace := pgRoleBinding.Namespace
-			status := pgRoleBinding.Status
+		name := pgRoleBinding.Name
+		namespace := pgRoleBinding.Namespace
+		status := pgRoleBinding.Status
 
-			err := dbRBClient.UpdateRoleBinding(getPostgresRbacRoleBindingName(name), namespace, pgRoleBinding.Spec.Subjects)
-			if err != nil {
-				status.Conditions = []api.PostgresRoleBindingCondition{
-					{
-						Type:    "Available",
-						Status:  corev1.ConditionFalse,
-						Reason:  "FailedToUpdateRoleBinding",
-						Message: err.Error(),
-					},
-				}
-
-				err2 := c.updatePostgresRoleBindingStatus(&status, pgRoleBinding)
-				if err2 != nil {
-					return errors.Wrapf(err2, "for postgresRoleBinding(%s/%s): failed to update status", namespace, name)
-				}
-
-				return errors.Wrapf(err, "for postgresRoleBinding(%s/%s)", namespace, name)
+		err := dbRBClient.UpdateRoleBinding(getPostgresRbacRoleBindingName(name), namespace, pgRoleBinding.Spec.Subjects)
+		if err != nil {
+			status.Conditions = []api.PostgresRoleBindingCondition{
+				{
+					Type:    "Available",
+					Status:  corev1.ConditionFalse,
+					Reason:  "FailedToUpdateRoleBinding",
+					Message: err.Error(),
+				},
 			}
 
-			status.Conditions = []api.PostgresRoleBindingCondition{}
-			status.ObservedGeneration = pgRoleBinding.ObjectMeta.Generation
-
-			err = c.updatePostgresRoleBindingStatus(&status, pgRoleBinding)
-			if err != nil {
-				return errors.Wrapf(err, "for postgresRoleBinding(%s/%s)", namespace, name)
+			err2 := c.updatePostgresRoleBindingStatus(&status, pgRoleBinding)
+			if err2 != nil {
+				return errors.Wrapf(err2, "for postgresRoleBinding(%s/%s): failed to update status", namespace, name)
 			}
+
+			return errors.Wrapf(err, "for postgresRoleBinding(%s/%s)", namespace, name)
+		}
+
+		status.Conditions = []api.PostgresRoleBindingCondition{}
+		status.ObservedGeneration = pgRoleBinding.ObjectMeta.Generation
+
+		err = c.updatePostgresRoleBindingStatus(&status, pgRoleBinding)
+		if err != nil {
+			return errors.Wrapf(err, "for postgresRoleBinding(%s/%s)", namespace, name)
 		}
 	}
 
