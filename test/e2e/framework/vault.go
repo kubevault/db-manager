@@ -3,6 +3,7 @@ package framework
 import (
 	"fmt"
 	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/appscode/go/crypto/rand"
@@ -12,7 +13,7 @@ import (
 	apps "k8s.io/api/apps/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
+	"k8s.io/apimachinery/pkg/labels"
 )
 
 var (
@@ -57,12 +58,6 @@ func (f *Framework) DeployVault() (string, error) {
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to create service(%s/%s)", srv.Namespace, srv.Name)
 	}
-
-	minikubeIP, err := getMinikubeIP()
-
-	url := fmt.Sprintf("http://%s:%d", minikubeIP, nodePort)
-
-	fmt.Println(url)
 
 	d := apps.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -131,6 +126,12 @@ func (f *Framework) DeployVault() (string, error) {
 		return "", err
 	}
 
+	nodePortIP, err := f.getNodePortIP(label)
+	if err != nil {
+		return "", err
+	}
+	url := fmt.Sprintf("http://%s:%d", nodePortIP, nodePort)
+
 	return url, nil
 }
 
@@ -164,6 +165,38 @@ func (f *Framework) GetVaultClient() (*vaultapi.Client, error) {
 	cl.SetToken("root")
 
 	return cl, nil
+}
+
+func (f *Framework) getNodePortIP(label map[string]string) (string, error) {
+	pods, err := f.KubeClient.CoreV1().Pods(f.namespace).List(metav1.ListOptions{
+		LabelSelector: labels.SelectorFromSet(label).String(),
+	})
+	if err != nil {
+		return "", err
+	}
+
+	if len(pods.Items) != 1 {
+		return "", errors.New("number of vault pods is not 1")
+	}
+
+	for _, p := range pods.Items {
+		node, err := f.KubeClient.CoreV1().Nodes().Get(p.Spec.NodeName, metav1.GetOptions{})
+		if err != nil {
+			return "", err
+		}
+
+		for _, addr := range node.Status.Addresses {
+			if addr.Type == corev1.NodeExternalIP {
+				return addr.Address, nil
+			}
+		}
+
+		if node.Name == "minikube" {
+			return getMinikubeIP()
+		}
+	}
+
+	return "", errors.New("no ip found")
 }
 
 func getMinikubeIP() (string, error) {
