@@ -9,7 +9,6 @@ import (
 	"github.com/golang/glog"
 	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
 	patchutil "github.com/kubedb/user-manager/client/clientset/versioned/typed/authorization/v1alpha1/util"
-	"github.com/kubedb/user-manager/pkg/vault"
 	"github.com/kubedb/user-manager/pkg/vault/database"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -19,15 +18,6 @@ import (
 
 const (
 	PostgresRoleBindingFinalizer = "database.postgres.rolebinding"
-)
-
-const (
-	PhaseSuccess           api.PostgresRoleBindingPhase = "Success"
-	PhaseInit              api.PostgresRoleBindingPhase = "Init"
-	PhaseGetCredential     api.PostgresRoleBindingPhase = "GetCredential"
-	PhaseCreateSecret      api.PostgresRoleBindingPhase = "CreateSecret"
-	PhaseCreateRole        api.PostgresRoleBindingPhase = "CreateRole"
-	PhaseCreateRoleBinding api.PostgresRoleBindingPhase = "CreateRoleBinding"
 )
 
 func (c *UserManagerController) initPostgresRoleBindingWatcher() {
@@ -81,7 +71,7 @@ func (c *UserManagerController) runPostgresRoleBindingInjector(key string) error
 
 			err = c.reconcilePostgresRoleBinding(dbRBClient, pgRoleBinding)
 			if err != nil {
-				return err
+				return errors.Wrapf(err, "for PostgresRoleBinding(%s/%s):", pgRoleBinding.Namespace, pgRoleBinding.Name)
 			}
 		}
 	}
@@ -95,176 +85,131 @@ func (c *UserManagerController) runPostgresRoleBindingInjector(key string) error
 //	  - create rbac role and role binding
 //    - sync role binding
 func (c *UserManagerController) reconcilePostgresRoleBinding(dbRBClient database.DatabaseRoleBindingInterface, pgRoleBinding *api.PostgresRoleBinding) error {
-	if pgRoleBinding.Status.ObservedGeneration == 0 { // initial stage
-		var (
-			cred *vault.DatabaseCredential
-			err  error
-		)
+	var (
+		err   error
+		credS *corev1.Secret
+	)
 
-		status := pgRoleBinding.Status
-		name := pgRoleBinding.Name
-		namespace := pgRoleBinding.Namespace
-		roleName := getPostgresRbacRoleName(name)
-		roleBindingName := getPostgresRbacRoleBindingName(name)
-		storeSecret := pgRoleBinding.Spec.Store.Secret
+	var (
+		pRBName    = pgRoleBinding.Name
+		ns         = pgRoleBinding.Namespace
+		secretName = pgRoleBinding.Spec.Store.Secret
+		status     = pgRoleBinding.Status
+	)
 
-		if status.Phase == "" || status.Phase == PhaseGetCredential || status.Phase == PhaseCreateSecret {
-			status.Phase = PhaseGetCredential
+	// get credential secret. if not found, then create it
+	credS, err = c.kubeClient.CoreV1().Secrets(ns).Get(secretName, metav1.GetOptions{})
+	if err != nil && !kerr.IsNotFound(err) {
+		return errors.WithStack(err)
+	}
 
-			cred, err = dbRBClient.GetCredential()
+	// is lease_id exists in credential secret
+	// if it exists, then is it expired
+	isLeaseExpired := true
+	if credS != nil && credS.Data != nil {
+		leaseID, ok := credS.Data["lease_id"]
+		if ok {
+			isLeaseExpired, err = dbRBClient.IsLeaseExpired(string(leaseID))
 			if err != nil {
-				status.Conditions = []api.PostgresRoleBindingCondition{
-					{
-						Type:    "Available",
-						Status:  corev1.ConditionFalse,
-						Reason:  "FailedToGetCredential",
-						Message: err.Error(),
-					},
-				}
-
-				err2 := c.updatePostgresRoleBindingStatus(&status, pgRoleBinding)
-				if err2 != nil {
-					return errors.Wrapf(err2, "for postgresRoleBinding(%s/%s): failed to update status", namespace, name)
-				}
-
-				return errors.Wrapf(err, "for postgresRoleBinding(%s/%s)", namespace, name)
+				return errors.WithStack(err)
 			}
-
-			glog.Infof("for postgresRoleBinding(%s/%s): getting postgres credential is successful\n", namespace, name)
-
-			// add lease info
-			d := time.Duration(cred.LeaseDuration)
-			status.Lease = api.LeaseData{
-				ID:            cred.LeaseID,
-				Duration:      cred.LeaseDuration,
-				RenewDeadline: time.Now().Add(time.Second * d).Unix(),
-			}
-
-			// next phase
-			status.Phase = PhaseCreateSecret
 		}
+	}
 
-		if status.Phase == PhaseCreateSecret {
-			err := dbRBClient.CreateSecret(storeSecret, namespace, cred)
-			if err != nil {
-				err2 := dbRBClient.RevokeLease(cred.LeaseID)
-				if err2 != nil {
-					return errors.Wrapf(err2, "for postgresRoleBinding(%s/%s): failed to revoke lease", namespace, name)
-				}
-
-				status.Conditions = []api.PostgresRoleBindingCondition{
-					{
-						Type:    "Available",
-						Status:  corev1.ConditionFalse,
-						Reason:  "FailedToCreateSecret",
-						Message: err.Error(),
-					},
-				}
-
-				err2 = c.updatePostgresRoleBindingStatus(&status, pgRoleBinding)
-				if err2 != nil {
-					return errors.Wrapf(err2, "for postgresRoleBinding(%s/%s): failed to update status", namespace, name)
-				}
-
-				return errors.Wrapf(err, "for postgresRoleBinding(%s/%s)", namespace, name)
-			}
-			glog.Infof("for postgresRoleBinding(%s/%s): creating secret(%s/%s) is successful\n", namespace, name, namespace, pgRoleBinding.Spec.Store.Secret)
-
-			// next phase
-			status.Phase = PhaseCreateRole
-		}
-
-		if status.Phase == PhaseCreateRole {
-			err := dbRBClient.CreateRole(roleName, namespace, storeSecret)
-			if err != nil {
-				status.Conditions = []api.PostgresRoleBindingCondition{
-					{
-						Type:    "Available",
-						Status:  corev1.ConditionFalse,
-						Reason:  "FailedToCreateRole",
-						Message: err.Error(),
-					},
-				}
-
-				err2 := c.updatePostgresRoleBindingStatus(&status, pgRoleBinding)
-				if err2 != nil {
-					return errors.Wrapf(err2, "for postgresRoleBinding(%s/%s): failed to update status", namespace, name)
-				}
-
-				return errors.Wrapf(err, "for postgresRoleBinding(%s/%s)", namespace, name)
-			}
-			glog.Infof("for postgresRoleBinding(%s/%s): creating rbac role(%s/%s) is successful\n", namespace, name, namespace, roleName)
-
-			//next phase
-			status.Phase = PhaseCreateRoleBinding
-		}
-
-		if status.Phase == PhaseCreateRoleBinding {
-			err := dbRBClient.CreateRoleBinding(roleBindingName, namespace, roleName, pgRoleBinding.Spec.Subjects)
-			if err != nil {
-				status.Conditions = []api.PostgresRoleBindingCondition{
-					{
-						Type:    "Available",
-						Status:  corev1.ConditionFalse,
-						Reason:  "FailedToCreateRoleBinding",
-						Message: err.Error(),
-					},
-				}
-
-				err2 := c.updatePostgresRoleBindingStatus(&status, pgRoleBinding)
-				if err2 != nil {
-					return errors.Wrapf(err2, "for postgresRoleBinding(%s/%s): failed to update status", namespace, name)
-				}
-
-				return errors.Wrapf(err, "for postgresRoleBinding(%s/%s)", namespace, name)
-			}
-			glog.Infof("for postgresRoleBinding(%s/%s): creating rbac role binding(%s/%s) is successful\n", namespace, name, namespace, roleBindingName)
-		}
-
-		status.Phase = PhaseSuccess
-		status.Conditions = []api.PostgresRoleBindingCondition{}
-		status.ObservedGeneration = pgRoleBinding.Generation
-
-		err = c.updatePostgresRoleBindingStatus(&status, pgRoleBinding)
-		if err != nil {
-			return errors.Wrapf(err, "for postgresRoleBinding(%s/%s): failed to update status", namespace, name)
-		}
-
-	} else {
-		// sync role binding
-		// - update role binding
-		name := pgRoleBinding.Name
-		namespace := pgRoleBinding.Namespace
-		status := pgRoleBinding.Status
-
-		err := dbRBClient.UpdateRoleBinding(getPostgresRbacRoleBindingName(name), namespace, pgRoleBinding.Spec.Subjects)
+	if isLeaseExpired {
+		// get database credential
+		cred, err := dbRBClient.GetCredential()
 		if err != nil {
 			status.Conditions = []api.PostgresRoleBindingCondition{
 				{
 					Type:    "Available",
 					Status:  corev1.ConditionFalse,
-					Reason:  "FailedToUpdateRoleBinding",
+					Reason:  "FailedToGetCredential",
 					Message: err.Error(),
 				},
 			}
 
 			err2 := c.updatePostgresRoleBindingStatus(&status, pgRoleBinding)
 			if err2 != nil {
-				return errors.Wrapf(err2, "for postgresRoleBinding(%s/%s): failed to update status", namespace, name)
+				return errors.Wrapf(err2, "failed to update status")
 			}
-
-			return errors.Wrapf(err, "for postgresRoleBinding(%s/%s)", namespace, name)
+			return errors.WithStack(err)
 		}
 
-		status.Conditions = []api.PostgresRoleBindingCondition{}
-		status.ObservedGeneration = pgRoleBinding.ObjectMeta.Generation
-
-		err = c.updatePostgresRoleBindingStatus(&status, pgRoleBinding)
+		err = dbRBClient.CreateSecret(secretName, ns, cred)
 		if err != nil {
-			return errors.Wrapf(err, "for postgresRoleBinding(%s/%s)", namespace, name)
+			err2 := dbRBClient.RevokeLease(cred.LeaseID)
+			if err2 != nil {
+				return errors.Wrapf(err2, "failed to revoke lease")
+			}
+
+			status.Conditions = []api.PostgresRoleBindingCondition{
+				{
+					Type:    "Available",
+					Status:  corev1.ConditionFalse,
+					Reason:  "FailedToCreateSecret",
+					Message: err.Error(),
+				},
+			}
+
+			err2 = c.updatePostgresRoleBindingStatus(&status, pgRoleBinding)
+			if err2 != nil {
+				return errors.Wrapf(err2, "failed to update status")
+			}
+			return errors.WithStack(err)
+		}
+
+		// add lease info in status
+		status.Lease = api.LeaseData{
+			ID:            cred.LeaseID,
+			Duration:      cred.LeaseDuration,
+			RenewDeadline: time.Now().Unix(),
 		}
 	}
 
+	err = dbRBClient.CreateRole(getPostgresRoleName(pRBName), ns, secretName)
+	if err != nil {
+		status.Conditions = []api.PostgresRoleBindingCondition{
+			{
+				Type:    "Available",
+				Status:  corev1.ConditionFalse,
+				Reason:  "FailedToCreateRole",
+				Message: err.Error(),
+			},
+		}
+
+		err2 := c.updatePostgresRoleBindingStatus(&status, pgRoleBinding)
+		if err2 != nil {
+			return errors.Wrapf(err2, "failed to update status")
+		}
+		return errors.WithStack(err)
+	}
+
+	err = dbRBClient.CreateRoleBinding(getPostgresRoleBindingName(pRBName), ns, getPostgresRoleName(pRBName), pgRoleBinding.Spec.Subjects)
+	if err != nil {
+		status.Conditions = []api.PostgresRoleBindingCondition{
+			{
+				Type:    "Available",
+				Status:  corev1.ConditionFalse,
+				Reason:  "FailedToCreateRoleBinding",
+				Message: err.Error(),
+			},
+		}
+
+		err2 := c.updatePostgresRoleBindingStatus(&status, pgRoleBinding)
+		if err2 != nil {
+			return errors.Wrapf(err2, "failed to update status")
+		}
+		return errors.WithStack(err)
+	}
+
+	status.Conditions = []api.PostgresRoleBindingCondition{}
+	status.ObservedGeneration = pgRoleBinding.Generation
+
+	err = c.updatePostgresRoleBindingStatus(&status, pgRoleBinding)
+	if err != nil {
+		return errors.WithStack(err)
+	}
 	return nil
 }
 
@@ -382,10 +327,10 @@ func getPostgresRoleBindingId(pgRoleBinding *api.PostgresRoleBinding) string {
 	return fmt.Sprintf("%s/%s/%s", api.ResourcePostgresRoleBinding, pgRoleBinding.Namespace, pgRoleBinding.Name)
 }
 
-func getPostgresRbacRoleName(name string) string {
+func getPostgresRoleName(name string) string {
 	return fmt.Sprintf("postgresrolebinding-%s-credential-reader", name)
 }
 
-func getPostgresRbacRoleBindingName(name string) string {
+func getPostgresRoleBindingName(name string) string {
 	return fmt.Sprintf("postgresrolebinding-%s-credential-reader", name)
 }

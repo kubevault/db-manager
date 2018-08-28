@@ -3,8 +3,8 @@ package framework
 import (
 	. "github.com/onsi/gomega"
 	apps "k8s.io/api/apps/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func (f *Framework) CreateDeployment(obj apps.Deployment) (*apps.Deployment, error) {

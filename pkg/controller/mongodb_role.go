@@ -71,7 +71,7 @@ func (c *UserManagerController) runMongodbRoleInjector(key string) error {
 
 			err = c.reconcileMongodbRole(dbRClient, mRole)
 			if err != nil {
-				return err
+				return errors.Wrapf(err, "for MongodbRole(%s/%s):", mRole.Namespace, mRole.Name)
 			}
 		}
 	}
@@ -85,111 +85,72 @@ func (c *UserManagerController) runMongodbRoleInjector(key string) error {
 // 	  - configure a role that maps a name in Vault to an SQL statement to execute to create the database credential.
 //    - sync role
 func (c *UserManagerController) reconcileMongodbRole(dbRClient database.DatabaseRoleInterface, mRole *api.MongodbRole) error {
-	if mRole.Status.Phase == "" { // initial stage
-		status := mRole.Status
-
-		// enable the database secrets engine if it is not already enabled
-		err := dbRClient.EnableDatabase()
-		if err != nil {
-			status.Conditions = []api.MongodbRoleCondition{
-				{
-					Type:    "Available",
-					Status:  corev1.ConditionFalse,
-					Reason:  "FailedToEnableDatabase",
-					Message: err.Error(),
-				},
-			}
-
-			err2 := c.updatedMongodbRoleStatus(&status, mRole)
-			if err2 != nil {
-				return errors.Wrapf(err2, "for MongodbRole(%s/%s): failed to update status", mRole.Namespace, mRole.Name)
-			}
-
-			return errors.Wrapf(err, "For MongodbRole(%s/%s): failed to enable database secret engine", mRole.Namespace, mRole.Name)
+	status := mRole.Status
+	// enable the database secrets engine if it is not already enabled
+	err := dbRClient.EnableDatabase()
+	if err != nil {
+		status.Conditions = []api.MongodbRoleCondition{
+			{
+				Type:    "Available",
+				Status:  corev1.ConditionFalse,
+				Reason:  "FailedToEnableDatabase",
+				Message: err.Error(),
+			},
 		}
 
-		// create database config for Mongodb
-		err = dbRClient.CreateConfig()
-		if err != nil {
-			status.Conditions = []api.MongodbRoleCondition{
-				{
-					Type:    "Available",
-					Status:  corev1.ConditionFalse,
-					Reason:  "FailedToCreateDatabaseConfig",
-					Message: err.Error(),
-				},
-			}
-
-			err2 := c.updatedMongodbRoleStatus(&status, mRole)
-			if err2 != nil {
-				return errors.Wrapf(err2, "for MongodbRole(%s/%s): failed to update status", mRole.Namespace, mRole.Name)
-			}
-
-			return errors.Wrapf(err, "For MongodbRole(%s/%s): failed to created database connection config(%s)", mRole.Namespace, mRole.Name, mRole.Spec.Database.Name)
+		err2 := c.updatedMongodbRoleStatus(&status, mRole)
+		if err2 != nil {
+			return errors.Wrap(err2, "failed to update status")
 		}
-
-		// create role
-		err = dbRClient.CreateRole()
-		if err != nil {
-			status.Conditions = []api.MongodbRoleCondition{
-				{
-					Type:    "Available",
-					Status:  corev1.ConditionFalse,
-					Reason:  "FailedToCreateRole",
-					Message: err.Error(),
-				},
-			}
-
-			err2 := c.updatedMongodbRoleStatus(&status, mRole)
-			if err2 != nil {
-				return errors.Wrapf(err2, "for MongodbRole(%s/%s): failed to update status", mRole.Namespace, mRole.Name)
-			}
-
-			return errors.Wrapf(err, "For MongodbRole(%s/%s): failed to create role", mRole.Namespace, mRole.Name)
-		}
-
-		status.Conditions = []api.MongodbRoleCondition{}
-		status.Phase = MongodbRolePhaseSuccess
-		status.ObservedGeneration = mRole.Generation
-
-		err = c.updatedMongodbRoleStatus(&status, mRole)
-		if err != nil {
-			return errors.Wrapf(err, "For MongodbRole(%s/%s): failed to update MongodbRole status", mRole.Namespace, mRole.Name)
-		}
-
-	} else {
-		// sync role
-		status := mRole.Status
-
-		// In vault create role replaces the old role
-		err := dbRClient.CreateRole()
-		if err != nil {
-			status.Conditions = []api.MongodbRoleCondition{
-				{
-					Type:    "Available",
-					Status:  corev1.ConditionFalse,
-					Reason:  "FailedToUpdateRole",
-					Message: err.Error(),
-				},
-			}
-
-			err2 := c.updatedMongodbRoleStatus(&status, mRole)
-			if err2 != nil {
-				return errors.Wrapf(err2, "for MongodbRole(%s/%s): failed to update status", mRole.Namespace, mRole.Name)
-			}
-
-			return errors.Wrapf(err, "For Mongodb(%s/%s): failed to update role", mRole.Namespace, mRole.Name)
-		}
-
-		status.Conditions = []api.MongodbRoleCondition{}
-		status.ObservedGeneration = mRole.Generation
-
-		err = c.updatedMongodbRoleStatus(&status, mRole)
-		if err != nil {
-			return errors.Wrapf(err, "For Mongodb(%s/%s): failed to update MongodbRole status", mRole.Namespace, mRole.Name)
-		}
+		return errors.Wrap(err, "failed to enable database secret engine")
 	}
 
+	// create database config for Mongodb
+	err = dbRClient.CreateConfig()
+	if err != nil {
+		status.Conditions = []api.MongodbRoleCondition{
+			{
+				Type:    "Available",
+				Status:  corev1.ConditionFalse,
+				Reason:  "FailedToCreateDatabaseConfig",
+				Message: err.Error(),
+			},
+		}
+
+		err2 := c.updatedMongodbRoleStatus(&status, mRole)
+		if err2 != nil {
+			return errors.Wrap(err2, "failed to update status")
+		}
+		return errors.Wrapf(err, "failed to created database connection config(%s)", mRole.Spec.Database.Name)
+	}
+
+	// create role
+	err = dbRClient.CreateRole()
+	if err != nil {
+		status.Conditions = []api.MongodbRoleCondition{
+			{
+				Type:    "Available",
+				Status:  corev1.ConditionFalse,
+				Reason:  "FailedToCreateRole",
+				Message: err.Error(),
+			},
+		}
+
+		err2 := c.updatedMongodbRoleStatus(&status, mRole)
+		if err2 != nil {
+			return errors.Wrap(err2, "failed to update status")
+		}
+		return errors.Wrap(err, "failed to create role")
+	}
+
+	status.Conditions = []api.MongodbRoleCondition{}
+	status.Phase = MongodbRolePhaseSuccess
+	status.ObservedGeneration = mRole.Generation
+
+	err = c.updatedMongodbRoleStatus(&status, mRole)
+	if err != nil {
+		return errors.Wrapf(err, "failed to update MongodbRole status")
+	}
 	return nil
 }
 

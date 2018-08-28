@@ -39,8 +39,7 @@ type DatabaseRoleBindingInterface interface {
 	// Creates kubernetes role binding
 	CreateRoleBinding(name string, namespace string, roleName string, subjects []rbacv1.Subject) error
 
-	// Updates subjects of kubernetes role binding
-	UpdateRoleBinding(name string, namespace string, subjects []rbacv1.Subject) error
+	IsLeaseExpired(leaseID string) (bool, error)
 
 	RevokeLease(leaseID string) error
 }

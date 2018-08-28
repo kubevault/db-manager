@@ -10,8 +10,8 @@ import (
 	. "github.com/onsi/gomega"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var _ = Describe("Mongodb role and role binding", func() {
@@ -28,7 +28,6 @@ var _ = Describe("Mongodb role and role binding", func() {
 	})
 
 	var (
-
 		IsSecretCreated = func(name, namespace string) {
 			By(fmt.Sprintf("Waiting for secret (%s/%s) to create", namespace, name))
 			Eventually(func() bool {

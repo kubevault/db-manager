@@ -259,7 +259,7 @@ var _ = Describe("Mysql role and role binding", func() {
 					},
 					Database: &api.DatabaseConfigForMysql{
 						Name:             "mysql-test1",
-						PluginName: "mysql-rds-database-plugin",
+						PluginName:       "mysql-rds-database-plugin",
 						CredentialSecret: framework.MysqlCredentialSecret,
 						ConnectionUrl:    fmt.Sprintf("{{username}}:{{password}}@tcp(%s)/", f.MysqlUrl),
 						AllowedRoles:     "*",

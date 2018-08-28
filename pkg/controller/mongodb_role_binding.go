@@ -9,7 +9,6 @@ import (
 	"github.com/golang/glog"
 	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
 	patchutil "github.com/kubedb/user-manager/client/clientset/versioned/typed/authorization/v1alpha1/util"
-	"github.com/kubedb/user-manager/pkg/vault"
 	"github.com/kubedb/user-manager/pkg/vault/database"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -19,15 +18,6 @@ import (
 
 const (
 	MongodbRoleBindingFinalizer = "database.mongodb.rolebinding"
-)
-
-const (
-	MongodbRoleBindingPhaseSuccess           api.MongodbRoleBindingPhase = "Success"
-	MongodbRoleBindingPhaseInit              api.MongodbRoleBindingPhase = "Init"
-	MongodbRoleBindingPhaseGetCredential     api.MongodbRoleBindingPhase = "GetCredential"
-	MongodbRoleBindingPhaseCreateSecret      api.MongodbRoleBindingPhase = "CreateSecret"
-	MongodbRoleBindingPhaseCreateRole        api.MongodbRoleBindingPhase = "CreateRole"
-	MongodbRoleBindingPhaseCreateRoleBinding api.MongodbRoleBindingPhase = "CreateRoleBinding"
 )
 
 func (c *UserManagerController) initMongodbRoleBindingWatcher() {
@@ -79,7 +69,7 @@ func (c *UserManagerController) runMongodbRoleBindingInjector(key string) error 
 
 			err = c.reconcileMongodbRoleBinding(dbRBClient, mRoleBinding)
 			if err != nil {
-				return err
+				return errors.Wrapf(err, "For MongodbRoleBinding(%s/%s)", mRoleBinding.Namespace, mRoleBinding.Name)
 			}
 		}
 	}
@@ -93,176 +83,131 @@ func (c *UserManagerController) runMongodbRoleBindingInjector(key string) error 
 //	  - create rbac role and role binding
 //    - sync role binding
 func (c *UserManagerController) reconcileMongodbRoleBinding(dbRBClient database.DatabaseRoleBindingInterface, mRoleBinding *api.MongodbRoleBinding) error {
-	if mRoleBinding.Status.ObservedGeneration == 0 { // initial stage
-		var (
-			cred *vault.DatabaseCredential
-			err  error
-		)
+	var (
+		err   error
+		credS *corev1.Secret
+	)
 
-		status := mRoleBinding.Status
-		name := mRoleBinding.Name
-		namespace := mRoleBinding.Namespace
-		roleName := getMongodbRbacRoleName(name)
-		roleBindingName := getMongodbRbacRoleBindingName(name)
-		storeSecret := mRoleBinding.Spec.Store.Secret
+	var (
+		mRBName    = mRoleBinding.Name
+		ns         = mRoleBinding.Namespace
+		secretName = mRoleBinding.Spec.Store.Secret
+		status     = mRoleBinding.Status
+	)
 
-		if status.Phase == "" || status.Phase == MongodbRoleBindingPhaseGetCredential || status.Phase == MongodbRoleBindingPhaseCreateSecret {
-			status.Phase = MongodbRoleBindingPhaseGetCredential
+	// get credential secret. if not found, then create it
+	credS, err = c.kubeClient.CoreV1().Secrets(ns).Get(secretName, metav1.GetOptions{})
+	if err != nil && !kerr.IsNotFound(err) {
+		return errors.WithStack(err)
+	}
 
-			cred, err = dbRBClient.GetCredential()
+	// is lease_id exists in credential secret
+	// if it exists, then is it expired
+	isLeaseExpired := true
+	if credS != nil && credS.Data != nil {
+		leaseID, ok := credS.Data["lease_id"]
+		if ok {
+			isLeaseExpired, err = dbRBClient.IsLeaseExpired(string(leaseID))
 			if err != nil {
-				status.Conditions = []api.MongodbRoleBindingCondition{
-					{
-						Type:    "Available",
-						Status:  corev1.ConditionFalse,
-						Reason:  "FailedToGetCredential",
-						Message: err.Error(),
-					},
-				}
-
-				err2 := c.updateMongodbRoleBindingStatus(&status, mRoleBinding)
-				if err2 != nil {
-					return errors.Wrapf(err2, "for MongodbRoleBinding(%s/%s): failed to update status", namespace, name)
-				}
-
-				return errors.Wrapf(err, "for MongodbRoleBinding(%s/%s)", namespace, name)
+				return errors.WithStack(err)
 			}
-
-			glog.Infof("for MongodbRoleBinding(%s/%s): getting Mongodb credential is successful\n", namespace, name)
-
-			// add lease info
-			d := time.Duration(cred.LeaseDuration)
-			status.Lease = api.LeaseData{
-				ID:            cred.LeaseID,
-				Duration:      cred.LeaseDuration,
-				RenewDeadline: time.Now().Add(time.Second * d).Unix(),
-			}
-
-			// next phase
-			status.Phase = MongodbRoleBindingPhaseCreateSecret
 		}
+	}
 
-		if status.Phase == MongodbRoleBindingPhaseCreateSecret {
-			err = dbRBClient.CreateSecret(storeSecret, namespace, cred)
-			if err != nil {
-				err2 := dbRBClient.RevokeLease(cred.LeaseID)
-				if err2 != nil {
-					return errors.Wrapf(err2, "for MongodbRoleBinding(%s/%s): failed to revoke lease", namespace, name)
-				}
-
-				status.Conditions = []api.MongodbRoleBindingCondition{
-					{
-						Type:    "Available",
-						Status:  corev1.ConditionFalse,
-						Reason:  "FailedToCreateSecret",
-						Message: err.Error(),
-					},
-				}
-
-				err2 = c.updateMongodbRoleBindingStatus(&status, mRoleBinding)
-				if err2 != nil {
-					return errors.Wrapf(err2, "for MongodbRoleBinding(%s/%s): failed to update status", namespace, name)
-				}
-
-				return errors.Wrapf(err, "for MongodbRoleBinding(%s/%s)", namespace, name)
-			}
-			glog.Infof("for MongodbRoleBinding(%s/%s): creating secret(%s/%s) is successful\n", namespace, name, namespace, mRoleBinding.Spec.Store.Secret)
-
-			// next phase
-			status.Phase = MongodbRoleBindingPhaseCreateRole
-		}
-
-		if status.Phase == MongodbRoleBindingPhaseCreateRole {
-			err = dbRBClient.CreateRole(roleName, namespace, storeSecret)
-			if err != nil {
-				status.Conditions = []api.MongodbRoleBindingCondition{
-					{
-						Type:    "Available",
-						Status:  corev1.ConditionFalse,
-						Reason:  "FailedToCreateRole",
-						Message: err.Error(),
-					},
-				}
-
-				err2 := c.updateMongodbRoleBindingStatus(&status, mRoleBinding)
-				if err2 != nil {
-					return errors.Wrapf(err2, "for MongodbRoleBinding(%s/%s): failed to update status", namespace, name)
-				}
-
-				return errors.Wrapf(err, "for MongodbRoleBinding(%s/%s)", namespace, name)
-			}
-			glog.Infof("for MongodbRoleBinding(%s/%s): creating rbac role(%s/%s) is successful\n", namespace, name, namespace, roleName)
-
-			//next phase
-			status.Phase = MongodbRoleBindingPhaseCreateRoleBinding
-		}
-
-		if status.Phase == MongodbRoleBindingPhaseCreateRoleBinding {
-			err = dbRBClient.CreateRoleBinding(roleBindingName, namespace, roleName, mRoleBinding.Spec.Subjects)
-			if err != nil {
-				status.Conditions = []api.MongodbRoleBindingCondition{
-					{
-						Type:    "Available",
-						Status:  corev1.ConditionFalse,
-						Reason:  "FailedToCreateRoleBinding",
-						Message: err.Error(),
-					},
-				}
-
-				err2 := c.updateMongodbRoleBindingStatus(&status, mRoleBinding)
-				if err2 != nil {
-					return errors.Wrapf(err2, "for MongodbRoleBinding(%s/%s): failed to update status", namespace, name)
-				}
-
-				return errors.Wrapf(err, "for MongodbRoleBinding(%s/%s)", namespace, name)
-			}
-			glog.Infof("for MongodbRoleBinding(%s/%s): creating rbac role binding(%s/%s) is successful\n", namespace, name, namespace, roleBindingName)
-		}
-
-		status.Phase = MongodbRoleBindingPhaseSuccess
-		status.Conditions = []api.MongodbRoleBindingCondition{}
-		status.ObservedGeneration = mRoleBinding.Generation
-
-		err = c.updateMongodbRoleBindingStatus(&status, mRoleBinding)
-		if err != nil {
-			return errors.Wrapf(err, "for MongodbRoleBinding(%s/%s): failed to update status", namespace, name)
-		}
-
-	} else {
-		// sync role binding
-		// - update role binding
-		name := mRoleBinding.Name
-		namespace := mRoleBinding.Namespace
-		status := mRoleBinding.Status
-
-		err := dbRBClient.UpdateRoleBinding(getMongodbRbacRoleBindingName(name), namespace, mRoleBinding.Spec.Subjects)
+	if isLeaseExpired {
+		// get database credential
+		cred, err := dbRBClient.GetCredential()
 		if err != nil {
 			status.Conditions = []api.MongodbRoleBindingCondition{
 				{
 					Type:    "Available",
 					Status:  corev1.ConditionFalse,
-					Reason:  "FailedToUpdateRoleBinding",
+					Reason:  "FailedToGetCredential",
 					Message: err.Error(),
 				},
 			}
 
 			err2 := c.updateMongodbRoleBindingStatus(&status, mRoleBinding)
 			if err2 != nil {
-				return errors.Wrapf(err2, "for mongodbRoleBinding(%s/%s): failed to update status", namespace, name)
+				return errors.Wrapf(err2, "failed to update status")
 			}
-
-			return errors.Wrapf(err, "for MongodbRoleBinding(%s/%s)", namespace, name)
+			return errors.WithStack(err)
 		}
 
-		status.Conditions = []api.MongodbRoleBindingCondition{}
-		status.ObservedGeneration = mRoleBinding.ObjectMeta.Generation
-
-		err = c.updateMongodbRoleBindingStatus(&status, mRoleBinding)
+		err = dbRBClient.CreateSecret(secretName, ns, cred)
 		if err != nil {
-			return errors.Wrapf(err, "for MongodbRoleBinding(%s/%s)", namespace, name)
+			err2 := dbRBClient.RevokeLease(cred.LeaseID)
+			if err2 != nil {
+				return errors.Wrapf(err2, "failed to revoke lease")
+			}
+
+			status.Conditions = []api.MongodbRoleBindingCondition{
+				{
+					Type:    "Available",
+					Status:  corev1.ConditionFalse,
+					Reason:  "FailedToCreateSecret",
+					Message: err.Error(),
+				},
+			}
+
+			err2 = c.updateMongodbRoleBindingStatus(&status, mRoleBinding)
+			if err2 != nil {
+				return errors.Wrapf(err2, "failed to update status")
+			}
+			return errors.WithStack(err)
+		}
+
+		// add lease info in status
+		status.Lease = api.LeaseData{
+			ID:            cred.LeaseID,
+			Duration:      cred.LeaseDuration,
+			RenewDeadline: time.Now().Unix(),
 		}
 	}
 
+	err = dbRBClient.CreateRole(getMongodbRoleName(mRBName), ns, secretName)
+	if err != nil {
+		status.Conditions = []api.MongodbRoleBindingCondition{
+			{
+				Type:    "Available",
+				Status:  corev1.ConditionFalse,
+				Reason:  "FailedToCreateRole",
+				Message: err.Error(),
+			},
+		}
+
+		err2 := c.updateMongodbRoleBindingStatus(&status, mRoleBinding)
+		if err2 != nil {
+			return errors.Wrapf(err2, "failed to update status")
+		}
+		return errors.WithStack(err)
+	}
+
+	err = dbRBClient.CreateRoleBinding(getMongodbRoleBindingName(mRBName), ns, getMongodbRoleName(mRBName), mRoleBinding.Spec.Subjects)
+	if err != nil {
+		status.Conditions = []api.MongodbRoleBindingCondition{
+			{
+				Type:    "Available",
+				Status:  corev1.ConditionFalse,
+				Reason:  "FailedToCreateRoleBinding",
+				Message: err.Error(),
+			},
+		}
+
+		err2 := c.updateMongodbRoleBindingStatus(&status, mRoleBinding)
+		if err2 != nil {
+			return errors.Wrapf(err2, "failed to update status")
+		}
+		return errors.WithStack(err)
+	}
+
+	status.Conditions = []api.MongodbRoleBindingCondition{}
+	status.ObservedGeneration = mRoleBinding.Generation
+
+	err = c.updateMongodbRoleBindingStatus(&status, mRoleBinding)
+	if err != nil {
+		return errors.WithStack(err)
+	}
 	return nil
 }
 
@@ -380,10 +325,10 @@ func getMongodbRoleBindingId(mRoleBinding *api.MongodbRoleBinding) string {
 	return fmt.Sprintf("%s/%s/%s", api.ResourceMongodbRoleBinding, mRoleBinding.Namespace, mRoleBinding.Name)
 }
 
-func getMongodbRbacRoleName(name string) string {
+func getMongodbRoleName(name string) string {
 	return fmt.Sprintf("mongodbrolebinding-%s-credential-reader", name)
 }
 
-func getMongodbRbacRoleBindingName(name string) string {
+func getMongodbRoleBindingName(name string) string {
 	return fmt.Sprintf("mongodbrolebinding-%s-credential-reader", name)
 }

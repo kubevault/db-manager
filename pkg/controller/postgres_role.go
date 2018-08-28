@@ -72,7 +72,7 @@ func (c *UserManagerController) runPostgresRoleInjector(key string) error {
 
 			err = c.reconcilePostgresRole(dbRClient, pgRole)
 			if err != nil {
-				return err
+				return errors.Wrapf(err, "for PostgresRole(%s/%s):", pgRole.Namespace, pgRole.Name)
 			}
 		}
 	}
@@ -86,113 +86,72 @@ func (c *UserManagerController) runPostgresRoleInjector(key string) error {
 // 	  - configure a role that maps a name in Vault to an SQL statement to execute to create the database credential.
 //    - sync role
 func (c *UserManagerController) reconcilePostgresRole(dbRClient database.DatabaseRoleInterface, pgRole *api.PostgresRole) error {
-	if pgRole.Status.Phase == "" { // initial stage
-		name := pgRole.Name
-		namespace := pgRole.Namespace
-		status := pgRole.Status
-
-		// enable the database secrets engine if it is not already enabled
-		err := dbRClient.EnableDatabase()
-		if err != nil {
-			status.Conditions = []api.PostgresRoleCondition{
-				{
-					Type:    "Available",
-					Status:  corev1.ConditionFalse,
-					Reason:  "FailedToEnableDatabase",
-					Message: err.Error(),
-				},
-			}
-
-			err2 := c.updatePostgresRoleStatus(&status, pgRole)
-			if err2 != nil {
-				return errors.Wrapf(err2, "for postgresRole(%s/%s): failed to update status", namespace, name)
-			}
-			return errors.Wrapf(err, "for postgresRole(%s/%s): failed to enable database secret engine", namespace, name)
+	status := pgRole.Status
+	// enable the database secrets engine if it is not already enabled
+	err := dbRClient.EnableDatabase()
+	if err != nil {
+		status.Conditions = []api.PostgresRoleCondition{
+			{
+				Type:    "Available",
+				Status:  corev1.ConditionFalse,
+				Reason:  "FailedToEnableDatabase",
+				Message: err.Error(),
+			},
 		}
 
-		// create database config for postgres
-		err = dbRClient.CreateConfig()
-		if err != nil {
-			status.Conditions = []api.PostgresRoleCondition{
-				{
-					Type:    "Available",
-					Status:  corev1.ConditionFalse,
-					Reason:  "FailedToCreateDatabaseConnectionConfig",
-					Message: err.Error(),
-				},
-			}
-
-			err2 := c.updatePostgresRoleStatus(&status, pgRole)
-			if err2 != nil {
-				return errors.Wrapf(err2, "for postgresRole(%s/%s): failed to update status", namespace, name)
-			}
-			return errors.Wrapf(err, "for postgresRole(%s/%s): failed to created database connection config", namespace, name)
+		err2 := c.updatePostgresRoleStatus(&status, pgRole)
+		if err2 != nil {
+			return errors.Wrap(err2, "failed to update status")
 		}
-
-		// create role
-		err = dbRClient.CreateRole()
-		if err != nil {
-			status.Conditions = []api.PostgresRoleCondition{
-				{
-					Type:    "Available",
-					Status:  corev1.ConditionFalse,
-					Reason:  "FailedToCreateDatabaseRole",
-					Message: err.Error(),
-				},
-			}
-
-			err2 := c.updatePostgresRoleStatus(&status, pgRole)
-			if err2 != nil {
-				return errors.Wrapf(err2, "for postgresRole(%s/%s): failed to update status", namespace, name)
-			}
-
-			return errors.Wrapf(err, "for postgresRole(%s/%s): failed to create role", namespace, name)
-		}
-
-		status.ObservedGeneration = pgRole.Generation
-		status.Conditions = []api.PostgresRoleCondition{}
-		status.Phase = PostgresRolePhaseSuccess
-
-		err = c.updatePostgresRoleStatus(&status, pgRole)
-		if err != nil {
-			return errors.Wrap(err, "failed to update postgresRole status")
-		}
-
-	} else {
-		// sync role
-		status := pgRole.Status
-		name := pgRole.Name
-		namespace := pgRole.Namespace
-
-		// In vault create role replaces the old role
-		err := dbRClient.CreateRole()
-		if err != nil {
-			status.Conditions = []api.PostgresRoleCondition{
-				{
-					Type:    "Available",
-					Status:  corev1.ConditionFalse,
-					Reason:  "FailedToUpdateDatabaseRole",
-					Message: err.Error(),
-				},
-			}
-
-			err2 := c.updatePostgresRoleStatus(&status, pgRole)
-			if err2 != nil {
-				return errors.Wrapf(err2, "for postgresRole(%s/%s): failed to update status", namespace, name)
-			}
-
-			return errors.Wrapf(err, "for postgresRole(%s/%s): failed to update role", namespace, name)
-		}
-
-		status.ObservedGeneration = pgRole.Generation
-		status.Conditions = []api.PostgresRoleCondition{}
-
-		err = c.updatePostgresRoleStatus(&status, pgRole)
-		if err != nil {
-			return errors.Wrap(err, "failed to update postgresRole status")
-		}
+		return errors.Wrap(err, "failed to enable database secret engine")
 	}
 
+	// create database config for postgres
+	err = dbRClient.CreateConfig()
+	if err != nil {
+		status.Conditions = []api.PostgresRoleCondition{
+			{
+				Type:    "Available",
+				Status:  corev1.ConditionFalse,
+				Reason:  "FailedToCreateDatabaseConnectionConfig",
+				Message: err.Error(),
+			},
+		}
+
+		err2 := c.updatePostgresRoleStatus(&status, pgRole)
+		if err2 != nil {
+			return errors.Wrap(err2, "failed to update status")
+		}
+		return errors.Wrap(err, "failed to created database connection config")
+	}
+
+	// create role
+	err = dbRClient.CreateRole()
+	if err != nil {
+		status.Conditions = []api.PostgresRoleCondition{
+			{
+				Type:    "Available",
+				Status:  corev1.ConditionFalse,
+				Reason:  "FailedToCreateDatabaseRole",
+				Message: err.Error(),
+			},
+		}
+
+		err2 := c.updatePostgresRoleStatus(&status, pgRole)
+		if err2 != nil {
+			return errors.Wrap(err2, "for postgresRole(%s/%s): failed to update status")
+		}
+		return errors.Wrap(err, "for postgresRole(%s/%s): failed to create role")
+	}
+
+	status.ObservedGeneration = pgRole.Generation
+	status.Conditions = []api.PostgresRoleCondition{}
+	status.Phase = PostgresRolePhaseSuccess
+
+	err = c.updatePostgresRoleStatus(&status, pgRole)
+	if err != nil {
+		return errors.Wrap(err, "failed to update postgresRole status")
+	}
 	return nil
 }
 

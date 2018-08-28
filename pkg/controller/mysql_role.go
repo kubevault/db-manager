@@ -72,7 +72,7 @@ func (c *UserManagerController) runMysqlRoleInjector(key string) error {
 
 			err = c.reconcileMysqlRole(dbRClient, mRole)
 			if err != nil {
-				return err
+				return errors.Wrapf(err, "for MysqlRole(%s/%s):", mRole.Namespace, mRole.Name)
 			}
 		}
 	}
@@ -86,109 +86,71 @@ func (c *UserManagerController) runMysqlRoleInjector(key string) error {
 // 	  - configure a role that maps a name in Vault to an SQL statement to execute to create the database credential.
 //    - sync role
 func (c *UserManagerController) reconcileMysqlRole(dbRClient database.DatabaseRoleInterface, mRole *api.MysqlRole) error {
-	if mRole.Status.Phase == "" { // initial stage
-		status := mRole.Status
-
-		// enable the database secrets engine if it is not already enabled
-		err := dbRClient.EnableDatabase()
-		if err != nil {
-			status.Conditions = []api.MysqlRoleCondition{
-				{
-					Type:    "Available",
-					Status:  corev1.ConditionFalse,
-					Reason:  "FailedToEnableDatabase",
-					Message: err.Error(),
-				},
-			}
-
-			err2 := c.updatedMysqlRoleStatus(&status, mRole)
-			if err2 != nil {
-				return errors.Wrapf(err2, "for MysqlRole(%s/%s): failed to update status", mRole.Namespace, mRole.Name)
-			}
-
-			return errors.Wrapf(err, "For MysqlROle(%s/%s): failed to enable database secret engine", mRole.Namespace, mRole.Name)
+	status := mRole.Status
+	// enable the database secrets engine if it is not already enabled
+	err := dbRClient.EnableDatabase()
+	if err != nil {
+		status.Conditions = []api.MysqlRoleCondition{
+			{
+				Type:    "Available",
+				Status:  corev1.ConditionFalse,
+				Reason:  "FailedToEnableDatabase",
+				Message: err.Error(),
+			},
 		}
 
-		// create database config for mysql
-		err = dbRClient.CreateConfig()
-		if err != nil {
-			status.Conditions = []api.MysqlRoleCondition{
-				{
-					Type:    "Available",
-					Status:  corev1.ConditionFalse,
-					Reason:  "FailedToCreateDatabaseConfig",
-					Message: err.Error(),
-				},
-			}
+		err2 := c.updatedMysqlRoleStatus(&status, mRole)
+		if err2 != nil {
+			return errors.Wrap(err2, "failed to update status")
+		}
+		return errors.Wrap(err, "failed to enable database secret engine")
+	}
 
-			err2 := c.updatedMysqlRoleStatus(&status, mRole)
-			if err2 != nil {
-				return errors.Wrapf(err2, "for MysqlRole(%s/%s): failed to update status", mRole.Namespace, mRole.Name)
-			}
-
-			return errors.Wrapf(err, "For MysqlRole(%s/%s): failed to created database connection config(%s)", mRole.Namespace, mRole.Name, mRole.Spec.Database.Name)
+	// create database config for mysql
+	err = dbRClient.CreateConfig()
+	if err != nil {
+		status.Conditions = []api.MysqlRoleCondition{
+			{
+				Type:    "Available",
+				Status:  corev1.ConditionFalse,
+				Reason:  "FailedToCreateDatabaseConfig",
+				Message: err.Error(),
+			},
 		}
 
-		// create role
-		err = dbRClient.CreateRole()
-		if err != nil {
-			status.Conditions = []api.MysqlRoleCondition{
-				{
-					Type:    "Available",
-					Status:  corev1.ConditionFalse,
-					Reason:  "FailedToCreateRole",
-					Message: err.Error(),
-				},
-			}
+		err2 := c.updatedMysqlRoleStatus(&status, mRole)
+		if err2 != nil {
+			return errors.Wrap(err2, "failed to update status")
+		}
+		return errors.Wrapf(err, "failed to created database connection config(%s)", mRole.Spec.Database.Name)
+	}
 
-			err2 := c.updatedMysqlRoleStatus(&status, mRole)
-			if err2 != nil {
-				return errors.Wrapf(err2, "for MysqlRole(%s/%s): failed to update status", mRole.Namespace, mRole.Name)
-			}
-
-			return errors.Wrapf(err, "For MysqlRole(%s/%s): failed to create role", mRole.Namespace, mRole.Name)
+	// create role
+	err = dbRClient.CreateRole()
+	if err != nil {
+		status.Conditions = []api.MysqlRoleCondition{
+			{
+				Type:    "Available",
+				Status:  corev1.ConditionFalse,
+				Reason:  "FailedToCreateRole",
+				Message: err.Error(),
+			},
 		}
 
-		status.Conditions = []api.MysqlRoleCondition{}
-		status.Phase = MysqlRolePhaseSuccess
-		status.ObservedGeneration = mRole.Generation
-
-		err = c.updatedMysqlRoleStatus(&status, mRole)
-		if err != nil {
-			return errors.Wrapf(err, "For MysqlRole(%s/%s): failed to update MysqlRole status", mRole.Namespace, mRole.Name)
+		err2 := c.updatedMysqlRoleStatus(&status, mRole)
+		if err2 != nil {
+			return errors.Wrap(err2, "failed to update status")
 		}
+		return errors.Wrap(err, "failed to create role")
+	}
 
-	} else {
-		// sync role
-		status := mRole.Status
+	status.Conditions = []api.MysqlRoleCondition{}
+	status.Phase = MysqlRolePhaseSuccess
+	status.ObservedGeneration = mRole.Generation
 
-		// In vault create role replaces the old role
-		err := dbRClient.CreateRole()
-		if err != nil {
-			status.Conditions = []api.MysqlRoleCondition{
-				{
-					Type:    "Available",
-					Status:  corev1.ConditionFalse,
-					Reason:  "FailedToUpdateRole",
-					Message: err.Error(),
-				},
-			}
-
-			err2 := c.updatedMysqlRoleStatus(&status, mRole)
-			if err2 != nil {
-				return errors.Wrapf(err2, "for MysqlRole(%s/%s): failed to update status", mRole.Namespace, mRole.Name)
-			}
-
-			return errors.Wrapf(err, "For Mysql(%s/%s): failed to update role", mRole.Namespace, mRole.Name)
-		}
-
-		status.Conditions = []api.MysqlRoleCondition{}
-		status.ObservedGeneration = mRole.Generation
-
-		err = c.updatedMysqlRoleStatus(&status, mRole)
-		if err != nil {
-			return errors.Wrapf(err, "For Mysql(%s/%s): failed to update MysqlRole status", mRole.Namespace, mRole.Name)
-		}
+	err = c.updatedMysqlRoleStatus(&status, mRole)
+	if err != nil {
+		return errors.Wrap(err, "failed to update MysqlRole status")
 	}
 
 	return nil
