@@ -34,17 +34,17 @@ func (c *UserManagerController) initMysqlRoleBindingWatcher() {
 func (c *UserManagerController) runMysqlRoleBindingInjector(key string) error {
 	obj, exist, err := c.myRoleBindingInformer.GetIndexer().GetByKey(key)
 	if err != nil {
-		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
+		glog.Errorf("Fetching object with key(%s) from store failed with %v", key, err)
 		return err
 	}
 
 	if !exist {
-		glog.Warningf("MysqlRoleBinding %s does not exist anymore\n", key)
+		glog.Warningf("MysqlRoleBinding(%s) does not exist anymore\n", key)
 
 	} else {
 		mRoleBinding := obj.(*api.MysqlRoleBinding).DeepCopy()
 
-		glog.Infof("Sync/Add/Update for MysqlRoleBinding %s/%s\n", mRoleBinding.Namespace, mRoleBinding.Name)
+		glog.Infof("Sync/Add/Update for MysqlRoleBinding(%s/%s)\n", mRoleBinding.Namespace, mRoleBinding.Name)
 
 		if mRoleBinding.DeletionTimestamp != nil {
 			if kutilcorev1.HasFinalizer(mRoleBinding.ObjectMeta, MysqlRoleBindingFinalizer) {
@@ -221,7 +221,6 @@ func (c *UserManagerController) updateMysqlRoleBindingStatus(status *api.MysqlRo
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -319,7 +318,6 @@ func (c *UserManagerController) removeMysqlRoleBindingFinalizer(mRoleBinding *ap
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 

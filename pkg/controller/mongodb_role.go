@@ -14,6 +14,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 )
 
 const (
@@ -30,23 +31,23 @@ func (c *UserManagerController) initMongodbRoleWatcher() {
 		newObj := new.(*api.MongodbRole)
 		return newObj.DeletionTimestamp != nil || !newObj.AlreadyObserved(oldObj)
 	}))
-	c.mongodbRoleLister = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoles().Lister()
+	c.mgRoleLister = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoles().Lister()
 }
 
 func (c *UserManagerController) runMongodbRoleInjector(key string) error {
 	obj, exist, err := c.mgRoleInformer.GetIndexer().GetByKey(key)
 	if err != nil {
-		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
+		glog.Errorf("Fetching object with key(%s) from store failed with %v", key, err)
 		return err
 	}
 
 	if !exist {
-		glog.Warningf("MongodbRole %s does not exist anymore\n", key)
+		glog.Warningf("MongodbRole(%s) does not exist anymore\n", key)
 
 	} else {
 		mRole := obj.(*api.MongodbRole).DeepCopy()
 
-		glog.Infof("Sync/Add/Update for MongodbRole %s/%s\n", mRole.Namespace, mRole.Name)
+		glog.Infof("Sync/Add/Update for MongodbRole(%s/%s)\n", mRole.Namespace, mRole.Name)
 
 		if mRole.DeletionTimestamp != nil {
 			if kutilcorev1.HasFinalizer(mRole.ObjectMeta, MongodbRoleFinalizer) {
@@ -84,6 +85,7 @@ func (c *UserManagerController) runMongodbRoleInjector(key string) error {
 //	  - configure Vault with the proper Mongodb plugin and connection information
 // 	  - configure a role that maps a name in Vault to an SQL statement to execute to create the database credential.
 //    - sync role
+//	  - revoke previous lease of all the respective mongodbRoleBinding and reissue a new lease
 func (c *UserManagerController) reconcileMongodbRole(dbRClient database.DatabaseRoleInterface, mRole *api.MongodbRole) error {
 	status := mRole.Status
 	// enable the database secrets engine if it is not already enabled
@@ -151,6 +153,33 @@ func (c *UserManagerController) reconcileMongodbRole(dbRClient database.Database
 	if err != nil {
 		return errors.Wrapf(err, "failed to update MongodbRole status")
 	}
+
+	if mRole.Spec.Provider == nil || mRole.Spec.Provider.Vault == nil {
+		return errors.New("spec.provider.vault is nil")
+	}
+
+	mList, err := c.mgRoleBindingLister.MongodbRoleBindings(mRole.Namespace).List(labels.SelectorFromSet(map[string]string{}))
+	for _, m := range mList {
+		if m.Spec.RoleRef == mRole.Name {
+			// revoke lease if have any lease
+			if m.Status.Lease.ID != "" {
+				err = c.RevokeLease(mRole.Spec.Provider.Vault, mRole.Namespace, m.Status.Lease.ID)
+				if err != nil {
+					return errors.Wrap(err, "failed to revoke lease")
+				}
+
+				status := m.Status
+				status.Lease = api.LeaseData{}
+				err = c.updateMongodbRoleBindingStatus(&status, m)
+				if err != nil {
+					return errors.WithStack(err)
+				}
+			}
+
+			// enqueue mongodbRoleBinding to reissue database credentials lease
+			queue.Enqueue(c.mgRoleBindingQueue.GetQueue(), m)
+		}
+	}
 	return nil
 }
 
@@ -162,7 +191,6 @@ func (c *UserManagerController) updatedMongodbRoleStatus(status *api.MongodbRole
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -241,12 +269,37 @@ func (c *UserManagerController) runMongodbRoleFinalizer(mRole *api.MongodbRole, 
 	}
 }
 
+// Do:
+//	- delete role in vault
+//	- revoke lease of all the corresponding mongodbRoleBinding
 func (c *UserManagerController) finalizeMongodbRole(dbRClient database.DatabaseRoleInterface, mRole *api.MongodbRole) error {
-	err := dbRClient.DeleteRole(mRole.Name)
+	mRList, err := c.mgRoleBindingLister.MongodbRoleBindings(mRole.Namespace).List(labels.SelectorFromSet(map[string]string{}))
+	if err != nil {
+		return errors.Wrap(err, "failed to list mongodbRoleBinding")
+	}
+
+	for _, m := range mRList {
+		if m.Spec.RoleRef == mRole.Name {
+			if m.Status.Lease.ID != "" {
+				err = c.RevokeLease(mRole.Spec.Provider.Vault, mRole.Namespace, m.Status.Lease.ID)
+				if err != nil {
+					return errors.Wrap(err, "failed to revoke lease")
+				}
+
+				status := m.Status
+				status.Lease = api.LeaseData{}
+				err = c.updateMongodbRoleBindingStatus(&status, m)
+				if err != nil {
+					return errors.WithStack(err)
+				}
+			}
+		}
+	}
+
+	err = dbRClient.DeleteRole(mRole.Name)
 	if err != nil {
 		return errors.Wrap(err, "failed to database role")
 	}
-
 	return nil
 }
 
@@ -259,7 +312,6 @@ func (c *UserManagerController) removeMongodbRoleFinalizer(mRole *api.MongodbRol
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 

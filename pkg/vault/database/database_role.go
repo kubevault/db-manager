@@ -37,7 +37,6 @@ func NewDatabaseRoleForPostgres(kClient kubernetes.Interface, role *api.Postgres
 		path:          "database",
 		vaultClient:   vClient,
 	}
-
 	return d, nil
 }
 
@@ -59,7 +58,6 @@ func NewDatabaseRoleForMysql(kClient kubernetes.Interface, role *api.MysqlRole) 
 		path:          "database",
 		vaultClient:   vClient,
 	}
-
 	return d, nil
 }
 
@@ -81,7 +79,6 @@ func NewDatabaseRoleForMongodb(kClient kubernetes.Interface, role *api.MongodbRo
 		path:          "database",
 		vaultClient:   vClient,
 	}
-
 	return d, nil
 }
 
@@ -119,13 +116,14 @@ func (d *DatabaseRole) IsDatabaseEnabled() (bool, error) {
 			return true, nil
 		}
 	}
-
 	return false, nil
 }
 
 // https://www.vaultproject.io/api/secret/databases/index.html#delete-role
 //
 // DeleteRole deletes role
+// It's safe to call multiple time. It doesn't give
+// error even if respective role doesn't exist
 func (d *DatabaseRole) DeleteRole(name string) error {
 	path := fmt.Sprintf("/v1/%s/roles/%s", d.path, name)
 	req := d.vaultClient.NewRequest("DELETE", path)

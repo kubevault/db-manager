@@ -15,6 +15,23 @@ const (
 	renewThreshold = time.Second * 50
 )
 
+func (u *UserManagerController) RevokeLease(v *api.VaultSpec, namespace string, leaseID string) error {
+	if v == nil {
+		return errors.New("vault spec is nil")
+	}
+
+	cl, err := vault.NewClient(u.kubeClient, namespace, v)
+	if err != nil {
+		return errors.Wrap(err, "failed to create vault client")
+	}
+
+	err = cl.Sys().Revoke(leaseID)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
 func (u *UserManagerController) LeaseRenewer(duration time.Duration) {
 	for {
 		select {

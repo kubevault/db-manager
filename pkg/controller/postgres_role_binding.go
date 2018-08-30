@@ -34,17 +34,17 @@ func (c *UserManagerController) initPostgresRoleBindingWatcher() {
 func (c *UserManagerController) runPostgresRoleBindingInjector(key string) error {
 	obj, exist, err := c.pgRoleBindingInformer.GetIndexer().GetByKey(key)
 	if err != nil {
-		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
+		glog.Errorf("Fetching object with key(%s) from store failed with %v", key, err)
 		return err
 	}
 
 	if !exist {
-		glog.Warningf("PostgresRoleBinding %s does not exist anymore\n", key)
+		glog.Warningf("PostgresRoleBinding(%s) does not exist anymore\n", key)
 
 	} else {
 		pgRoleBinding := obj.(*api.PostgresRoleBinding).DeepCopy()
 
-		glog.Infof("Sync/Add/Update for PostgresRoleBinding %s/%s\n", pgRoleBinding.Namespace, pgRoleBinding.Name)
+		glog.Infof("Sync/Add/Update for PostgresRoleBinding(%s/%s)\n", pgRoleBinding.Namespace, pgRoleBinding.Name)
 
 		if pgRoleBinding.DeletionTimestamp != nil {
 			if kutilcorev1.HasFinalizer(pgRoleBinding.ObjectMeta, PostgresRoleBindingFinalizer) {
@@ -221,7 +221,6 @@ func (c *UserManagerController) updatePostgresRoleBindingStatus(status *api.Post
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -319,7 +318,6 @@ func (c *UserManagerController) removePostgresRoleBindingFinalizer(pgRoleBinding
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 

@@ -33,6 +33,13 @@ func NewDatabaseRoleBindingForPostgres(k kubernetes.Interface, cr crd.Interface,
 		return nil, errors.Wrapf(err, "failed to get postgres role(%s/%s)", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
+	if pgRole.Spec.Provider == nil {
+		return nil, errors.Errorf("in postgres role(%s/%s) spec.provider is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+	}
+	if pgRole.Spec.Provider.Vault == nil {
+		return nil, errors.Errorf("in postgres role(%s/%s) spec.provider.vault is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+	}
+
 	v, err := vault.NewClient(k, roleBinding.Namespace, pgRole.Spec.Provider.Vault)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to create vault client from postgres role(%s/%s) spec.provider.vault", roleBinding.Namespace, roleBinding.Spec.RoleRef)
@@ -54,6 +61,13 @@ func NewDatabaseRoleBindingForMysql(k kubernetes.Interface, cr crd.Interface, ro
 		return nil, errors.Wrapf(err, "failed to get mysql role(%s/%s)", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
+	if mRole.Spec.Provider == nil {
+		return nil, errors.Errorf("in mysql role(%s/%s) spec.provider is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+	}
+	if mRole.Spec.Provider.Vault == nil {
+		return nil, errors.Errorf("in mysql role(%s/%s) spec.provider.vault is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+	}
+
 	v, err := vault.NewClient(k, roleBinding.Namespace, mRole.Spec.Provider.Vault)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to create vault client from mysql role(%s/%s) spec.provider.vault", roleBinding.Namespace, roleBinding.Spec.RoleRef)
@@ -73,6 +87,13 @@ func NewDatabaseRoleBindingForMongodb(k kubernetes.Interface, cr crd.Interface, 
 	mRole, err := cr.AuthorizationV1alpha1().MongodbRoles(roleBinding.Namespace).Get(roleBinding.Spec.RoleRef, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get mongodb role(%s/%s)", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+	}
+
+	if mRole.Spec.Provider == nil {
+		return nil, errors.Errorf("in mongodb role(%s/%s) spec.provider is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+	}
+	if mRole.Spec.Provider.Vault == nil {
+		return nil, errors.Errorf("in mongodb role(%s/%s) spec.provider.vault is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
 	v, err := vault.NewClient(k, roleBinding.Namespace, mRole.Spec.Provider.Vault)
@@ -212,6 +233,10 @@ func (d *DatabaseRoleBinding) IsLeaseExpired(leaseID string) (bool, error) {
 	return false, nil
 }
 
+// RevokeLease revokes respective lease
+// It's safe to call multiple time. It doesn't give
+// error even if respective lease_id doesn't exist
+// but it will give an error if lease_id is empty
 func (d *DatabaseRoleBinding) RevokeLease(leaseID string) error {
 	err := d.vaultClient.Sys().Revoke(leaseID)
 	if err != nil {

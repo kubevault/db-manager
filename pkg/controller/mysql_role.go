@@ -14,6 +14,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 )
 
 const (
@@ -36,17 +37,17 @@ func (c *UserManagerController) initMysqlRoleWatcher() {
 func (c *UserManagerController) runMysqlRoleInjector(key string) error {
 	obj, exist, err := c.myRoleInformer.GetIndexer().GetByKey(key)
 	if err != nil {
-		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
+		glog.Errorf("Fetching object with key(%s) from store failed with %v", key, err)
 		return err
 	}
 
 	if !exist {
-		glog.Warningf("MysqlRole %s does not exist anymore\n", key)
+		glog.Warningf("MysqlRole(%s) does not exist anymore\n", key)
 
 	} else {
 		mRole := obj.(*api.MysqlRole).DeepCopy()
 
-		glog.Infof("Sync/Add/Update for MysqlRole %s/%s\n", mRole.Namespace, mRole.Name)
+		glog.Infof("Sync/Add/Update for MysqlRole(%s/%s)\n", mRole.Namespace, mRole.Name)
 
 		if mRole.DeletionTimestamp != nil {
 			if kutilcorev1.HasFinalizer(mRole.ObjectMeta, MysqlRoleFinalizer) {
@@ -85,6 +86,7 @@ func (c *UserManagerController) runMysqlRoleInjector(key string) error {
 //	  - configure Vault with the proper mysql plugin and connection information
 // 	  - configure a role that maps a name in Vault to an SQL statement to execute to create the database credential.
 //    - sync role
+//	  - revoke previous lease of all the respective mysqlRoleBinding and reissue a new lease
 func (c *UserManagerController) reconcileMysqlRole(dbRClient database.DatabaseRoleInterface, mRole *api.MysqlRole) error {
 	status := mRole.Status
 	// enable the database secrets engine if it is not already enabled
@@ -153,6 +155,28 @@ func (c *UserManagerController) reconcileMysqlRole(dbRClient database.DatabaseRo
 		return errors.Wrap(err, "failed to update MysqlRole status")
 	}
 
+	mList, err := c.myRoleBindingLister.MysqlRoleBindings(mRole.Namespace).List(labels.SelectorFromSet(map[string]string{}))
+	for _, m := range mList {
+		if m.Spec.RoleRef == mRole.Name {
+			// revoke lease if have any lease
+			if m.Status.Lease.ID != "" {
+				err = c.RevokeLease(mRole.Spec.Provider.Vault, mRole.Namespace, m.Status.Lease.ID)
+				if err != nil {
+					return errors.Wrap(err, "failed to revoke lease")
+				}
+
+				status := m.Status
+				status.Lease = api.LeaseData{}
+				err = c.updateMysqlRoleBindingStatus(&status, m)
+				if err != nil {
+					return errors.WithStack(err)
+				}
+			}
+
+			// enqueue mysqlRoleBinding to reissue database credentials lease
+			queue.Enqueue(c.myRoleBindingQueue.GetQueue(), m)
+		}
+	}
 	return nil
 }
 
@@ -164,7 +188,6 @@ func (c *UserManagerController) updatedMysqlRoleStatus(status *api.MysqlRoleStat
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -243,12 +266,37 @@ func (c *UserManagerController) runMysqlRoleFinalizer(mRole *api.MysqlRole, time
 	}
 }
 
+// Do:
+//	- delete role in vault
+//	- revoke lease of all the corresponding mysqlRoleBinding
 func (c *UserManagerController) finalizeMysqlRole(dbRClient database.DatabaseRoleInterface, mRole *api.MysqlRole) error {
-	err := dbRClient.DeleteRole(mRole.Name)
+	mRList, err := c.myRoleBindingLister.MysqlRoleBindings(mRole.Namespace).List(labels.SelectorFromSet(map[string]string{}))
+	if err != nil {
+		return errors.Wrap(err, "failed to list mysqlRoleBinding")
+	}
+
+	for _, m := range mRList {
+		if m.Spec.RoleRef == mRole.Name {
+			if m.Status.Lease.ID != "" {
+				err = c.RevokeLease(mRole.Spec.Provider.Vault, mRole.Namespace, m.Status.Lease.ID)
+				if err != nil {
+					return errors.Wrap(err, "failed to revoke lease")
+				}
+
+				status := m.Status
+				status.Lease = api.LeaseData{}
+				err = c.updateMysqlRoleBindingStatus(&status, m)
+				if err != nil {
+					return errors.WithStack(err)
+				}
+			}
+		}
+	}
+
+	err = dbRClient.DeleteRole(mRole.Name)
 	if err != nil {
 		return errors.Wrap(err, "failed to database role")
 	}
-
 	return nil
 }
 
@@ -261,7 +309,6 @@ func (c *UserManagerController) removeMysqlRoleFinalizer(mRole *api.MysqlRole) e
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 

@@ -29,6 +29,12 @@ func NewClient(kclient kubernetes.Interface, namespace string, v *api.VaultSpec)
 		return nil, errors.Wrapf(err, "failed to get vault token secret(%s/%s)", namespace, v.TokenSecret)
 	}
 
+	if sr.Data == nil {
+		return nil, errors.Errorf("vault token is not found in secret(%s/%s)")
+	}
+	if _, ok := sr.Data["token"]; !ok {
+		return nil, errors.Errorf("vault token is not found in secret(%s/%s)")
+	}
 	cl.SetToken(string(sr.Data["token"]))
 
 	return cl, nil

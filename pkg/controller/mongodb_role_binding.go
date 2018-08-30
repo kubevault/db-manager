@@ -34,17 +34,17 @@ func (c *UserManagerController) initMongodbRoleBindingWatcher() {
 func (c *UserManagerController) runMongodbRoleBindingInjector(key string) error {
 	obj, exist, err := c.mgRoleBindingInformer.GetIndexer().GetByKey(key)
 	if err != nil {
-		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
+		glog.Errorf("Fetching object with key(%s) from store failed with %v", key, err)
 		return err
 	}
 
 	if !exist {
-		glog.Warningf("MongodbRoleBinding %s does not exist anymore\n", key)
+		glog.Warningf("MongodbRoleBinding(%s) does not exist anymore\n", key)
 
 	} else {
 		mRoleBinding := obj.(*api.MongodbRoleBinding).DeepCopy()
 
-		glog.Infof("Sync/Add/Update for MongodbRoleBinding %s/%s\n", mRoleBinding.Namespace, mRoleBinding.Name)
+		glog.Infof("Sync/Add/Update for MongodbRoleBinding(%s/%s)\n", mRoleBinding.Namespace, mRoleBinding.Name)
 
 		if mRoleBinding.DeletionTimestamp != nil {
 			if kutilcorev1.HasFinalizer(mRoleBinding.ObjectMeta, MongodbRoleBindingFinalizer) {
@@ -317,7 +317,6 @@ func (c *UserManagerController) removeMongodbRoleBindingFinalizer(mRoleBinding *
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 

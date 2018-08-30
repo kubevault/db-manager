@@ -14,6 +14,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 )
 
 const (
@@ -36,17 +37,17 @@ func (c *UserManagerController) initPostgresRoleWatcher() {
 func (c *UserManagerController) runPostgresRoleInjector(key string) error {
 	obj, exist, err := c.pgRoleInformer.GetIndexer().GetByKey(key)
 	if err != nil {
-		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
+		glog.Errorf("Fetching object with key(%s) from store failed with %v", key, err)
 		return err
 	}
 
 	if !exist {
-		glog.Warningf("PostgresRole %s does not exist anymore\n", key)
+		glog.Warningf("PostgresRole(%s) does not exist anymore\n", key)
 
 	} else {
 		pgRole := obj.(*api.PostgresRole).DeepCopy()
 
-		glog.Infof("Sync/Add/Update for PostgresRole %s/%s\n", pgRole.Namespace, pgRole.Name)
+		glog.Infof("Sync/Add/Update for PostgresRole(%s/%s)\n", pgRole.Namespace, pgRole.Name)
 
 		if pgRole.DeletionTimestamp != nil {
 			if kutilcorev1.HasFinalizer(pgRole.ObjectMeta, PostgresRoleFinalizer) {
@@ -85,6 +86,7 @@ func (c *UserManagerController) runPostgresRoleInjector(key string) error {
 //	  - configure Vault with the proper postgres plugin and connection information
 // 	  - configure a role that maps a name in Vault to an SQL statement to execute to create the database credential.
 //    - sync role
+//	  - revoke previous lease of all the respective postgresRoleBinding and reissue a new lease
 func (c *UserManagerController) reconcilePostgresRole(dbRClient database.DatabaseRoleInterface, pgRole *api.PostgresRole) error {
 	status := pgRole.Status
 	// enable the database secrets engine if it is not already enabled
@@ -151,6 +153,29 @@ func (c *UserManagerController) reconcilePostgresRole(dbRClient database.Databas
 	err = c.updatePostgresRoleStatus(&status, pgRole)
 	if err != nil {
 		return errors.Wrap(err, "failed to update postgresRole status")
+	}
+
+	pList, err := c.pgRoleBindingLister.PostgresRoleBindings(pgRole.Namespace).List(labels.SelectorFromSet(map[string]string{}))
+	for _, p := range pList {
+		if p.Spec.RoleRef == pgRole.Name {
+			// revoke lease if have any lease
+			if p.Status.Lease.ID != "" {
+				err = c.RevokeLease(pgRole.Spec.Provider.Vault, pgRole.Namespace, p.Status.Lease.ID)
+				if err != nil {
+					return errors.Wrap(err, "failed to revoke lease")
+				}
+
+				status := p.Status
+				status.Lease = api.LeaseData{}
+				err = c.updatePostgresRoleBindingStatus(&status, p)
+				if err != nil {
+					return errors.WithStack(err)
+				}
+			}
+
+			// enqueue postgresRoleBinding to reissue database credentials lease
+			queue.Enqueue(c.pgRoleBindingQueue.GetQueue(), p)
+		}
 	}
 	return nil
 }
@@ -241,12 +266,37 @@ func (c *UserManagerController) runPostgresRoleFinalizer(pgRole *api.PostgresRol
 	}
 }
 
+// Do:
+//	- delete role in vault
+//	- revoke lease of all the corresponding postgresRoleBinding
 func (c *UserManagerController) finalizePostgresRole(dbRClient database.DatabaseRoleInterface, pgRole *api.PostgresRole) error {
-	err := dbRClient.DeleteRole(pgRole.Name)
+	pRList, err := c.pgRoleBindingLister.PostgresRoleBindings(pgRole.Namespace).List(labels.SelectorFromSet(map[string]string{}))
+	if err != nil {
+		return errors.Wrap(err, "failed to list postgresRoleBinding")
+	}
+
+	for _, p := range pRList {
+		if p.Spec.RoleRef == pgRole.Name {
+			if p.Status.Lease.ID != "" {
+				err = c.RevokeLease(pgRole.Spec.Provider.Vault, pgRole.Namespace, p.Status.Lease.ID)
+				if err != nil {
+					return errors.Wrap(err, "failed to revoke lease")
+				}
+
+				status := p.Status
+				status.Lease = api.LeaseData{}
+				err = c.updatePostgresRoleBindingStatus(&status, p)
+				if err != nil {
+					return errors.WithStack(err)
+				}
+			}
+		}
+	}
+
+	err = dbRClient.DeleteRole(pgRole.Name)
 	if err != nil {
 		return errors.Wrap(err, "failed to database role")
 	}
-
 	return nil
 }
 
@@ -259,7 +309,6 @@ func (c *UserManagerController) removePostgresRoleFinalizer(pgRole *api.Postgres
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
