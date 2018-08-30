@@ -51,9 +51,9 @@ type UserManagerController struct {
 	myRoleBindingLister   dblisters.MysqlRoleBindingLister
 
 	// MongodbRole
-	mgRoleQueue       *queue.Worker
-	mgRoleInformer    cache.SharedIndexInformer
-	mongodbRoleLister dblisters.MongodbRoleLister
+	mgRoleQueue    *queue.Worker
+	mgRoleInformer cache.SharedIndexInformer
+	mgRoleLister   dblisters.MongodbRoleLister
 
 	// MongodbRoleBinding
 	mgRoleBindingQueue    *queue.Worker

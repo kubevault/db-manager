@@ -10,6 +10,7 @@ import (
 	"github.com/appscode/pat"
 	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
 	dbfake "github.com/kubedb/user-manager/client/clientset/versioned/fake"
+	dbinformers "github.com/kubedb/user-manager/client/informers/externalversions"
 	"github.com/kubedb/user-manager/pkg/vault/database"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -49,6 +50,8 @@ func TestUserManagerController_runMongodbFinalizer(t *testing.T) {
 		dbClient:            dbfake.NewSimpleClientset(),
 		kubeClient:          kfake.NewSimpleClientset(),
 	}
+	userManager.dbInformerFactory = dbinformers.NewSharedInformerFactory(userManager.dbClient, time.Minute*10)
+	userManager.mgRoleBindingLister = userManager.dbInformerFactory.Authorization().V1alpha1().MongodbRoleBindings().Lister()
 
 	provider := &api.ProviderSpec{
 		Vault: &api.VaultSpec{
@@ -243,6 +246,8 @@ func TestUserManagerController_reconcileMongodbRole(t *testing.T) {
 				kubeClient: kfake.NewSimpleClientset(),
 				dbClient:   dbfake.NewSimpleClientset(),
 			}
+			c.dbInformerFactory = dbinformers.NewSharedInformerFactory(c.dbClient, time.Minute*10)
+			c.mgRoleBindingLister = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoleBindings().Lister()
 
 			_, err := c.dbClient.AuthorizationV1alpha1().MongodbRoles(test.mRole.Namespace).Create(&test.mRole)
 			if !assert.Nil(t, err) {

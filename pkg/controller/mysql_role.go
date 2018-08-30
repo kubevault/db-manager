@@ -14,6 +14,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 )
 
 const (
@@ -41,12 +42,12 @@ func (c *UserManagerController) runMysqlRoleInjector(key string) error {
 	}
 
 	if !exist {
-		glog.Warningf("MysqlRole %s does not exist anymore\n", key)
+		glog.Warningf("MysqlRole %s does not exist anymore", key)
 
 	} else {
 		mRole := obj.(*api.MysqlRole).DeepCopy()
 
-		glog.Infof("Sync/Add/Update for MysqlRole %s/%s\n", mRole.Namespace, mRole.Name)
+		glog.Infof("Sync/Add/Update for MysqlRole %s/%s", mRole.Namespace, mRole.Name)
 
 		if mRole.DeletionTimestamp != nil {
 			if kutilcorev1.HasFinalizer(mRole.ObjectMeta, MysqlRoleFinalizer) {
@@ -61,7 +62,7 @@ func (c *UserManagerController) runMysqlRoleInjector(key string) error {
 					return role
 				})
 				if err != nil {
-					return errors.Wrapf(err, "failed to set MysqlRole finalizer for (%s/%s)", mRole.Namespace, mRole.Name)
+					return errors.Wrapf(err, "failed to set MysqlRole finalizer for %s/%s", mRole.Namespace, mRole.Name)
 				}
 			}
 
@@ -72,7 +73,7 @@ func (c *UserManagerController) runMysqlRoleInjector(key string) error {
 
 			err = c.reconcileMysqlRole(dbRClient, mRole)
 			if err != nil {
-				return err
+				return errors.Wrapf(err, "for MysqlRole %s/%s:", mRole.Namespace, mRole.Name)
 			}
 		}
 	}
@@ -85,112 +86,97 @@ func (c *UserManagerController) runMysqlRoleInjector(key string) error {
 //	  - configure Vault with the proper mysql plugin and connection information
 // 	  - configure a role that maps a name in Vault to an SQL statement to execute to create the database credential.
 //    - sync role
+//	  - revoke previous lease of all the respective mysqlRoleBinding and reissue a new lease
 func (c *UserManagerController) reconcileMysqlRole(dbRClient database.DatabaseRoleInterface, mRole *api.MysqlRole) error {
-	if mRole.Status.Phase == "" { // initial stage
-		status := mRole.Status
-
-		// enable the database secrets engine if it is not already enabled
-		err := dbRClient.EnableDatabase()
-		if err != nil {
-			status.Conditions = []api.MysqlRoleCondition{
-				{
-					Type:    "Available",
-					Status:  corev1.ConditionFalse,
-					Reason:  "FailedToEnableDatabase",
-					Message: err.Error(),
-				},
-			}
-
-			err2 := c.updatedMysqlRoleStatus(&status, mRole)
-			if err2 != nil {
-				return errors.Wrapf(err2, "for MysqlRole(%s/%s): failed to update status", mRole.Namespace, mRole.Name)
-			}
-
-			return errors.Wrapf(err, "For MysqlROle(%s/%s): failed to enable database secret engine", mRole.Namespace, mRole.Name)
+	status := mRole.Status
+	// enable the database secrets engine if it is not already enabled
+	err := dbRClient.EnableDatabase()
+	if err != nil {
+		status.Conditions = []api.MysqlRoleCondition{
+			{
+				Type:    "Available",
+				Status:  corev1.ConditionFalse,
+				Reason:  "FailedToEnableDatabase",
+				Message: err.Error(),
+			},
 		}
 
-		// create database config for mysql
-		err = dbRClient.CreateConfig()
-		if err != nil {
-			status.Conditions = []api.MysqlRoleCondition{
-				{
-					Type:    "Available",
-					Status:  corev1.ConditionFalse,
-					Reason:  "FailedToCreateDatabaseConfig",
-					Message: err.Error(),
-				},
-			}
-
-			err2 := c.updatedMysqlRoleStatus(&status, mRole)
-			if err2 != nil {
-				return errors.Wrapf(err2, "for MysqlRole(%s/%s): failed to update status", mRole.Namespace, mRole.Name)
-			}
-
-			return errors.Wrapf(err, "For MysqlRole(%s/%s): failed to created database connection config(%s)", mRole.Namespace, mRole.Name, mRole.Spec.Database.Name)
+		err2 := c.updatedMysqlRoleStatus(&status, mRole)
+		if err2 != nil {
+			return errors.Wrap(err2, "failed to update status")
 		}
-
-		// create role
-		err = dbRClient.CreateRole()
-		if err != nil {
-			status.Conditions = []api.MysqlRoleCondition{
-				{
-					Type:    "Available",
-					Status:  corev1.ConditionFalse,
-					Reason:  "FailedToCreateRole",
-					Message: err.Error(),
-				},
-			}
-
-			err2 := c.updatedMysqlRoleStatus(&status, mRole)
-			if err2 != nil {
-				return errors.Wrapf(err2, "for MysqlRole(%s/%s): failed to update status", mRole.Namespace, mRole.Name)
-			}
-
-			return errors.Wrapf(err, "For MysqlRole(%s/%s): failed to create role", mRole.Namespace, mRole.Name)
-		}
-
-		status.Conditions = []api.MysqlRoleCondition{}
-		status.Phase = MysqlRolePhaseSuccess
-		status.ObservedGeneration = mRole.Generation
-
-		err = c.updatedMysqlRoleStatus(&status, mRole)
-		if err != nil {
-			return errors.Wrapf(err, "For MysqlRole(%s/%s): failed to update MysqlRole status", mRole.Namespace, mRole.Name)
-		}
-
-	} else {
-		// sync role
-		status := mRole.Status
-
-		// In vault create role replaces the old role
-		err := dbRClient.CreateRole()
-		if err != nil {
-			status.Conditions = []api.MysqlRoleCondition{
-				{
-					Type:    "Available",
-					Status:  corev1.ConditionFalse,
-					Reason:  "FailedToUpdateRole",
-					Message: err.Error(),
-				},
-			}
-
-			err2 := c.updatedMysqlRoleStatus(&status, mRole)
-			if err2 != nil {
-				return errors.Wrapf(err2, "for MysqlRole(%s/%s): failed to update status", mRole.Namespace, mRole.Name)
-			}
-
-			return errors.Wrapf(err, "For Mysql(%s/%s): failed to update role", mRole.Namespace, mRole.Name)
-		}
-
-		status.Conditions = []api.MysqlRoleCondition{}
-		status.ObservedGeneration = mRole.Generation
-
-		err = c.updatedMysqlRoleStatus(&status, mRole)
-		if err != nil {
-			return errors.Wrapf(err, "For Mysql(%s/%s): failed to update MysqlRole status", mRole.Namespace, mRole.Name)
-		}
+		return errors.Wrap(err, "failed to enable database secret engine")
 	}
 
+	// create database config for mysql
+	err = dbRClient.CreateConfig()
+	if err != nil {
+		status.Conditions = []api.MysqlRoleCondition{
+			{
+				Type:    "Available",
+				Status:  corev1.ConditionFalse,
+				Reason:  "FailedToCreateDatabaseConfig",
+				Message: err.Error(),
+			},
+		}
+
+		err2 := c.updatedMysqlRoleStatus(&status, mRole)
+		if err2 != nil {
+			return errors.Wrap(err2, "failed to update status")
+		}
+		return errors.Wrapf(err, "failed to created database connection config %s", mRole.Spec.Database.Name)
+	}
+
+	// create role
+	err = dbRClient.CreateRole()
+	if err != nil {
+		status.Conditions = []api.MysqlRoleCondition{
+			{
+				Type:    "Available",
+				Status:  corev1.ConditionFalse,
+				Reason:  "FailedToCreateRole",
+				Message: err.Error(),
+			},
+		}
+
+		err2 := c.updatedMysqlRoleStatus(&status, mRole)
+		if err2 != nil {
+			return errors.Wrap(err2, "failed to update status")
+		}
+		return errors.Wrap(err, "failed to create role")
+	}
+
+	status.Conditions = []api.MysqlRoleCondition{}
+	status.Phase = MysqlRolePhaseSuccess
+	status.ObservedGeneration = mRole.Generation
+
+	err = c.updatedMysqlRoleStatus(&status, mRole)
+	if err != nil {
+		return errors.Wrap(err, "failed to update MysqlRole status")
+	}
+
+	mList, err := c.myRoleBindingLister.MysqlRoleBindings(mRole.Namespace).List(labels.SelectorFromSet(map[string]string{}))
+	for _, m := range mList {
+		if m.Spec.RoleRef == mRole.Name {
+			// revoke lease if have any lease
+			if m.Status.Lease.ID != "" {
+				err = c.RevokeLease(mRole.Spec.Provider.Vault, mRole.Namespace, m.Status.Lease.ID)
+				if err != nil {
+					return errors.Wrap(err, "failed to revoke lease")
+				}
+
+				status := m.Status
+				status.Lease = api.LeaseData{}
+				err = c.updateMysqlRoleBindingStatus(&status, m)
+				if err != nil {
+					return errors.WithStack(err)
+				}
+			}
+
+			// enqueue mysqlRoleBinding to reissue database credentials lease
+			queue.Enqueue(c.myRoleBindingQueue.GetQueue(), m)
+		}
+	}
 	return nil
 }
 
@@ -202,7 +188,6 @@ func (c *UserManagerController) updatedMysqlRoleStatus(status *api.MysqlRoleStat
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -225,7 +210,7 @@ func (c *UserManagerController) runMysqlRoleFinalizer(mRole *api.MysqlRole, time
 			delete(c.processingFinalizer, id)
 			return
 		} else if err != nil {
-			glog.Errorf("MysqlRole(%s/%s) finalizer: %v\n", mRole.Namespace, mRole.Name, err)
+			glog.Errorf("MysqlRole %s/%s finalizer: %v", mRole.Namespace, mRole.Name, err)
 		}
 
 		// to make sure p is not nil
@@ -237,7 +222,7 @@ func (c *UserManagerController) runMysqlRoleFinalizer(mRole *api.MysqlRole, time
 		case <-stopCh:
 			err := c.removeMysqlRoleFinalizer(m)
 			if err != nil {
-				glog.Errorf("MysqlRole(%s/%s) finalizer: %v\n", m.Namespace, m.Name, err)
+				glog.Errorf("MysqlRole %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return
@@ -247,11 +232,11 @@ func (c *UserManagerController) runMysqlRoleFinalizer(mRole *api.MysqlRole, time
 		if !finalizationDone {
 			d, err := database.NewDatabaseRoleForMysql(c.kubeClient, m)
 			if err != nil {
-				glog.Errorf("MysqlRole(%s/%s) finalizer: %v\n", m.Namespace, m.Name, err)
+				glog.Errorf("MysqlRole %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			} else {
 				err = c.finalizeMysqlRole(d, m)
 				if err != nil {
-					glog.Errorf("MysqlRole(%s/%s) finalizer: %v\n", m.Namespace, m.Name, err)
+					glog.Errorf("MysqlRole %s/%s finalizer: %v", m.Namespace, m.Name, err)
 				} else {
 					finalizationDone = true
 				}
@@ -262,7 +247,7 @@ func (c *UserManagerController) runMysqlRoleFinalizer(mRole *api.MysqlRole, time
 		if finalizationDone {
 			err := c.removeMysqlRoleFinalizer(m)
 			if err != nil {
-				glog.Errorf("MysqlRole(%s/%s) finalizer: %v\n", m.Namespace, m.Name, err)
+				glog.Errorf("MysqlRole %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return
@@ -272,7 +257,7 @@ func (c *UserManagerController) runMysqlRoleFinalizer(mRole *api.MysqlRole, time
 		case <-stopCh:
 			err := c.removeMysqlRoleFinalizer(m)
 			if err != nil {
-				glog.Errorf("MysqlRole(%s/%s) finalizer: %v\n", m.Namespace, m.Name, err)
+				glog.Errorf("MysqlRole %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return
@@ -281,12 +266,37 @@ func (c *UserManagerController) runMysqlRoleFinalizer(mRole *api.MysqlRole, time
 	}
 }
 
+// Do:
+//	- delete role in vault
+//	- revoke lease of all the corresponding mysqlRoleBinding
 func (c *UserManagerController) finalizeMysqlRole(dbRClient database.DatabaseRoleInterface, mRole *api.MysqlRole) error {
-	err := dbRClient.DeleteRole(mRole.Name)
+	mRList, err := c.myRoleBindingLister.MysqlRoleBindings(mRole.Namespace).List(labels.SelectorFromSet(map[string]string{}))
+	if err != nil {
+		return errors.Wrap(err, "failed to list mysqlRoleBinding")
+	}
+
+	for _, m := range mRList {
+		if m.Spec.RoleRef == mRole.Name {
+			if m.Status.Lease.ID != "" {
+				err = c.RevokeLease(mRole.Spec.Provider.Vault, mRole.Namespace, m.Status.Lease.ID)
+				if err != nil {
+					return errors.Wrap(err, "failed to revoke lease")
+				}
+
+				status := m.Status
+				status.Lease = api.LeaseData{}
+				err = c.updateMysqlRoleBindingStatus(&status, m)
+				if err != nil {
+					return errors.WithStack(err)
+				}
+			}
+		}
+	}
+
+	err = dbRClient.DeleteRole(mRole.Name)
 	if err != nil {
 		return errors.Wrap(err, "failed to database role")
 	}
-
 	return nil
 }
 
@@ -299,7 +309,6 @@ func (c *UserManagerController) removeMysqlRoleFinalizer(mRole *api.MysqlRole) e
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 

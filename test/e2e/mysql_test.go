@@ -10,6 +10,8 @@ import (
 	. "github.com/onsi/gomega"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 
+	patchutil "github.com/kubedb/user-manager/client/clientset/versioned/typed/authorization/v1alpha1/util"
+	"github.com/kubedb/user-manager/pkg/vault/database"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -108,6 +110,22 @@ var _ = Describe("Mysql role and role binding", func() {
 				_, err := cl.RawRequest(req)
 				return err == nil
 			}, timeOut, pollingInterval).Should(BeTrue(), "Is vault database role created")
+		}
+
+		IsVaultLeaseRevoked = func(dRB database.DatabaseRoleBindingInterface, leaseID string) {
+			By(fmt.Sprintf("Checking Is lease revoked"))
+			Eventually(func() bool {
+				ok, err := dRB.IsLeaseExpired(leaseID)
+				return err == nil && ok == true
+			}, timeOut, pollingInterval).Should(BeTrue(), "Is lease revoked")
+		}
+
+		IsVaultLeaseValid = func(dRB database.DatabaseRoleBindingInterface, leaseID string) {
+			By(fmt.Sprintf("Checking Is lease valid"))
+			Eventually(func() bool {
+				ok, err := dRB.IsLeaseExpired(leaseID)
+				return err == nil && ok == false
+			}, timeOut, pollingInterval).Should(BeTrue(), "Is lease valid")
 		}
 
 		IsVaultDatabaseRoleDeleted = func(name string) {
@@ -259,7 +277,7 @@ var _ = Describe("Mysql role and role binding", func() {
 					},
 					Database: &api.DatabaseConfigForMysql{
 						Name:             "mysql-test1",
-						PluginName: "mysql-rds-database-plugin",
+						PluginName:       "mysql-rds-database-plugin",
 						CredentialSecret: framework.MysqlCredentialSecret,
 						ConnectionUrl:    fmt.Sprintf("{{username}}:{{password}}@tcp(%s)/", f.MysqlUrl),
 						AllowedRoles:     "*",
@@ -325,7 +343,7 @@ var _ = Describe("Mysql role and role binding", func() {
 
 			It("should be successful", func() {
 				_, err := f.DBClient.AuthorizationV1alpha1().MysqlRoleBindings(mRoleBinding.Namespace).Create(mRoleBinding)
-				Expect(err).NotTo(HaveOccurred(), "Create PostgresRoleBinding")
+				Expect(err).NotTo(HaveOccurred(), "Create MysqlRoleBinding")
 
 				IsMysqlRoleBindingCreated(mRoleBinding.Name, mRoleBinding.Namespace)
 
@@ -334,6 +352,168 @@ var _ = Describe("Mysql role and role binding", func() {
 				IsSecretCreated(mRoleBinding.Spec.Store.Secret, mRoleBinding.Namespace)
 				IsRbacRoleCreated(fmt.Sprintf("mysqlrolebinding-%s-credential-reader", mRoleBinding.Name), mRoleBinding.Namespace)
 				IsRbacRoleBindingCreated(fmt.Sprintf("mysqlrolebinding-%s-credential-reader", mRoleBinding.Name), mRoleBinding.Namespace)
+			})
+		})
+	})
+
+	Describe("Lease revoke and reissue", func() {
+		var (
+			mRole        api.MysqlRole
+			mRoleBinding api.MysqlRoleBinding
+		)
+
+		BeforeEach(func() {
+			mRole = api.MysqlRole{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "m-role-test1",
+					Namespace: f.Namespace(),
+				},
+				Spec: api.MysqlRoleSpec{
+					Provider: &api.ProviderSpec{
+						Vault: &api.VaultSpec{
+							Address:             f.VaultUrl,
+							TokenSecret:         framework.VaultTokenSecret,
+							SkipTLSVerification: true,
+						},
+					},
+					Database: &api.DatabaseConfigForMysql{
+						Name:             "mysql-test1",
+						PluginName:       "mysql-rds-database-plugin",
+						CredentialSecret: framework.MysqlCredentialSecret,
+						ConnectionUrl:    fmt.Sprintf("{{username}}:{{password}}@tcp(%s)/", f.MysqlUrl),
+						AllowedRoles:     "*",
+					},
+					DBName: "mysql-test1",
+					CreationStatements: []string{
+						"CREATE USER '{{name}}'@'%' IDENTIFIED BY '{{password}}';",
+						"GRANT SELECT ON *.* TO '{{name}}'@'%';",
+					},
+					MaxTTL:     "1h",
+					DefaultTTL: "300",
+				},
+			}
+
+			mRoleBinding = api.MysqlRoleBinding{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "m-read",
+					Namespace: f.Namespace(),
+				},
+				Spec: api.MysqlRoleBindingSpec{
+					RoleRef: mRole.Name,
+					Subjects: []rbacv1.Subject{
+						{
+							Name:      "m-sa",
+							Kind:      rbacv1.ServiceAccountKind,
+							Namespace: f.Namespace(),
+						},
+					},
+					Store: api.Store{
+						Secret: "m-cred",
+					},
+				},
+			}
+		})
+
+		Context("for mysqlRole and mysqlRoleBinding", func() {
+			BeforeEach(func() {
+				_, err := f.DBClient.AuthorizationV1alpha1().MysqlRoles(mRole.Namespace).Create(&mRole)
+				Expect(err).NotTo(HaveOccurred(), "Create MysqlRole")
+				IsMysqlRoleCreated(mRole.Name, mRole.Namespace)
+
+				_, err = f.DBClient.AuthorizationV1alpha1().MysqlRoleBindings(mRoleBinding.Namespace).Create(&mRoleBinding)
+				Expect(err).NotTo(HaveOccurred(), "Create MysqlRoleBinding")
+				IsMysqlRoleBindingCreated(mRoleBinding.Name, mRoleBinding.Namespace)
+				IsSecretCreated(mRoleBinding.Spec.Store.Secret, mRoleBinding.Namespace)
+				IsSecretCreated(mRoleBinding.Spec.Store.Secret, mRoleBinding.Namespace)
+				IsRbacRoleCreated(fmt.Sprintf("mysqlrolebinding-%s-credential-reader", mRoleBinding.Name), mRoleBinding.Namespace)
+				IsRbacRoleBindingCreated(fmt.Sprintf("mysqlrolebinding-%s-credential-reader", mRoleBinding.Name), mRoleBinding.Namespace)
+			})
+
+			AfterEach(func() {
+				err := f.DBClient.AuthorizationV1alpha1().MysqlRoles(mRole.Namespace).Delete(mRole.Name, &metav1.DeleteOptions{})
+				Expect(err).NotTo(HaveOccurred(), "Delete MysqlRole")
+
+				IsMysqlRoleDeleted(mRole.Name, mRole.Namespace)
+				IsVaultDatabaseRoleDeleted(mRole.Name)
+
+				err = f.DBClient.AuthorizationV1alpha1().MysqlRoleBindings(mRoleBinding.Namespace).Delete(mRoleBinding.Name, &metav1.DeleteOptions{})
+				Expect(err).NotTo(HaveOccurred(), "Delete MysqlRoleBindings")
+
+				IsMysqlRoleBindingDeleted(mRoleBinding.Name, mRoleBinding.Namespace)
+
+				IsSecretDeleted(mRoleBinding.Spec.Store.Secret, mRoleBinding.Namespace)
+				IsRbacRoleDeleted(fmt.Sprintf("mysqlrolebinding-%s-credential-reader", mRoleBinding.Name), mRoleBinding.Namespace)
+				IsRbacRoleBindingDeleted(fmt.Sprintf("mysqlrolebinding-%s-credential-reader", mRoleBinding.Name), mRoleBinding.Namespace)
+
+			})
+
+			It("delete role should revoke lease successfully, recreate role should reissue lease successfully", func() {
+				mRB, err := f.DBClient.AuthorizationV1alpha1().MysqlRoleBindings(mRoleBinding.Namespace).Get(mRoleBinding.Name, metav1.GetOptions{})
+				Expect(err).NotTo(HaveOccurred(), "Get MysqlRoleBinding")
+				Expect(mRB.Status.Lease.ID != "").To(BeTrue(), "status.lease.id should be non empty")
+				previousLease := mRB.Status.Lease
+
+				dRB, err := database.NewDatabaseRoleBindingForMysql(f.KubeClient, f.DBClient, mRB)
+				Expect(err).NotTo(HaveOccurred())
+
+				// delete role
+				err = f.DBClient.AuthorizationV1alpha1().MysqlRoles(mRole.Namespace).Delete(mRole.Name, &metav1.DeleteOptions{})
+				Expect(err).NotTo(HaveOccurred(), "Delete MysqlRole")
+				IsMysqlRoleDeleted(mRole.Name, mRole.Namespace)
+
+				IsVaultLeaseRevoked(dRB, previousLease.ID)
+
+				// recreate role
+				_, err = f.DBClient.AuthorizationV1alpha1().MysqlRoles(mRole.Namespace).Create(&mRole)
+				Expect(err).NotTo(HaveOccurred(), "Create MysqlRole")
+				IsMysqlRoleCreated(mRole.Name, mRole.Namespace)
+
+				Eventually(func() bool {
+					mRB, err = f.DBClient.AuthorizationV1alpha1().MysqlRoleBindings(mRoleBinding.Namespace).Get(mRoleBinding.Name, metav1.GetOptions{})
+					return err == nil && mRB.Status.Lease.ID != ""
+				}, timeOut, pollingInterval).Should(BeTrue(), "MysqlRoleBinding status.lease.id should be non empty")
+
+				curLease := mRB.Status.Lease
+				IsVaultLeaseValid(dRB, curLease.ID)
+
+				sr, err := f.KubeClient.CoreV1().Secrets(mRoleBinding.Namespace).Get(mRoleBinding.Spec.Store.Secret, metav1.GetOptions{})
+				Expect(err).NotTo(HaveOccurred(), "Get secret")
+				Expect(sr.Data != nil &&
+					string(sr.Data["lease_id"]) == curLease.ID).To(BeTrue(), "lease in the secret should be updated")
+			})
+
+			It("update role should revoke the previous lease and issue a new lease successfully", func() {
+				mRB, err := f.DBClient.AuthorizationV1alpha1().MysqlRoleBindings(mRoleBinding.Namespace).Get(mRoleBinding.Name, metav1.GetOptions{})
+				Expect(err).NotTo(HaveOccurred(), "Get MysqlRoleBinding")
+				Expect(mRB.Status.Lease.ID != "").To(BeTrue(), "status.lease.id should be non empty")
+				previousLease := mRB.Status.Lease
+
+				dRB, err := database.NewDatabaseRoleBindingForMysql(f.KubeClient, f.DBClient, mRB)
+				Expect(err).NotTo(HaveOccurred())
+
+				// update role
+				_, _, err = patchutil.PatchMysqlRole(f.DBClient.AuthorizationV1alpha1(), &mRole, func(r *api.MysqlRole) *api.MysqlRole {
+					r.Spec.DefaultTTL = "500"
+					return r
+				})
+				Expect(err).NotTo(HaveOccurred(), "Update MysqlRole")
+				IsVaultLeaseRevoked(dRB, previousLease.ID)
+
+				Eventually(func() bool {
+					mRB, err = f.DBClient.AuthorizationV1alpha1().MysqlRoleBindings(mRoleBinding.Namespace).Get(mRoleBinding.Name, metav1.GetOptions{})
+					return err == nil &&
+						mRB.Status.Lease.ID != "" &&
+						mRB.Status.Lease.ID != previousLease.ID &&
+						mRB.Status.Lease.Duration == 500
+				}, timeOut, pollingInterval).Should(BeTrue(), "MysqlRoleBinding status.lease.id should be reissued")
+
+				curLease := mRB.Status.Lease
+				IsVaultLeaseValid(dRB, curLease.ID)
+
+				sr, err := f.KubeClient.CoreV1().Secrets(mRoleBinding.Namespace).Get(mRoleBinding.Spec.Store.Secret, metav1.GetOptions{})
+				Expect(err).NotTo(HaveOccurred(), "Get secret")
+				Expect(sr.Data != nil &&
+					string(sr.Data["lease_id"]) == curLease.ID).To(BeTrue(), "lease in the secret should be updated")
 			})
 		})
 	})

@@ -1,8 +1,10 @@
 package database
 
 import (
+	"encoding/json"
 	"strconv"
 
+	patchutilv1 "github.com/appscode/kutil/core/v1"
 	patchutil "github.com/appscode/kutil/rbac/v1"
 	vaultapi "github.com/hashicorp/vault/api"
 	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
@@ -28,12 +30,19 @@ type DatabaseRoleBinding struct {
 func NewDatabaseRoleBindingForPostgres(k kubernetes.Interface, cr crd.Interface, roleBinding *api.PostgresRoleBinding) (DatabaseRoleBindingInterface, error) {
 	pgRole, err := cr.AuthorizationV1alpha1().PostgresRoles(roleBinding.Namespace).Get(roleBinding.Spec.RoleRef, metav1.GetOptions{})
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get postgres role(%s/%s)", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+		return nil, errors.Wrapf(err, "failed to get postgres role %s/%s", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+	}
+
+	if pgRole.Spec.Provider == nil {
+		return nil, errors.Errorf("in postgres role %s/%s spec.provider is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+	}
+	if pgRole.Spec.Provider.Vault == nil {
+		return nil, errors.Errorf("in postgres role %s/%s spec.provider.vault is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
 	v, err := vault.NewClient(k, roleBinding.Namespace, pgRole.Spec.Provider.Vault)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create vault client from postgres role(%s/%s) spec.provider.vault", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+		return nil, errors.Wrapf(err, "failed to create vault client from postgres role %s/%s spec.provider.vault", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
 	p := postgres.NewPostgresRoleBinding(k, v, roleBinding, "database")
@@ -49,12 +58,19 @@ func NewDatabaseRoleBindingForPostgres(k kubernetes.Interface, cr crd.Interface,
 func NewDatabaseRoleBindingForMysql(k kubernetes.Interface, cr crd.Interface, roleBinding *api.MysqlRoleBinding) (DatabaseRoleBindingInterface, error) {
 	mRole, err := cr.AuthorizationV1alpha1().MysqlRoles(roleBinding.Namespace).Get(roleBinding.Spec.RoleRef, metav1.GetOptions{})
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get mysql role(%s/%s)", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+		return nil, errors.Wrapf(err, "failed to get mysql role %s/%s", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+	}
+
+	if mRole.Spec.Provider == nil {
+		return nil, errors.Errorf("in mysql role %s/%s spec.provider is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+	}
+	if mRole.Spec.Provider.Vault == nil {
+		return nil, errors.Errorf("in mysql role %s/%s spec.provider.vault is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
 	v, err := vault.NewClient(k, roleBinding.Namespace, mRole.Spec.Provider.Vault)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create vault client from mysql role(%s/%s) spec.provider.vault", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+		return nil, errors.Wrapf(err, "failed to create vault client from mysql role %s/%s spec.provider.vault", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
 	m := mysql.NewMysqlRoleBinding(k, v, roleBinding, "database")
@@ -70,12 +86,19 @@ func NewDatabaseRoleBindingForMysql(k kubernetes.Interface, cr crd.Interface, ro
 func NewDatabaseRoleBindingForMongodb(k kubernetes.Interface, cr crd.Interface, roleBinding *api.MongodbRoleBinding) (DatabaseRoleBindingInterface, error) {
 	mRole, err := cr.AuthorizationV1alpha1().MongodbRoles(roleBinding.Namespace).Get(roleBinding.Spec.RoleRef, metav1.GetOptions{})
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get mongodb role(%s/%s)", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+		return nil, errors.Wrapf(err, "failed to get mongodb role %s/%s", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+	}
+
+	if mRole.Spec.Provider == nil {
+		return nil, errors.Errorf("in mongodb role %s/%s spec.provider is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+	}
+	if mRole.Spec.Provider.Vault == nil {
+		return nil, errors.Errorf("in mongodb role %s/%s spec.provider.vault is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
 	v, err := vault.NewClient(k, roleBinding.Namespace, mRole.Spec.Provider.Vault)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create vault client from mongodb role(%s/%s) spec.provider.vault", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+		return nil, errors.Wrapf(err, "failed to create vault client from mongodb role %s/%s spec.provider.vault", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
 	m := mongodb.NewMongodbRoleBinding(k, v, roleBinding, "database")
@@ -90,38 +113,42 @@ func NewDatabaseRoleBindingForMongodb(k kubernetes.Interface, cr crd.Interface, 
 
 // Creates a kubernetes secret containing database credential
 func (d *DatabaseRoleBinding) CreateSecret(name string, namespace string, cred *vault.DatabaseCredential) error {
-	sr := &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-		Data: map[string][]byte{
+	data := map[string][]byte{}
+	if cred != nil {
+		data = map[string][]byte{
 			"lease_id":       []byte(cred.LeaseID),
 			"lease_duration": []byte(strconv.FormatInt(cred.LeaseDuration, 10)),
 			"renewable":      []byte(strconv.FormatBool(cred.Renewable)),
 			"password":       []byte(cred.Data.Password),
 			"username":       []byte(cred.Data.Username),
-		},
+		}
 	}
 
-	addOwnerRefToObject(sr, d.AsOwner())
+	obj := metav1.ObjectMeta{
+		Name:      name,
+		Namespace: namespace,
+	}
 
-	_, err := d.kubeClient.CoreV1().Secrets(namespace).Create(sr)
+	_, _, err := patchutilv1.CreateOrPatchSecret(d.kubeClient, obj, func(s *corev1.Secret) *corev1.Secret {
+		s.Data = data
+		addOwnerRefToObject(s, d.AsOwner())
+		return s
+	})
 	if err != nil {
-		return errors.Wrapf(err, "failed to create secret(%s/%s)", sr.Namespace, sr.Name)
+		return errors.Wrapf(err, "failed to create/update secret %s/%s", namespace, name)
 	}
-
 	return nil
 }
 
 // Creates kubernetes role
 func (d *DatabaseRoleBinding) CreateRole(name string, namespace string, secretName string) error {
-	role := &rbacv1.Role{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-		Rules: []rbacv1.PolicyRule{
+	obj := metav1.ObjectMeta{
+		Name:      name,
+		Namespace: namespace,
+	}
+
+	_, _, err := patchutil.CreateOrPatchRole(d.kubeClient, obj, func(role *rbacv1.Role) *rbacv1.Role {
+		role.Rules = []rbacv1.PolicyRule{
 			{
 				APIGroups: []string{
 					"", // represents core api
@@ -136,58 +163,80 @@ func (d *DatabaseRoleBinding) CreateRole(name string, namespace string, secretNa
 					"get",
 				},
 			},
-		},
-	}
+		}
 
-	addOwnerRefToObject(role, d.AsOwner())
-
-	_, err := d.kubeClient.RbacV1().Roles(role.Namespace).Create(role)
+		addOwnerRefToObject(role, d.AsOwner())
+		return role
+	})
 	if err != nil {
-		return errors.Wrapf(err, "failed to create rbac role(%s/%s)", role.Namespace, role.Name)
+		return errors.Wrapf(err, "failed to create rbac role %s/%s", namespace, name)
 	}
 	return nil
 }
 
-// Creates kubernetes role binding
+// Create kubernetes role binding
 func (d *DatabaseRoleBinding) CreateRoleBinding(name string, namespace string, roleName string, subjects []rbacv1.Subject) error {
-	rBinding := &rbacv1.RoleBinding{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-		RoleRef: rbacv1.RoleRef{
-			APIGroup: rbacv1.GroupName,
-			Kind:     "Role",
-			Name:     roleName,
-		},
-		Subjects: subjects,
-	}
-
-	addOwnerRefToObject(rBinding, d.AsOwner())
-
-	_, err := d.kubeClient.RbacV1().RoleBindings(rBinding.Namespace).Create(rBinding)
-	if err != nil {
-		return errors.Wrapf(err, "failed to create rbac role binding(%s/%s)", rBinding.Namespace, rBinding.Name)
-	}
-	return nil
-}
-
-// Updates subjects of kubernetes role binding
-func (d *DatabaseRoleBinding) UpdateRoleBinding(name string, namespace string, subjects []rbacv1.Subject) error {
 	obj := metav1.ObjectMeta{
 		Name:      name,
 		Namespace: namespace,
 	}
+
 	_, _, err := patchutil.CreateOrPatchRoleBinding(d.kubeClient, obj, func(role *rbacv1.RoleBinding) *rbacv1.RoleBinding {
+		role.RoleRef = rbacv1.RoleRef{
+			APIGroup: rbacv1.GroupName,
+			Kind:     "Role",
+			Name:     roleName,
+		}
 		role.Subjects = subjects
+
+		addOwnerRefToObject(role, d.AsOwner())
 		return role
 	})
 	if err != nil {
-		return errors.Wrapf(err, "failed to update subjects of rbac role binding(%s/%s)", namespace, name)
+		return errors.Wrapf(err, "failed to create/update rbac role binding %s/%s", namespace, name)
 	}
 	return nil
 }
 
+// https://www.vaultproject.io/api/system/leases.html#read-lease
+//
+// Whether or not lease is expired in vault
+// In vault, lease is revoked if lease is expired
+func (d *DatabaseRoleBinding) IsLeaseExpired(leaseID string) (bool, error) {
+	if leaseID == "" {
+		return true, nil
+	}
+
+	req := d.vaultClient.NewRequest("PUT", "/v1/sys/leases/lookup")
+	err := req.SetJSONBody(map[string]string{
+		"lease_id": leaseID,
+	})
+	if err != nil {
+		return false, errors.WithStack(err)
+	}
+
+	resp, err := d.vaultClient.RawRequest(req)
+	if resp == nil && err != nil {
+		return false, errors.WithStack(err)
+	}
+
+	defer resp.Body.Close()
+	errResp := vaultapi.ErrorResponse{}
+	err = json.NewDecoder(resp.Body).Decode(&errResp)
+	if err != nil {
+		return false, errors.WithStack(err)
+	}
+
+	if len(errResp.Errors) > 0 {
+		return true, nil
+	}
+	return false, nil
+}
+
+// RevokeLease revokes respective lease
+// It's safe to call multiple time. It doesn't give
+// error even if respective lease_id doesn't exist
+// but it will give an error if lease_id is empty
 func (d *DatabaseRoleBinding) RevokeLease(leaseID string) error {
 	err := d.vaultClient.Sys().Revoke(leaseID)
 	if err != nil {
@@ -198,5 +247,20 @@ func (d *DatabaseRoleBinding) RevokeLease(leaseID string) error {
 
 // addOwnerRefToObject appends the desired OwnerReference to the object
 func addOwnerRefToObject(o metav1.Object, r metav1.OwnerReference) {
-	o.SetOwnerReferences(append(o.GetOwnerReferences(), r))
+	if !IsOwnerRefAlreadyExists(o, r) {
+		o.SetOwnerReferences(append(o.GetOwnerReferences(), r))
+	}
+}
+
+func IsOwnerRefAlreadyExists(o metav1.Object, r metav1.OwnerReference) bool {
+	refs := o.GetOwnerReferences()
+	for _, u := range refs {
+		if u.Name != r.Name &&
+			u.UID == r.UID &&
+			u.Kind == r.Kind &&
+			u.APIVersion == u.APIVersion {
+			return true
+		}
+	}
+	return false
 }

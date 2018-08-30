@@ -259,3 +259,105 @@ func TestMongodbRole_CreateRole(t *testing.T) {
 		})
 	}
 }
+
+func TestNewMongodbRoleBindingCreatConfig(t *testing.T) {
+	cfg := vaultapi.DefaultConfig()
+	cfg.ConfigureTLS(&vaultapi.TLSConfig{
+		Insecure: true,
+	})
+
+	v, _ := vaultapi.NewClient(cfg)
+
+	if !assert.NotNil(t, v) {
+		return
+	}
+
+	k := kfake.NewSimpleClientset()
+	k.CoreV1().Secrets("default").Create(&corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: "default",
+			Name:      "cred",
+		},
+		Data: map[string][]byte{
+			"username": []byte("root"),
+			"password": []byte("root"),
+		},
+	})
+
+	v.SetAddress("http://192.168.99.100:30001")
+	v.SetToken("root")
+
+	m := &MongodbRole{
+		vaultClient:  v,
+		kubeClient:   k,
+		databasePath: "database",
+		mdbRole: &api.MongodbRole{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "default",
+				Name:      "mg",
+			},
+			Spec: api.MongodbRoleSpec{
+				Database: &api.DatabaseConfigForMongodb{
+					Name:             "mongo-test",
+					AllowedRoles:     "*",
+					ConnectionUrl:    "mongodb://{{username}}:{{password}}@mongo.default.svc:27017/admin?ssl=false",
+					CredentialSecret: "cred",
+				},
+			},
+		},
+	}
+
+	err := m.CreateConfig()
+	assert.Nil(t, err)
+}
+
+func TestNewMongodbRoleBindingCreatRole(t *testing.T) {
+	cfg := vaultapi.DefaultConfig()
+	cfg.ConfigureTLS(&vaultapi.TLSConfig{
+		Insecure: true,
+	})
+
+	v, _ := vaultapi.NewClient(cfg)
+
+	if !assert.NotNil(t, v) {
+		return
+	}
+
+	k := kfake.NewSimpleClientset()
+	k.CoreV1().Secrets("default").Create(&corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: "default",
+			Name:      "cred",
+		},
+		Data: map[string][]byte{
+			"username": []byte("root"),
+			"password": []byte("root"),
+		},
+	})
+
+	v.SetAddress("http://192.168.99.100:30001")
+	v.SetToken("root")
+
+	m := &MongodbRole{
+		vaultClient:  v,
+		kubeClient:   k,
+		databasePath: "database",
+		mdbRole: &api.MongodbRole{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "default",
+				Name:      "mg",
+			},
+			Spec: api.MongodbRoleSpec{
+				DBName:     "mongo-test",
+				MaxTTL:     "1h",
+				DefaultTTL: "300",
+				CreationStatements: []string{
+					"{ \"db\": \"admin\", \"roles\": [{ \"role\": \"readWrite\" }, {\"role\": \"read\", \"db\": \"foo\"}] }",
+				},
+			},
+		},
+	}
+
+	err := m.CreateRole()
+	assert.Nil(t, err)
+}

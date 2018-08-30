@@ -52,7 +52,7 @@ func (m *MysqlRole) CreateConfig() error {
 
 	sr, err := m.kubeClient.CoreV1().Secrets(ns).Get(cfg.CredentialSecret, metav1.GetOptions{})
 	if err != nil {
-		return errors.Wrapf(err, "failed to get credential information from secret(%s/%s)", ns, cfg.CredentialSecret)
+		return errors.Wrapf(err, "failed to get credential information from secret %s/%s", ns, cfg.CredentialSecret)
 	}
 
 	payload["username"] = string(sr.Data["username"])
@@ -112,7 +112,7 @@ func (m *MysqlRole) CreateRole() error {
 
 	_, err = m.vaultClient.RawRequest(req)
 	if err != nil {
-		return errors.Wrapf(err, "failed to create database role(%s) for config(%s)", name, pg.DBName)
+		return errors.Wrapf(err, "failed to create database role %s for config %s", name, pg.DBName)
 	}
 
 	return nil

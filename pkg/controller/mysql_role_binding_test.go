@@ -195,7 +195,7 @@ func TestUserManagerController_reconcileMysqlRoleBinding(t *testing.T) {
 		mRBinding          api.MysqlRoleBinding
 		expectedErr        bool
 		hasStatusCondition bool
-		expectedPhase      api.MysqlRoleBindingPhase
+		createCredSecret   bool
 	}{
 		{
 			testName:           "initial stage, on error",
@@ -203,7 +203,6 @@ func TestUserManagerController_reconcileMysqlRoleBinding(t *testing.T) {
 			dbRBClient:         &fakeDRB{},
 			expectedErr:        false,
 			hasStatusCondition: false,
-			expectedPhase:      MysqlRoleBindingPhaseSuccess,
 		},
 		{
 			testName:  "initial stage, failed to get credential",
@@ -213,7 +212,6 @@ func TestUserManagerController_reconcileMysqlRoleBinding(t *testing.T) {
 			},
 			expectedErr:        true,
 			hasStatusCondition: true,
-			expectedPhase:      MysqlRoleBindingPhaseGetCredential,
 		},
 		{
 			testName:  "initial stage, failed to create secret",
@@ -223,7 +221,6 @@ func TestUserManagerController_reconcileMysqlRoleBinding(t *testing.T) {
 			},
 			expectedErr:        true,
 			hasStatusCondition: true,
-			expectedPhase:      MysqlRoleBindingPhaseCreateSecret,
 		},
 		{
 			testName:  "initial stage, failed to create rbac role",
@@ -233,7 +230,6 @@ func TestUserManagerController_reconcileMysqlRoleBinding(t *testing.T) {
 			},
 			expectedErr:        true,
 			hasStatusCondition: true,
-			expectedPhase:      MysqlRoleBindingPhaseCreateRole,
 		},
 		{
 			testName:  "initial stage, failed to create rbac role binding",
@@ -243,49 +239,15 @@ func TestUserManagerController_reconcileMysqlRoleBinding(t *testing.T) {
 			},
 			expectedErr:        true,
 			hasStatusCondition: true,
-			expectedPhase:      MysqlRoleBindingPhaseCreateRoleBinding,
 		},
 		{
-			testName: "initial stage, no error, test phase dependency",
-			mRBinding: func(p api.MysqlRoleBinding) api.MysqlRoleBinding {
-				p.Status.Phase = MysqlRoleBindingPhaseCreateRole
-				return p
-			}(mRBinding),
+			testName:  "error in lease check",
+			mRBinding: mRBinding,
 			dbRBClient: &fakeDRB{
-				errorOccurredInCreateSecret:  true,
-				errorOccurredInGetCredential: true,
+				errorOccurredInLease: true,
 			},
-			expectedErr:        false,
-			hasStatusCondition: false,
-			expectedPhase:      MysqlRoleBindingPhaseSuccess,
-		},
-		{
-			testName: "update stage, no error",
-			mRBinding: func(p api.MysqlRoleBinding) api.MysqlRoleBinding {
-				p.Generation = 2
-				p.Status.ObservedGeneration = 1
-				p.Status.Phase = MysqlRoleBindingPhaseSuccess
-				return p
-			}(mRBinding),
-			dbRBClient:         &fakeDRB{},
-			expectedErr:        false,
-			hasStatusCondition: false,
-			expectedPhase:      MysqlRoleBindingPhaseSuccess,
-		},
-		{
-			testName: "update stage, failed to update rbac role binding",
-			mRBinding: func(p api.MysqlRoleBinding) api.MysqlRoleBinding {
-				p.Generation = 2
-				p.Status.ObservedGeneration = 1
-				p.Status.Phase = MysqlRoleBindingPhaseSuccess
-				return p
-			}(mRBinding),
-			dbRBClient: &fakeDRB{
-				errorOccurredInUpdateRoleBinding: true,
-			},
-			expectedErr:        true,
-			hasStatusCondition: true,
-			expectedPhase:      MysqlRoleBindingPhaseSuccess,
+			expectedErr:      true,
+			createCredSecret: true,
 		},
 	}
 
@@ -294,6 +256,19 @@ func TestUserManagerController_reconcileMysqlRoleBinding(t *testing.T) {
 			c := &UserManagerController{
 				kubeClient: kfake.NewSimpleClientset(),
 				dbClient:   dbfake.NewSimpleClientset(),
+			}
+
+			if test.createCredSecret {
+				_, err := c.kubeClient.CoreV1().Secrets(test.mRBinding.Namespace).Create(&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      test.mRBinding.Spec.Store.Secret,
+						Namespace: test.mRBinding.Namespace,
+					},
+					Data: map[string][]byte{
+						"lease_id": []byte("1234"),
+					},
+				})
+				assert.Nil(t, err)
 			}
 
 			_, err := c.dbClient.AuthorizationV1alpha1().MysqlRoleBindings(test.mRBinding.Namespace).Create(&test.mRBinding)
@@ -313,13 +288,6 @@ func TestUserManagerController_reconcileMysqlRoleBinding(t *testing.T) {
 								}
 								return true
 							}, "should have status.conditions")
-
-							assert.Condition(t, func() (success bool) {
-								if string(test.expectedPhase) == string(p.Status.Phase) {
-									return true
-								}
-								return false
-							}, "check phase")
 						}
 					}
 				}
@@ -333,13 +301,6 @@ func TestUserManagerController_reconcileMysqlRoleBinding(t *testing.T) {
 							}
 							return true
 						}, "should not have status.conditions")
-
-						assert.Condition(t, func() (success bool) {
-							if string(test.expectedPhase) == string(p.Status.Phase) {
-								return true
-							}
-							return false
-						}, "check phase")
 					}
 				}
 			}

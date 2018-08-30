@@ -14,6 +14,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 )
 
 const (
@@ -41,12 +42,12 @@ func (c *UserManagerController) runPostgresRoleInjector(key string) error {
 	}
 
 	if !exist {
-		glog.Warningf("PostgresRole %s does not exist anymore\n", key)
+		glog.Warningf("PostgresRole %s does not exist anymore", key)
 
 	} else {
 		pgRole := obj.(*api.PostgresRole).DeepCopy()
 
-		glog.Infof("Sync/Add/Update for PostgresRole %s/%s\n", pgRole.Namespace, pgRole.Name)
+		glog.Infof("Sync/Add/Update for PostgresRole %s/%s", pgRole.Namespace, pgRole.Name)
 
 		if pgRole.DeletionTimestamp != nil {
 			if kutilcorev1.HasFinalizer(pgRole.ObjectMeta, PostgresRoleFinalizer) {
@@ -61,7 +62,7 @@ func (c *UserManagerController) runPostgresRoleInjector(key string) error {
 					return role
 				})
 				if err != nil {
-					return errors.Wrapf(err, "failed to set postgresRole finalizer for (%s/%s)", pgRole.Namespace, pgRole.Name)
+					return errors.Wrapf(err, "failed to set postgresRole finalizer for %s/%s", pgRole.Namespace, pgRole.Name)
 				}
 			}
 
@@ -72,7 +73,7 @@ func (c *UserManagerController) runPostgresRoleInjector(key string) error {
 
 			err = c.reconcilePostgresRole(dbRClient, pgRole)
 			if err != nil {
-				return err
+				return errors.Wrapf(err, "for PostgresRole %s/%s:", pgRole.Namespace, pgRole.Name)
 			}
 		}
 	}
@@ -85,114 +86,97 @@ func (c *UserManagerController) runPostgresRoleInjector(key string) error {
 //	  - configure Vault with the proper postgres plugin and connection information
 // 	  - configure a role that maps a name in Vault to an SQL statement to execute to create the database credential.
 //    - sync role
+//	  - revoke previous lease of all the respective postgresRoleBinding and reissue a new lease
 func (c *UserManagerController) reconcilePostgresRole(dbRClient database.DatabaseRoleInterface, pgRole *api.PostgresRole) error {
-	if pgRole.Status.Phase == "" { // initial stage
-		name := pgRole.Name
-		namespace := pgRole.Namespace
-		status := pgRole.Status
-
-		// enable the database secrets engine if it is not already enabled
-		err := dbRClient.EnableDatabase()
-		if err != nil {
-			status.Conditions = []api.PostgresRoleCondition{
-				{
-					Type:    "Available",
-					Status:  corev1.ConditionFalse,
-					Reason:  "FailedToEnableDatabase",
-					Message: err.Error(),
-				},
-			}
-
-			err2 := c.updatePostgresRoleStatus(&status, pgRole)
-			if err2 != nil {
-				return errors.Wrapf(err2, "for postgresRole(%s/%s): failed to update status", namespace, name)
-			}
-			return errors.Wrapf(err, "for postgresRole(%s/%s): failed to enable database secret engine", namespace, name)
+	status := pgRole.Status
+	// enable the database secrets engine if it is not already enabled
+	err := dbRClient.EnableDatabase()
+	if err != nil {
+		status.Conditions = []api.PostgresRoleCondition{
+			{
+				Type:    "Available",
+				Status:  corev1.ConditionFalse,
+				Reason:  "FailedToEnableDatabase",
+				Message: err.Error(),
+			},
 		}
 
-		// create database config for postgres
-		err = dbRClient.CreateConfig()
-		if err != nil {
-			status.Conditions = []api.PostgresRoleCondition{
-				{
-					Type:    "Available",
-					Status:  corev1.ConditionFalse,
-					Reason:  "FailedToCreateDatabaseConnectionConfig",
-					Message: err.Error(),
-				},
-			}
-
-			err2 := c.updatePostgresRoleStatus(&status, pgRole)
-			if err2 != nil {
-				return errors.Wrapf(err2, "for postgresRole(%s/%s): failed to update status", namespace, name)
-			}
-			return errors.Wrapf(err, "for postgresRole(%s/%s): failed to created database connection config", namespace, name)
+		err2 := c.updatePostgresRoleStatus(&status, pgRole)
+		if err2 != nil {
+			return errors.Wrap(err2, "failed to update status")
 		}
-
-		// create role
-		err = dbRClient.CreateRole()
-		if err != nil {
-			status.Conditions = []api.PostgresRoleCondition{
-				{
-					Type:    "Available",
-					Status:  corev1.ConditionFalse,
-					Reason:  "FailedToCreateDatabaseRole",
-					Message: err.Error(),
-				},
-			}
-
-			err2 := c.updatePostgresRoleStatus(&status, pgRole)
-			if err2 != nil {
-				return errors.Wrapf(err2, "for postgresRole(%s/%s): failed to update status", namespace, name)
-			}
-
-			return errors.Wrapf(err, "for postgresRole(%s/%s): failed to create role", namespace, name)
-		}
-
-		status.ObservedGeneration = pgRole.Generation
-		status.Conditions = []api.PostgresRoleCondition{}
-		status.Phase = PostgresRolePhaseSuccess
-
-		err = c.updatePostgresRoleStatus(&status, pgRole)
-		if err != nil {
-			return errors.Wrap(err, "failed to update postgresRole status")
-		}
-
-	} else {
-		// sync role
-		status := pgRole.Status
-		name := pgRole.Name
-		namespace := pgRole.Namespace
-
-		// In vault create role replaces the old role
-		err := dbRClient.CreateRole()
-		if err != nil {
-			status.Conditions = []api.PostgresRoleCondition{
-				{
-					Type:    "Available",
-					Status:  corev1.ConditionFalse,
-					Reason:  "FailedToUpdateDatabaseRole",
-					Message: err.Error(),
-				},
-			}
-
-			err2 := c.updatePostgresRoleStatus(&status, pgRole)
-			if err2 != nil {
-				return errors.Wrapf(err2, "for postgresRole(%s/%s): failed to update status", namespace, name)
-			}
-
-			return errors.Wrapf(err, "for postgresRole(%s/%s): failed to update role", namespace, name)
-		}
-
-		status.ObservedGeneration = pgRole.Generation
-		status.Conditions = []api.PostgresRoleCondition{}
-
-		err = c.updatePostgresRoleStatus(&status, pgRole)
-		if err != nil {
-			return errors.Wrap(err, "failed to update postgresRole status")
-		}
+		return errors.Wrap(err, "failed to enable database secret engine")
 	}
 
+	// create database config for postgres
+	err = dbRClient.CreateConfig()
+	if err != nil {
+		status.Conditions = []api.PostgresRoleCondition{
+			{
+				Type:    "Available",
+				Status:  corev1.ConditionFalse,
+				Reason:  "FailedToCreateDatabaseConnectionConfig",
+				Message: err.Error(),
+			},
+		}
+
+		err2 := c.updatePostgresRoleStatus(&status, pgRole)
+		if err2 != nil {
+			return errors.Wrap(err2, "failed to update status")
+		}
+		return errors.Wrap(err, "failed to created database connection config")
+	}
+
+	// create role
+	err = dbRClient.CreateRole()
+	if err != nil {
+		status.Conditions = []api.PostgresRoleCondition{
+			{
+				Type:    "Available",
+				Status:  corev1.ConditionFalse,
+				Reason:  "FailedToCreateDatabaseRole",
+				Message: err.Error(),
+			},
+		}
+
+		err2 := c.updatePostgresRoleStatus(&status, pgRole)
+		if err2 != nil {
+			return errors.Wrap(err2, "for postgresRole %s/%s: failed to update status")
+		}
+		return errors.Wrap(err, "for postgresRole %s/%s: failed to create role")
+	}
+
+	status.ObservedGeneration = pgRole.Generation
+	status.Conditions = []api.PostgresRoleCondition{}
+	status.Phase = PostgresRolePhaseSuccess
+
+	err = c.updatePostgresRoleStatus(&status, pgRole)
+	if err != nil {
+		return errors.Wrap(err, "failed to update postgresRole status")
+	}
+
+	pList, err := c.pgRoleBindingLister.PostgresRoleBindings(pgRole.Namespace).List(labels.SelectorFromSet(map[string]string{}))
+	for _, p := range pList {
+		if p.Spec.RoleRef == pgRole.Name {
+			// revoke lease if have any lease
+			if p.Status.Lease.ID != "" {
+				err = c.RevokeLease(pgRole.Spec.Provider.Vault, pgRole.Namespace, p.Status.Lease.ID)
+				if err != nil {
+					return errors.Wrap(err, "failed to revoke lease")
+				}
+
+				status := p.Status
+				status.Lease = api.LeaseData{}
+				err = c.updatePostgresRoleBindingStatus(&status, p)
+				if err != nil {
+					return errors.WithStack(err)
+				}
+			}
+
+			// enqueue postgresRoleBinding to reissue database credentials lease
+			queue.Enqueue(c.pgRoleBindingQueue.GetQueue(), p)
+		}
+	}
 	return nil
 }
 
@@ -227,7 +211,7 @@ func (c *UserManagerController) runPostgresRoleFinalizer(pgRole *api.PostgresRol
 			delete(c.processingFinalizer, id)
 			return
 		} else if err != nil {
-			glog.Errorf("PostgresRole(%s/%s) finalizer: %v\n", pgRole.Namespace, pgRole.Name, err)
+			glog.Errorf("PostgresRole %s/%s finalizer: %v", pgRole.Namespace, pgRole.Name, err)
 		}
 
 		// to make sure p is not nil
@@ -239,7 +223,7 @@ func (c *UserManagerController) runPostgresRoleFinalizer(pgRole *api.PostgresRol
 		case <-stopCh:
 			err := c.removePostgresRoleFinalizer(p)
 			if err != nil {
-				glog.Errorf("PostgresRole(%s/%s) finalizer: %v\n", p.Namespace, p.Name, err)
+				glog.Errorf("PostgresRole %s/%s finalizer: %v", p.Namespace, p.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return
@@ -249,11 +233,11 @@ func (c *UserManagerController) runPostgresRoleFinalizer(pgRole *api.PostgresRol
 		if !finalizationDone {
 			d, err := database.NewDatabaseRoleForPostgres(c.kubeClient, p)
 			if err != nil {
-				glog.Errorf("PostgresRole(%s/%s) finalizer: %v\n", p.Namespace, p.Name, err)
+				glog.Errorf("PostgresRole %s/%s finalizer: %v", p.Namespace, p.Name, err)
 			} else {
 				err = c.finalizePostgresRole(d, p)
 				if err != nil {
-					glog.Errorf("PostgresRole(%s/%s) finalizer: %v\n", p.Namespace, p.Name, err)
+					glog.Errorf("PostgresRole %s/%s finalizer: %v", p.Namespace, p.Name, err)
 				} else {
 					finalizationDone = true
 				}
@@ -263,7 +247,7 @@ func (c *UserManagerController) runPostgresRoleFinalizer(pgRole *api.PostgresRol
 		if finalizationDone {
 			err := c.removePostgresRoleFinalizer(p)
 			if err != nil {
-				glog.Errorf("PostgresRole(%s/%s) finalizer: %v\n", p.Namespace, p.Name, err)
+				glog.Errorf("PostgresRole %s/%s finalizer: %v", p.Namespace, p.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return
@@ -273,7 +257,7 @@ func (c *UserManagerController) runPostgresRoleFinalizer(pgRole *api.PostgresRol
 		case <-stopCh:
 			err := c.removePostgresRoleFinalizer(p)
 			if err != nil {
-				glog.Errorf("PostgresRole(%s/%s) finalizer: %v\n", p.Namespace, p.Name, err)
+				glog.Errorf("PostgresRole %s/%s finalizer: %v", p.Namespace, p.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return
@@ -282,12 +266,37 @@ func (c *UserManagerController) runPostgresRoleFinalizer(pgRole *api.PostgresRol
 	}
 }
 
+// Do:
+//	- delete role in vault
+//	- revoke lease of all the corresponding postgresRoleBinding
 func (c *UserManagerController) finalizePostgresRole(dbRClient database.DatabaseRoleInterface, pgRole *api.PostgresRole) error {
-	err := dbRClient.DeleteRole(pgRole.Name)
+	pRList, err := c.pgRoleBindingLister.PostgresRoleBindings(pgRole.Namespace).List(labels.SelectorFromSet(map[string]string{}))
+	if err != nil {
+		return errors.Wrap(err, "failed to list postgresRoleBinding")
+	}
+
+	for _, p := range pRList {
+		if p.Spec.RoleRef == pgRole.Name {
+			if p.Status.Lease.ID != "" {
+				err = c.RevokeLease(pgRole.Spec.Provider.Vault, pgRole.Namespace, p.Status.Lease.ID)
+				if err != nil {
+					return errors.Wrap(err, "failed to revoke lease")
+				}
+
+				status := p.Status
+				status.Lease = api.LeaseData{}
+				err = c.updatePostgresRoleBindingStatus(&status, p)
+				if err != nil {
+					return errors.WithStack(err)
+				}
+			}
+		}
+	}
+
+	err = dbRClient.DeleteRole(pgRole.Name)
 	if err != nil {
 		return errors.Wrap(err, "failed to database role")
 	}
-
 	return nil
 }
 
@@ -300,7 +309,6 @@ func (c *UserManagerController) removePostgresRoleFinalizer(pgRole *api.Postgres
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 

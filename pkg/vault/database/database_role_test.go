@@ -75,3 +75,22 @@ func TestDeleteRole(t *testing.T) {
 		})
 	}
 }
+
+func TestTry(t *testing.T) {
+	cfg := vaultapi.DefaultConfig()
+	cfg.ConfigureTLS(&vaultapi.TLSConfig{
+		Insecure: true,
+	})
+
+	cfg.Address = "http://192.168.99.100:30001"
+	cl, _ := vaultapi.NewClient(cfg)
+	cl.SetToken("root")
+
+	d := DatabaseRoleBinding{
+		vaultClient: cl,
+		path:        "database",
+	}
+
+	err := d.RevokeLease("database/creds/test/33b022a7-7d50-4622-a74e-9c468d1d6e38")
+	assert.Nil(t, err)
+}

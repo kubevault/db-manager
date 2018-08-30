@@ -36,7 +36,7 @@ type fakeDRB struct {
 	errorOccurredInCreateSecret      bool
 	errorOccurredInCreateRole        bool
 	errorOccurredInCreateRoleBinding bool
-	errorOccurredInUpdateRoleBinding bool
+	errorOccurredInLease             bool
 	errorOccurredInRevokeLease       bool
 	errorOccurredInGetCredential     bool
 }
@@ -62,11 +62,11 @@ func (f *fakeDRB) CreateRoleBinding(name string, namespace string, roleName stri
 	return nil
 }
 
-func (f *fakeDRB) UpdateRoleBinding(name string, namespace string, subjects []rbacv1.Subject) error {
-	if f.errorOccurredInUpdateRoleBinding {
-		return fmt.Errorf("error")
+func (f *fakeDRB) IsLeaseExpired(leaseID string) (bool, error) {
+	if f.errorOccurredInLease {
+		return false, fmt.Errorf("error")
 	}
-	return nil
+	return false, nil
 }
 
 func (f *fakeDRB) RevokeLease(leaseID string) error {
@@ -278,7 +278,7 @@ func TestUserManagerController_reconcilePostgresRoleBinding(t *testing.T) {
 		pRBinding          api.PostgresRoleBinding
 		expectedErr        bool
 		hasStatusCondition bool
-		expectedPhase      api.PostgresRoleBindingPhase
+		createCredSecret   bool
 	}{
 		{
 			testName:           "initial stage, on error",
@@ -286,7 +286,6 @@ func TestUserManagerController_reconcilePostgresRoleBinding(t *testing.T) {
 			dbRBClient:         &fakeDRB{},
 			expectedErr:        false,
 			hasStatusCondition: false,
-			expectedPhase:      PhaseSuccess,
 		},
 		{
 			testName:  "initial stage, failed to get credential",
@@ -296,7 +295,6 @@ func TestUserManagerController_reconcilePostgresRoleBinding(t *testing.T) {
 			},
 			expectedErr:        true,
 			hasStatusCondition: true,
-			expectedPhase:      PhaseGetCredential,
 		},
 		{
 			testName:  "initial stage, failed to create secret",
@@ -306,7 +304,6 @@ func TestUserManagerController_reconcilePostgresRoleBinding(t *testing.T) {
 			},
 			expectedErr:        true,
 			hasStatusCondition: true,
-			expectedPhase:      PhaseCreateSecret,
 		},
 		{
 			testName:  "initial stage, failed to create rbac role",
@@ -316,7 +313,6 @@ func TestUserManagerController_reconcilePostgresRoleBinding(t *testing.T) {
 			},
 			expectedErr:        true,
 			hasStatusCondition: true,
-			expectedPhase:      PhaseCreateRole,
 		},
 		{
 			testName:  "initial stage, failed to create rbac role binding",
@@ -326,46 +322,15 @@ func TestUserManagerController_reconcilePostgresRoleBinding(t *testing.T) {
 			},
 			expectedErr:        true,
 			hasStatusCondition: true,
-			expectedPhase:      PhaseCreateRoleBinding,
 		},
 		{
-			testName:  "initial stage, no error, test phase dependency",
-			pRBinding: func(p api.PostgresRoleBinding) api.PostgresRoleBinding { p.Status.Phase = PhaseCreateRole; return p }(pRBinding),
+			testName:  "error in lease check",
+			pRBinding: pRBinding,
 			dbRBClient: &fakeDRB{
-				errorOccurredInCreateSecret:  true,
-				errorOccurredInGetCredential: true,
+				errorOccurredInLease: true,
 			},
-			expectedErr:        false,
-			hasStatusCondition: false,
-			expectedPhase:      PhaseSuccess,
-		},
-		{
-			testName: "update stage, no error",
-			pRBinding: func(p api.PostgresRoleBinding) api.PostgresRoleBinding {
-				p.Generation = 2
-				p.Status.ObservedGeneration = 1
-				p.Status.Phase = PhaseSuccess
-				return p
-			}(pRBinding),
-			dbRBClient:         &fakeDRB{},
-			expectedErr:        false,
-			hasStatusCondition: false,
-			expectedPhase:      PhaseSuccess,
-		},
-		{
-			testName: "update stage, failed to update rbac role binding",
-			pRBinding: func(p api.PostgresRoleBinding) api.PostgresRoleBinding {
-				p.Generation = 2
-				p.Status.ObservedGeneration = 1
-				p.Status.Phase = PhaseSuccess
-				return p
-			}(pRBinding),
-			dbRBClient: &fakeDRB{
-				errorOccurredInUpdateRoleBinding: true,
-			},
-			expectedErr:        true,
-			hasStatusCondition: true,
-			expectedPhase:      PhaseSuccess,
+			expectedErr:      true,
+			createCredSecret: true,
 		},
 	}
 
@@ -374,6 +339,19 @@ func TestUserManagerController_reconcilePostgresRoleBinding(t *testing.T) {
 			c := &UserManagerController{
 				kubeClient: kfake.NewSimpleClientset(),
 				dbClient:   dbfake.NewSimpleClientset(),
+			}
+
+			if test.createCredSecret {
+				_, err := c.kubeClient.CoreV1().Secrets(test.pRBinding.Namespace).Create(&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      test.pRBinding.Spec.Store.Secret,
+						Namespace: test.pRBinding.Namespace,
+					},
+					Data: map[string][]byte{
+						"lease_id": []byte("1234"),
+					},
+				})
+				assert.Nil(t, err)
 			}
 
 			_, err := c.dbClient.AuthorizationV1alpha1().PostgresRoleBindings(test.pRBinding.Namespace).Create(&test.pRBinding)
@@ -393,13 +371,6 @@ func TestUserManagerController_reconcilePostgresRoleBinding(t *testing.T) {
 								}
 								return true
 							}, "should have status.conditions")
-
-							assert.Condition(t, func() (success bool) {
-								if string(test.expectedPhase) == string(p.Status.Phase) {
-									return true
-								}
-								return false
-							}, "check phase")
 						}
 					}
 				}
@@ -413,13 +384,6 @@ func TestUserManagerController_reconcilePostgresRoleBinding(t *testing.T) {
 							}
 							return true
 						}, "should not have status.conditions")
-
-						assert.Condition(t, func() (success bool) {
-							if string(test.expectedPhase) == string(p.Status.Phase) {
-								return true
-							}
-							return false
-						}, "check phase")
 					}
 				}
 			}
