@@ -30,19 +30,19 @@ type DatabaseRoleBinding struct {
 func NewDatabaseRoleBindingForPostgres(k kubernetes.Interface, cr crd.Interface, roleBinding *api.PostgresRoleBinding) (DatabaseRoleBindingInterface, error) {
 	pgRole, err := cr.AuthorizationV1alpha1().PostgresRoles(roleBinding.Namespace).Get(roleBinding.Spec.RoleRef, metav1.GetOptions{})
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get postgres role(%s/%s)", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+		return nil, errors.Wrapf(err, "failed to get postgres role %s/%s", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
 	if pgRole.Spec.Provider == nil {
-		return nil, errors.Errorf("in postgres role(%s/%s) spec.provider is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+		return nil, errors.Errorf("in postgres role %s/%s spec.provider is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 	if pgRole.Spec.Provider.Vault == nil {
-		return nil, errors.Errorf("in postgres role(%s/%s) spec.provider.vault is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+		return nil, errors.Errorf("in postgres role %s/%s spec.provider.vault is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
 	v, err := vault.NewClient(k, roleBinding.Namespace, pgRole.Spec.Provider.Vault)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create vault client from postgres role(%s/%s) spec.provider.vault", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+		return nil, errors.Wrapf(err, "failed to create vault client from postgres role %s/%s spec.provider.vault", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
 	p := postgres.NewPostgresRoleBinding(k, v, roleBinding, "database")
@@ -58,19 +58,19 @@ func NewDatabaseRoleBindingForPostgres(k kubernetes.Interface, cr crd.Interface,
 func NewDatabaseRoleBindingForMysql(k kubernetes.Interface, cr crd.Interface, roleBinding *api.MysqlRoleBinding) (DatabaseRoleBindingInterface, error) {
 	mRole, err := cr.AuthorizationV1alpha1().MysqlRoles(roleBinding.Namespace).Get(roleBinding.Spec.RoleRef, metav1.GetOptions{})
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get mysql role(%s/%s)", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+		return nil, errors.Wrapf(err, "failed to get mysql role %s/%s", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
 	if mRole.Spec.Provider == nil {
-		return nil, errors.Errorf("in mysql role(%s/%s) spec.provider is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+		return nil, errors.Errorf("in mysql role %s/%s spec.provider is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 	if mRole.Spec.Provider.Vault == nil {
-		return nil, errors.Errorf("in mysql role(%s/%s) spec.provider.vault is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+		return nil, errors.Errorf("in mysql role %s/%s spec.provider.vault is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
 	v, err := vault.NewClient(k, roleBinding.Namespace, mRole.Spec.Provider.Vault)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create vault client from mysql role(%s/%s) spec.provider.vault", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+		return nil, errors.Wrapf(err, "failed to create vault client from mysql role %s/%s spec.provider.vault", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
 	m := mysql.NewMysqlRoleBinding(k, v, roleBinding, "database")
@@ -86,19 +86,19 @@ func NewDatabaseRoleBindingForMysql(k kubernetes.Interface, cr crd.Interface, ro
 func NewDatabaseRoleBindingForMongodb(k kubernetes.Interface, cr crd.Interface, roleBinding *api.MongodbRoleBinding) (DatabaseRoleBindingInterface, error) {
 	mRole, err := cr.AuthorizationV1alpha1().MongodbRoles(roleBinding.Namespace).Get(roleBinding.Spec.RoleRef, metav1.GetOptions{})
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get mongodb role(%s/%s)", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+		return nil, errors.Wrapf(err, "failed to get mongodb role %s/%s", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
 	if mRole.Spec.Provider == nil {
-		return nil, errors.Errorf("in mongodb role(%s/%s) spec.provider is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+		return nil, errors.Errorf("in mongodb role %s/%s spec.provider is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 	if mRole.Spec.Provider.Vault == nil {
-		return nil, errors.Errorf("in mongodb role(%s/%s) spec.provider.vault is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+		return nil, errors.Errorf("in mongodb role %s/%s spec.provider.vault is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
 	v, err := vault.NewClient(k, roleBinding.Namespace, mRole.Spec.Provider.Vault)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create vault client from mongodb role(%s/%s) spec.provider.vault", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+		return nil, errors.Wrapf(err, "failed to create vault client from mongodb role %s/%s spec.provider.vault", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
 	m := mongodb.NewMongodbRoleBinding(k, v, roleBinding, "database")
@@ -135,7 +135,7 @@ func (d *DatabaseRoleBinding) CreateSecret(name string, namespace string, cred *
 		return s
 	})
 	if err != nil {
-		return errors.Wrapf(err, "failed to create/update secret(%s/%s)", namespace, name)
+		return errors.Wrapf(err, "failed to create/update secret %s/%s", namespace, name)
 	}
 	return nil
 }
@@ -169,7 +169,7 @@ func (d *DatabaseRoleBinding) CreateRole(name string, namespace string, secretNa
 		return role
 	})
 	if err != nil {
-		return errors.Wrapf(err, "failed to create rbac role(%s/%s)", namespace, name)
+		return errors.Wrapf(err, "failed to create rbac role %s/%s", namespace, name)
 	}
 	return nil
 }
@@ -193,7 +193,7 @@ func (d *DatabaseRoleBinding) CreateRoleBinding(name string, namespace string, r
 		return role
 	})
 	if err != nil {
-		return errors.Wrapf(err, "failed to create/update rbac role binding(%s/%s)", namespace, name)
+		return errors.Wrapf(err, "failed to create/update rbac role binding %s/%s", namespace, name)
 	}
 	return nil
 }

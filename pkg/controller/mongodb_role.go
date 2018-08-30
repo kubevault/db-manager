@@ -37,17 +37,17 @@ func (c *UserManagerController) initMongodbRoleWatcher() {
 func (c *UserManagerController) runMongodbRoleInjector(key string) error {
 	obj, exist, err := c.mgRoleInformer.GetIndexer().GetByKey(key)
 	if err != nil {
-		glog.Errorf("Fetching object with key(%s) from store failed with %v", key, err)
+		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
 		return err
 	}
 
 	if !exist {
-		glog.Warningf("MongodbRole(%s) does not exist anymore\n", key)
+		glog.Warningf("MongodbRole %s does not exist anymore", key)
 
 	} else {
 		mRole := obj.(*api.MongodbRole).DeepCopy()
 
-		glog.Infof("Sync/Add/Update for MongodbRole(%s/%s)\n", mRole.Namespace, mRole.Name)
+		glog.Infof("Sync/Add/Update for MongodbRole %s/%s", mRole.Namespace, mRole.Name)
 
 		if mRole.DeletionTimestamp != nil {
 			if kutilcorev1.HasFinalizer(mRole.ObjectMeta, MongodbRoleFinalizer) {
@@ -61,7 +61,7 @@ func (c *UserManagerController) runMongodbRoleInjector(key string) error {
 					return role
 				})
 				if err != nil {
-					return errors.Wrapf(err, "failed to set MongodbRole finalizer for (%s/%s)", mRole.Namespace, mRole.Name)
+					return errors.Wrapf(err, "failed to set MongodbRole finalizer for %s/%s", mRole.Namespace, mRole.Name)
 				}
 			}
 
@@ -72,7 +72,7 @@ func (c *UserManagerController) runMongodbRoleInjector(key string) error {
 
 			err = c.reconcileMongodbRole(dbRClient, mRole)
 			if err != nil {
-				return errors.Wrapf(err, "for MongodbRole(%s/%s):", mRole.Namespace, mRole.Name)
+				return errors.Wrapf(err, "for MongodbRole %s/%s:", mRole.Namespace, mRole.Name)
 			}
 		}
 	}
@@ -123,7 +123,7 @@ func (c *UserManagerController) reconcileMongodbRole(dbRClient database.Database
 		if err2 != nil {
 			return errors.Wrap(err2, "failed to update status")
 		}
-		return errors.Wrapf(err, "failed to created database connection config(%s)", mRole.Spec.Database.Name)
+		return errors.Wrapf(err, "failed to created database connection config %s", mRole.Spec.Database.Name)
 	}
 
 	// create role
@@ -213,7 +213,7 @@ func (c *UserManagerController) runMongodbRoleFinalizer(mRole *api.MongodbRole, 
 			delete(c.processingFinalizer, id)
 			return
 		} else if err != nil {
-			glog.Errorf("MongodbRole(%s/%s) finalizer: %v\n", mRole.Namespace, mRole.Name, err)
+			glog.Errorf("MongodbRole %s/%s finalizer: %v", mRole.Namespace, mRole.Name, err)
 		}
 
 		// to make sure p is not nil
@@ -225,7 +225,7 @@ func (c *UserManagerController) runMongodbRoleFinalizer(mRole *api.MongodbRole, 
 		case <-stopCh:
 			err := c.removeMongodbRoleFinalizer(m)
 			if err != nil {
-				glog.Errorf("MongodbRole(%s/%s) finalizer: %v\n", m.Namespace, m.Name, err)
+				glog.Errorf("MongodbRole %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return
@@ -235,11 +235,11 @@ func (c *UserManagerController) runMongodbRoleFinalizer(mRole *api.MongodbRole, 
 		if !finalizationDone {
 			d, err := database.NewDatabaseRoleForMongodb(c.kubeClient, m)
 			if err != nil {
-				glog.Errorf("MongodbRole(%s/%s) finalizer: %v\n", m.Namespace, m.Name, err)
+				glog.Errorf("MongodbRole %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			} else {
 				err = c.finalizeMongodbRole(d, m)
 				if err != nil {
-					glog.Errorf("MongodbRole(%s/%s) finalizer: %v\n", m.Namespace, m.Name, err)
+					glog.Errorf("MongodbRole %s/%s finalizer: %v", m.Namespace, m.Name, err)
 				} else {
 					finalizationDone = true
 				}
@@ -250,7 +250,7 @@ func (c *UserManagerController) runMongodbRoleFinalizer(mRole *api.MongodbRole, 
 		if finalizationDone {
 			err := c.removeMongodbRoleFinalizer(m)
 			if err != nil {
-				glog.Errorf("MongodbRole(%s/%s) finalizer: %v\n", m.Namespace, m.Name, err)
+				glog.Errorf("MongodbRole %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return
@@ -260,7 +260,7 @@ func (c *UserManagerController) runMongodbRoleFinalizer(mRole *api.MongodbRole, 
 		case <-stopCh:
 			err := c.removeMongodbRoleFinalizer(m)
 			if err != nil {
-				glog.Errorf("MongodbRole(%s/%s) finalizer: %v\n", m.Namespace, m.Name, err)
+				glog.Errorf("MongodbRole %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return

@@ -37,17 +37,17 @@ func (c *UserManagerController) initMysqlRoleWatcher() {
 func (c *UserManagerController) runMysqlRoleInjector(key string) error {
 	obj, exist, err := c.myRoleInformer.GetIndexer().GetByKey(key)
 	if err != nil {
-		glog.Errorf("Fetching object with key(%s) from store failed with %v", key, err)
+		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
 		return err
 	}
 
 	if !exist {
-		glog.Warningf("MysqlRole(%s) does not exist anymore\n", key)
+		glog.Warningf("MysqlRole %s does not exist anymore", key)
 
 	} else {
 		mRole := obj.(*api.MysqlRole).DeepCopy()
 
-		glog.Infof("Sync/Add/Update for MysqlRole(%s/%s)\n", mRole.Namespace, mRole.Name)
+		glog.Infof("Sync/Add/Update for MysqlRole %s/%s", mRole.Namespace, mRole.Name)
 
 		if mRole.DeletionTimestamp != nil {
 			if kutilcorev1.HasFinalizer(mRole.ObjectMeta, MysqlRoleFinalizer) {
@@ -62,7 +62,7 @@ func (c *UserManagerController) runMysqlRoleInjector(key string) error {
 					return role
 				})
 				if err != nil {
-					return errors.Wrapf(err, "failed to set MysqlRole finalizer for (%s/%s)", mRole.Namespace, mRole.Name)
+					return errors.Wrapf(err, "failed to set MysqlRole finalizer for %s/%s", mRole.Namespace, mRole.Name)
 				}
 			}
 
@@ -73,7 +73,7 @@ func (c *UserManagerController) runMysqlRoleInjector(key string) error {
 
 			err = c.reconcileMysqlRole(dbRClient, mRole)
 			if err != nil {
-				return errors.Wrapf(err, "for MysqlRole(%s/%s):", mRole.Namespace, mRole.Name)
+				return errors.Wrapf(err, "for MysqlRole %s/%s:", mRole.Namespace, mRole.Name)
 			}
 		}
 	}
@@ -124,7 +124,7 @@ func (c *UserManagerController) reconcileMysqlRole(dbRClient database.DatabaseRo
 		if err2 != nil {
 			return errors.Wrap(err2, "failed to update status")
 		}
-		return errors.Wrapf(err, "failed to created database connection config(%s)", mRole.Spec.Database.Name)
+		return errors.Wrapf(err, "failed to created database connection config %s", mRole.Spec.Database.Name)
 	}
 
 	// create role
@@ -210,7 +210,7 @@ func (c *UserManagerController) runMysqlRoleFinalizer(mRole *api.MysqlRole, time
 			delete(c.processingFinalizer, id)
 			return
 		} else if err != nil {
-			glog.Errorf("MysqlRole(%s/%s) finalizer: %v\n", mRole.Namespace, mRole.Name, err)
+			glog.Errorf("MysqlRole %s/%s finalizer: %v", mRole.Namespace, mRole.Name, err)
 		}
 
 		// to make sure p is not nil
@@ -222,7 +222,7 @@ func (c *UserManagerController) runMysqlRoleFinalizer(mRole *api.MysqlRole, time
 		case <-stopCh:
 			err := c.removeMysqlRoleFinalizer(m)
 			if err != nil {
-				glog.Errorf("MysqlRole(%s/%s) finalizer: %v\n", m.Namespace, m.Name, err)
+				glog.Errorf("MysqlRole %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return
@@ -232,11 +232,11 @@ func (c *UserManagerController) runMysqlRoleFinalizer(mRole *api.MysqlRole, time
 		if !finalizationDone {
 			d, err := database.NewDatabaseRoleForMysql(c.kubeClient, m)
 			if err != nil {
-				glog.Errorf("MysqlRole(%s/%s) finalizer: %v\n", m.Namespace, m.Name, err)
+				glog.Errorf("MysqlRole %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			} else {
 				err = c.finalizeMysqlRole(d, m)
 				if err != nil {
-					glog.Errorf("MysqlRole(%s/%s) finalizer: %v\n", m.Namespace, m.Name, err)
+					glog.Errorf("MysqlRole %s/%s finalizer: %v", m.Namespace, m.Name, err)
 				} else {
 					finalizationDone = true
 				}
@@ -247,7 +247,7 @@ func (c *UserManagerController) runMysqlRoleFinalizer(mRole *api.MysqlRole, time
 		if finalizationDone {
 			err := c.removeMysqlRoleFinalizer(m)
 			if err != nil {
-				glog.Errorf("MysqlRole(%s/%s) finalizer: %v\n", m.Namespace, m.Name, err)
+				glog.Errorf("MysqlRole %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return
@@ -257,7 +257,7 @@ func (c *UserManagerController) runMysqlRoleFinalizer(mRole *api.MysqlRole, time
 		case <-stopCh:
 			err := c.removeMysqlRoleFinalizer(m)
 			if err != nil {
-				glog.Errorf("MysqlRole(%s/%s) finalizer: %v\n", m.Namespace, m.Name, err)
+				glog.Errorf("MysqlRole %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return

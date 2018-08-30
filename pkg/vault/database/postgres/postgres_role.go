@@ -53,7 +53,7 @@ func (p *PostgresRole) CreateConfig() error {
 
 	sr, err := p.kubeClient.CoreV1().Secrets(ns).Get(cfg.CredentialSecret, metav1.GetOptions{})
 	if err != nil {
-		return errors.Wrapf(err, "failed to get credential information from secret(%s/%s)", ns, cfg.CredentialSecret)
+		return errors.Wrapf(err, "failed to get credential information from secret %s/%s", ns, cfg.CredentialSecret)
 	}
 
 	payload["username"] = string(sr.Data["username"])
@@ -119,7 +119,7 @@ func (p *PostgresRole) CreateRole() error {
 
 	_, err = p.vaultClient.RawRequest(req)
 	if err != nil {
-		return errors.Wrapf(err, "failed to create database role(%s) for config(%s)", name, pg.DBName)
+		return errors.Wrapf(err, "failed to create database role %s for config %s", name, pg.DBName)
 	}
 
 	return nil

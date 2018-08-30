@@ -37,17 +37,17 @@ func (c *UserManagerController) initPostgresRoleWatcher() {
 func (c *UserManagerController) runPostgresRoleInjector(key string) error {
 	obj, exist, err := c.pgRoleInformer.GetIndexer().GetByKey(key)
 	if err != nil {
-		glog.Errorf("Fetching object with key(%s) from store failed with %v", key, err)
+		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
 		return err
 	}
 
 	if !exist {
-		glog.Warningf("PostgresRole(%s) does not exist anymore\n", key)
+		glog.Warningf("PostgresRole %s does not exist anymore", key)
 
 	} else {
 		pgRole := obj.(*api.PostgresRole).DeepCopy()
 
-		glog.Infof("Sync/Add/Update for PostgresRole(%s/%s)\n", pgRole.Namespace, pgRole.Name)
+		glog.Infof("Sync/Add/Update for PostgresRole %s/%s", pgRole.Namespace, pgRole.Name)
 
 		if pgRole.DeletionTimestamp != nil {
 			if kutilcorev1.HasFinalizer(pgRole.ObjectMeta, PostgresRoleFinalizer) {
@@ -62,7 +62,7 @@ func (c *UserManagerController) runPostgresRoleInjector(key string) error {
 					return role
 				})
 				if err != nil {
-					return errors.Wrapf(err, "failed to set postgresRole finalizer for (%s/%s)", pgRole.Namespace, pgRole.Name)
+					return errors.Wrapf(err, "failed to set postgresRole finalizer for %s/%s", pgRole.Namespace, pgRole.Name)
 				}
 			}
 
@@ -73,7 +73,7 @@ func (c *UserManagerController) runPostgresRoleInjector(key string) error {
 
 			err = c.reconcilePostgresRole(dbRClient, pgRole)
 			if err != nil {
-				return errors.Wrapf(err, "for PostgresRole(%s/%s):", pgRole.Namespace, pgRole.Name)
+				return errors.Wrapf(err, "for PostgresRole %s/%s:", pgRole.Namespace, pgRole.Name)
 			}
 		}
 	}
@@ -141,9 +141,9 @@ func (c *UserManagerController) reconcilePostgresRole(dbRClient database.Databas
 
 		err2 := c.updatePostgresRoleStatus(&status, pgRole)
 		if err2 != nil {
-			return errors.Wrap(err2, "for postgresRole(%s/%s): failed to update status")
+			return errors.Wrap(err2, "for postgresRole %s/%s: failed to update status")
 		}
-		return errors.Wrap(err, "for postgresRole(%s/%s): failed to create role")
+		return errors.Wrap(err, "for postgresRole %s/%s: failed to create role")
 	}
 
 	status.ObservedGeneration = pgRole.Generation
@@ -211,7 +211,7 @@ func (c *UserManagerController) runPostgresRoleFinalizer(pgRole *api.PostgresRol
 			delete(c.processingFinalizer, id)
 			return
 		} else if err != nil {
-			glog.Errorf("PostgresRole(%s/%s) finalizer: %v\n", pgRole.Namespace, pgRole.Name, err)
+			glog.Errorf("PostgresRole %s/%s finalizer: %v", pgRole.Namespace, pgRole.Name, err)
 		}
 
 		// to make sure p is not nil
@@ -223,7 +223,7 @@ func (c *UserManagerController) runPostgresRoleFinalizer(pgRole *api.PostgresRol
 		case <-stopCh:
 			err := c.removePostgresRoleFinalizer(p)
 			if err != nil {
-				glog.Errorf("PostgresRole(%s/%s) finalizer: %v\n", p.Namespace, p.Name, err)
+				glog.Errorf("PostgresRole %s/%s finalizer: %v", p.Namespace, p.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return
@@ -233,11 +233,11 @@ func (c *UserManagerController) runPostgresRoleFinalizer(pgRole *api.PostgresRol
 		if !finalizationDone {
 			d, err := database.NewDatabaseRoleForPostgres(c.kubeClient, p)
 			if err != nil {
-				glog.Errorf("PostgresRole(%s/%s) finalizer: %v\n", p.Namespace, p.Name, err)
+				glog.Errorf("PostgresRole %s/%s finalizer: %v", p.Namespace, p.Name, err)
 			} else {
 				err = c.finalizePostgresRole(d, p)
 				if err != nil {
-					glog.Errorf("PostgresRole(%s/%s) finalizer: %v\n", p.Namespace, p.Name, err)
+					glog.Errorf("PostgresRole %s/%s finalizer: %v", p.Namespace, p.Name, err)
 				} else {
 					finalizationDone = true
 				}
@@ -247,7 +247,7 @@ func (c *UserManagerController) runPostgresRoleFinalizer(pgRole *api.PostgresRol
 		if finalizationDone {
 			err := c.removePostgresRoleFinalizer(p)
 			if err != nil {
-				glog.Errorf("PostgresRole(%s/%s) finalizer: %v\n", p.Namespace, p.Name, err)
+				glog.Errorf("PostgresRole %s/%s finalizer: %v", p.Namespace, p.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return
@@ -257,7 +257,7 @@ func (c *UserManagerController) runPostgresRoleFinalizer(pgRole *api.PostgresRol
 		case <-stopCh:
 			err := c.removePostgresRoleFinalizer(p)
 			if err != nil {
-				glog.Errorf("PostgresRole(%s/%s) finalizer: %v\n", p.Namespace, p.Name, err)
+				glog.Errorf("PostgresRole %s/%s finalizer: %v", p.Namespace, p.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return

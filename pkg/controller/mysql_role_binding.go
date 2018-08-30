@@ -34,17 +34,17 @@ func (c *UserManagerController) initMysqlRoleBindingWatcher() {
 func (c *UserManagerController) runMysqlRoleBindingInjector(key string) error {
 	obj, exist, err := c.myRoleBindingInformer.GetIndexer().GetByKey(key)
 	if err != nil {
-		glog.Errorf("Fetching object with key(%s) from store failed with %v", key, err)
+		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
 		return err
 	}
 
 	if !exist {
-		glog.Warningf("MysqlRoleBinding(%s) does not exist anymore\n", key)
+		glog.Warningf("MysqlRoleBinding %s does not exist anymore", key)
 
 	} else {
 		mRoleBinding := obj.(*api.MysqlRoleBinding).DeepCopy()
 
-		glog.Infof("Sync/Add/Update for MysqlRoleBinding(%s/%s)\n", mRoleBinding.Namespace, mRoleBinding.Name)
+		glog.Infof("Sync/Add/Update for MysqlRoleBinding %s/%s", mRoleBinding.Namespace, mRoleBinding.Name)
 
 		if mRoleBinding.DeletionTimestamp != nil {
 			if kutilcorev1.HasFinalizer(mRoleBinding.ObjectMeta, MysqlRoleBindingFinalizer) {
@@ -59,7 +59,7 @@ func (c *UserManagerController) runMysqlRoleBindingInjector(key string) error {
 					return binding
 				})
 				if err != nil {
-					return errors.Wrapf(err, "failed to set MysqlRoleBinding finalizer for (%s/%s)", mRoleBinding.Namespace, mRoleBinding.Name)
+					return errors.Wrapf(err, "failed to set MysqlRoleBinding finalizer for %s/%s", mRoleBinding.Namespace, mRoleBinding.Name)
 				}
 
 			}
@@ -71,7 +71,7 @@ func (c *UserManagerController) runMysqlRoleBindingInjector(key string) error {
 
 			err = c.reconcileMysqlRoleBinding(dbRBClient, mRoleBinding)
 			if err != nil {
-				return errors.Wrapf(err, "For MysqlRoleBinding(%s/%s)", mRoleBinding.Namespace, mRoleBinding.Name)
+				return errors.Wrapf(err, "For MysqlRoleBinding %s/%s", mRoleBinding.Namespace, mRoleBinding.Name)
 			}
 		}
 	}
@@ -243,7 +243,7 @@ func (c *UserManagerController) runMysqlRoleBindingFinalizer(mRoleBinding *api.M
 			delete(c.processingFinalizer, id)
 			return
 		} else if err != nil {
-			glog.Errorf("MysqlRoleBinding(%s/%s) finalizer: %v\n", mRoleBinding.Namespace, mRoleBinding.Name, err)
+			glog.Errorf("MysqlRoleBinding %s/%s finalizer: %v", mRoleBinding.Namespace, mRoleBinding.Name, err)
 		}
 
 		// to make sure m is not nil
@@ -255,7 +255,7 @@ func (c *UserManagerController) runMysqlRoleBindingFinalizer(mRoleBinding *api.M
 		case <-stopCh:
 			err := c.removeMysqlRoleBindingFinalizer(m)
 			if err != nil {
-				glog.Errorf("MysqlRoleBinding(%s/%s) finalizer: %v\n", m.Namespace, m.Name, err)
+				glog.Errorf("MysqlRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return
@@ -265,11 +265,11 @@ func (c *UserManagerController) runMysqlRoleBindingFinalizer(mRoleBinding *api.M
 		if !finalizationDone {
 			d, err := database.NewDatabaseRoleBindingForMysql(c.kubeClient, c.dbClient, m)
 			if err != nil {
-				glog.Errorf("MysqlRoleBinding(%s/%s) finalizer: %v\n", m.Namespace, m.Name, err)
+				glog.Errorf("MysqlRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			} else {
 				err = c.finalizeMysqlRoleBinding(d, m.Status.Lease.ID)
 				if err != nil {
-					glog.Errorf("MysqlRoleBinding(%s/%s) finalizer: %v\n", m.Namespace, m.Name, err)
+					glog.Errorf("MysqlRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
 				} else {
 					finalizationDone = true
 				}
@@ -279,7 +279,7 @@ func (c *UserManagerController) runMysqlRoleBindingFinalizer(mRoleBinding *api.M
 		if finalizationDone {
 			err := c.removeMysqlRoleBindingFinalizer(m)
 			if err != nil {
-				glog.Errorf("MysqlRoleBinding(%s/%s) finalizer: %v\n", m.Namespace, m.Name, err)
+				glog.Errorf("MysqlRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return
@@ -289,7 +289,7 @@ func (c *UserManagerController) runMysqlRoleBindingFinalizer(mRoleBinding *api.M
 		case <-stopCh:
 			err := c.removeMysqlRoleBindingFinalizer(m)
 			if err != nil {
-				glog.Errorf("MysqlRoleBinding(%s/%s) finalizer: %v\n", m.Namespace, m.Name, err)
+				glog.Errorf("MysqlRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return

@@ -130,7 +130,7 @@ func (d *DatabaseRole) DeleteRole(name string) error {
 
 	_, err := d.vaultClient.RawRequest(req)
 	if err != nil {
-		return errors.Wrapf(err, "failed to delete database role(%s)", name)
+		return errors.Wrapf(err, "failed to delete database role %s", name)
 	}
 	return nil
 }

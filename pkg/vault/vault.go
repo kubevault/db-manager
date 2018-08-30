@@ -26,14 +26,14 @@ func NewClient(kclient kubernetes.Interface, namespace string, v *api.VaultSpec)
 
 	sr, err := kclient.CoreV1().Secrets(namespace).Get(v.TokenSecret, metav1.GetOptions{})
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get vault token secret(%s/%s)", namespace, v.TokenSecret)
+		return nil, errors.Wrapf(err, "failed to get vault token secret %s/%s", namespace, v.TokenSecret)
 	}
 
 	if sr.Data == nil {
-		return nil, errors.Errorf("vault token is not found in secret(%s/%s)")
+		return nil, errors.Errorf("vault token is not found in secret %s/%s")
 	}
 	if _, ok := sr.Data["token"]; !ok {
-		return nil, errors.Errorf("vault token is not found in secret(%s/%s)")
+		return nil, errors.Errorf("vault token is not found in secret %s/%s")
 	}
 	cl.SetToken(string(sr.Data["token"]))
 
@@ -50,7 +50,7 @@ func newVaultConfig(kclient kubernetes.Interface, namespace string, v *api.Vault
 	if v.ClientTLSSecret != "" {
 		sr, err := kclient.CoreV1().Secrets(namespace).Get(v.ClientTLSSecret, metav1.GetOptions{})
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to get vault client tls secret(%s/%s)", namespace, v.ClientTLSSecret)
+			return nil, errors.Wrapf(err, "failed to get vault client tls secret %s/%s", namespace, v.ClientTLSSecret)
 		}
 
 		clientTLSConfig.GetClientCertificate = func(*tls.CertificateRequestInfo) (*tls.Certificate, error) {
@@ -68,13 +68,13 @@ func newVaultConfig(kclient kubernetes.Interface, namespace string, v *api.Vault
 		if v.ServerCASecret != "" {
 			sr, err := kclient.CoreV1().Secrets(namespace).Get(v.ClientTLSSecret, metav1.GetOptions{})
 			if err != nil {
-				return nil, errors.Wrapf(err, "failed to get vault server ca secret(%s/%s)", namespace, v.ServerCASecret)
+				return nil, errors.Wrapf(err, "failed to get vault server ca secret %s/%s", namespace, v.ServerCASecret)
 			}
 
 			pool := x509.NewCertPool()
 			ok := pool.AppendCertsFromPEM(sr.Data["ca.crt"])
 			if !ok {
-				return nil, errors.Errorf("error loading CA File: couldn't parse PEM data in secret(%s/%s)", namespace, v.ServerCASecret)
+				return nil, errors.Errorf("error loading CA File: couldn't parse PEM data in secret %s/%s", namespace, v.ServerCASecret)
 			}
 
 			clientTLSConfig.RootCAs = pool
@@ -85,7 +85,7 @@ func newVaultConfig(kclient kubernetes.Interface, namespace string, v *api.Vault
 
 	clientTLSConfig.ServerName, err = getHostName(v.Address)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get hostname from url(%s)", v.Address)
+		return nil, errors.Wrapf(err, "failed to get hostname from url %s", v.Address)
 	}
 
 	return cfg, nil

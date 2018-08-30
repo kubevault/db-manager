@@ -34,17 +34,17 @@ func (c *UserManagerController) initPostgresRoleBindingWatcher() {
 func (c *UserManagerController) runPostgresRoleBindingInjector(key string) error {
 	obj, exist, err := c.pgRoleBindingInformer.GetIndexer().GetByKey(key)
 	if err != nil {
-		glog.Errorf("Fetching object with key(%s) from store failed with %v", key, err)
+		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
 		return err
 	}
 
 	if !exist {
-		glog.Warningf("PostgresRoleBinding(%s) does not exist anymore\n", key)
+		glog.Warningf("PostgresRoleBinding %s does not exist anymore", key)
 
 	} else {
 		pgRoleBinding := obj.(*api.PostgresRoleBinding).DeepCopy()
 
-		glog.Infof("Sync/Add/Update for PostgresRoleBinding(%s/%s)\n", pgRoleBinding.Namespace, pgRoleBinding.Name)
+		glog.Infof("Sync/Add/Update for PostgresRoleBinding %s/%s", pgRoleBinding.Namespace, pgRoleBinding.Name)
 
 		if pgRoleBinding.DeletionTimestamp != nil {
 			if kutilcorev1.HasFinalizer(pgRoleBinding.ObjectMeta, PostgresRoleBindingFinalizer) {
@@ -59,7 +59,7 @@ func (c *UserManagerController) runPostgresRoleBindingInjector(key string) error
 					return binding
 				})
 				if err != nil {
-					return errors.Wrapf(err, "failed to set postgresRoleBinding finalizer for (%s/%s)", pgRoleBinding.Namespace, pgRoleBinding.Name)
+					return errors.Wrapf(err, "failed to set postgresRoleBinding finalizer for %s/%s", pgRoleBinding.Namespace, pgRoleBinding.Name)
 				}
 
 			}
@@ -71,7 +71,7 @@ func (c *UserManagerController) runPostgresRoleBindingInjector(key string) error
 
 			err = c.reconcilePostgresRoleBinding(dbRBClient, pgRoleBinding)
 			if err != nil {
-				return errors.Wrapf(err, "for PostgresRoleBinding(%s/%s):", pgRoleBinding.Namespace, pgRoleBinding.Name)
+				return errors.Wrapf(err, "for PostgresRoleBinding %s/%s:", pgRoleBinding.Namespace, pgRoleBinding.Name)
 			}
 		}
 	}
@@ -243,7 +243,7 @@ func (c *UserManagerController) runPostgresRoleBindingFinalizer(pgRoleBinding *a
 			delete(c.processingFinalizer, id)
 			return
 		} else if err != nil {
-			glog.Errorf("PostgresRoleBinding(%s/%s) finalizer: %v\n", pgRoleBinding.Namespace, pgRoleBinding.Name, err)
+			glog.Errorf("PostgresRoleBinding %s/%s finalizer: %v", pgRoleBinding.Namespace, pgRoleBinding.Name, err)
 		}
 
 		// to make sure p is not nil
@@ -255,7 +255,7 @@ func (c *UserManagerController) runPostgresRoleBindingFinalizer(pgRoleBinding *a
 		case <-stopCh:
 			err := c.removePostgresRoleBindingFinalizer(p)
 			if err != nil {
-				glog.Errorf("PostgresRoleBinding(%s/%s) finalizer: %v\n", p.Namespace, p.Name, err)
+				glog.Errorf("PostgresRoleBinding %s/%s finalizer: %v", p.Namespace, p.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return
@@ -265,11 +265,11 @@ func (c *UserManagerController) runPostgresRoleBindingFinalizer(pgRoleBinding *a
 		if !finalizationDone {
 			d, err := database.NewDatabaseRoleBindingForPostgres(c.kubeClient, c.dbClient, p)
 			if err != nil {
-				glog.Errorf("PostgresRoleBinding(%s/%s) finalizer: %v\n", p.Namespace, p.Name, err)
+				glog.Errorf("PostgresRoleBinding %s/%s finalizer: %v", p.Namespace, p.Name, err)
 			} else {
 				err = c.finalizePostgresRoleBinding(d, p.Status.Lease.ID)
 				if err != nil {
-					glog.Errorf("PostgresRoleBinding(%s/%s) finalizer: %v\n", p.Namespace, p.Name, err)
+					glog.Errorf("PostgresRoleBinding %s/%s finalizer: %v", p.Namespace, p.Name, err)
 				} else {
 					finalizationDone = true
 				}
@@ -279,7 +279,7 @@ func (c *UserManagerController) runPostgresRoleBindingFinalizer(pgRoleBinding *a
 		if finalizationDone {
 			err := c.removePostgresRoleBindingFinalizer(p)
 			if err != nil {
-				glog.Errorf("PostgresRoleBinding(%s/%s) finalizer: %v\n", p.Namespace, p.Name, err)
+				glog.Errorf("PostgresRoleBinding %s/%s finalizer: %v", p.Namespace, p.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return
@@ -289,7 +289,7 @@ func (c *UserManagerController) runPostgresRoleBindingFinalizer(pgRoleBinding *a
 		case <-stopCh:
 			err := c.removePostgresRoleBindingFinalizer(p)
 			if err != nil {
-				glog.Errorf("PostgresRoleBinding(%s/%s) finalizer: %v\n", p.Namespace, p.Name, err)
+				glog.Errorf("PostgresRoleBinding %s/%s finalizer: %v", p.Namespace, p.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return

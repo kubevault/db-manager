@@ -34,17 +34,17 @@ func (c *UserManagerController) initMongodbRoleBindingWatcher() {
 func (c *UserManagerController) runMongodbRoleBindingInjector(key string) error {
 	obj, exist, err := c.mgRoleBindingInformer.GetIndexer().GetByKey(key)
 	if err != nil {
-		glog.Errorf("Fetching object with key(%s) from store failed with %v", key, err)
+		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
 		return err
 	}
 
 	if !exist {
-		glog.Warningf("MongodbRoleBinding(%s) does not exist anymore\n", key)
+		glog.Warningf("MongodbRoleBinding %s does not exist anymore", key)
 
 	} else {
 		mRoleBinding := obj.(*api.MongodbRoleBinding).DeepCopy()
 
-		glog.Infof("Sync/Add/Update for MongodbRoleBinding(%s/%s)\n", mRoleBinding.Namespace, mRoleBinding.Name)
+		glog.Infof("Sync/Add/Update for MongodbRoleBinding %s/%s", mRoleBinding.Namespace, mRoleBinding.Name)
 
 		if mRoleBinding.DeletionTimestamp != nil {
 			if kutilcorev1.HasFinalizer(mRoleBinding.ObjectMeta, MongodbRoleBindingFinalizer) {
@@ -58,7 +58,7 @@ func (c *UserManagerController) runMongodbRoleBindingInjector(key string) error 
 					return binding
 				})
 				if err != nil {
-					return errors.Wrapf(err, "failed to set MongodbRoleBinding finalizer for (%s/%s)", mRoleBinding.Namespace, mRoleBinding.Name)
+					return errors.Wrapf(err, "failed to set MongodbRoleBinding finalizer for %s/%s", mRoleBinding.Namespace, mRoleBinding.Name)
 				}
 			}
 
@@ -69,7 +69,7 @@ func (c *UserManagerController) runMongodbRoleBindingInjector(key string) error 
 
 			err = c.reconcileMongodbRoleBinding(dbRBClient, mRoleBinding)
 			if err != nil {
-				return errors.Wrapf(err, "For MongodbRoleBinding(%s/%s)", mRoleBinding.Namespace, mRoleBinding.Name)
+				return errors.Wrapf(err, "For MongodbRoleBinding %s/%s", mRoleBinding.Namespace, mRoleBinding.Name)
 			}
 		}
 	}
@@ -242,7 +242,7 @@ func (c *UserManagerController) runMongodbRoleBindingFinalizer(mRoleBinding *api
 			delete(c.processingFinalizer, id)
 			return
 		} else if err != nil {
-			glog.Errorf("MongodbRoleBinding(%s/%s) finalizer: %v\n", mRoleBinding.Namespace, mRoleBinding.Name, err)
+			glog.Errorf("MongodbRoleBinding %s/%s finalizer: %v", mRoleBinding.Namespace, mRoleBinding.Name, err)
 		}
 
 		// to make sure m is not nil
@@ -254,7 +254,7 @@ func (c *UserManagerController) runMongodbRoleBindingFinalizer(mRoleBinding *api
 		case <-stopCh:
 			err := c.removeMongodbRoleBindingFinalizer(m)
 			if err != nil {
-				glog.Errorf("MongodbRoleBinding(%s/%s) finalizer: %v\n", m.Namespace, m.Name, err)
+				glog.Errorf("MongodbRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return
@@ -264,11 +264,11 @@ func (c *UserManagerController) runMongodbRoleBindingFinalizer(mRoleBinding *api
 		if !finalizationDone {
 			d, err := database.NewDatabaseRoleBindingForMongodb(c.kubeClient, c.dbClient, m)
 			if err != nil {
-				glog.Errorf("MongodbRoleBinding(%s/%s) finalizer: %v\n", m.Namespace, m.Name, err)
+				glog.Errorf("MongodbRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			} else {
 				err = c.finalizeMongodbRoleBinding(d, m.Status.Lease.ID)
 				if err != nil {
-					glog.Errorf("MongodbRoleBinding(%s/%s) finalizer: %v\n", m.Namespace, m.Name, err)
+					glog.Errorf("MongodbRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
 				} else {
 					finalizationDone = true
 				}
@@ -278,7 +278,7 @@ func (c *UserManagerController) runMongodbRoleBindingFinalizer(mRoleBinding *api
 		if finalizationDone {
 			err := c.removeMongodbRoleBindingFinalizer(m)
 			if err != nil {
-				glog.Errorf("MongodbRoleBinding(%s/%s) finalizer: %v\n", m.Namespace, m.Name, err)
+				glog.Errorf("MongodbRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return
@@ -288,7 +288,7 @@ func (c *UserManagerController) runMongodbRoleBindingFinalizer(mRoleBinding *api
 		case <-stopCh:
 			err := c.removeMongodbRoleBindingFinalizer(m)
 			if err != nil {
-				glog.Errorf("MongodbRoleBinding(%s/%s) finalizer: %v\n", m.Namespace, m.Name, err)
+				glog.Errorf("MongodbRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return

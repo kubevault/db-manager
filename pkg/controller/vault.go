@@ -51,7 +51,7 @@ func (u *UserManagerController) runLeaseRenewerForPostgres(duration time.Duratio
 		for _, p := range pgRBList {
 			err = u.RenewLeaseForPostgres(p, duration)
 			if err != nil {
-				glog.Errorf("Postgres credential lease renewer: for PostgresRoleBinding(%s/%s): %v", p.Namespace, p.Name, err)
+				glog.Errorf("Postgres credential lease renewer: for PostgresRoleBinding %s/%s: %v", p.Namespace, p.Name, err)
 			}
 		}
 	}
@@ -72,12 +72,12 @@ func (u *UserManagerController) RenewLeaseForPostgres(p *api.PostgresRoleBinding
 
 	pgRole, err := u.dbClient.AuthorizationV1alpha1().PostgresRoles(p.Namespace).Get(p.Spec.RoleRef, metav1.GetOptions{})
 	if err != nil {
-		return errors.Wrapf(err, "failed to get postgres role(%s/%s)", p.Namespace, p.Spec.RoleRef)
+		return errors.Wrapf(err, "failed to get postgres role %s/%s", p.Namespace, p.Spec.RoleRef)
 	}
 
 	v, err := vault.NewClient(u.kubeClient, p.Namespace, pgRole.Spec.Provider.Vault)
 	if err != nil {
-		return errors.Wrapf(err, "failed to create vault client from postgres role(%s/%s) spec.provider.vault", p.Namespace, p.Spec.RoleRef)
+		return errors.Wrapf(err, "failed to create vault client from postgres role %s/%s spec.provider.vault", p.Namespace, p.Spec.RoleRef)
 	}
 
 	_, err = v.Sys().Renew(p.Status.Lease.ID, 0)
@@ -103,7 +103,7 @@ func (u *UserManagerController) runLeaseRenewerForMysql(duration time.Duration) 
 		for _, m := range mRBList {
 			err = u.RenewLeaseForMysql(m, duration)
 			if err != nil {
-				glog.Errorf("Mysql credential lease renewer: for MysqlRoleBinding(%s/%s): %v", m.Namespace, m.Name, err)
+				glog.Errorf("Mysql credential lease renewer: for MysqlRoleBinding %s/%s: %v", m.Namespace, m.Name, err)
 			}
 		}
 	}
@@ -124,12 +124,12 @@ func (u *UserManagerController) RenewLeaseForMysql(m *api.MysqlRoleBinding, dura
 
 	mRole, err := u.dbClient.AuthorizationV1alpha1().MysqlRoles(m.Namespace).Get(m.Spec.RoleRef, metav1.GetOptions{})
 	if err != nil {
-		return errors.Wrapf(err, "failed to get mysql role(%s/%s)", m.Namespace, m.Spec.RoleRef)
+		return errors.Wrapf(err, "failed to get mysql role %s/%s", m.Namespace, m.Spec.RoleRef)
 	}
 
 	v, err := vault.NewClient(u.kubeClient, m.Namespace, mRole.Spec.Provider.Vault)
 	if err != nil {
-		return errors.Wrapf(err, "failed to create vault client from mysql role(%s/%s) spec.provider.vault", m.Namespace, m.Spec.RoleRef)
+		return errors.Wrapf(err, "failed to create vault client from mysql role %s/%s spec.provider.vault", m.Namespace, m.Spec.RoleRef)
 	}
 
 	_, err = v.Sys().Renew(m.Status.Lease.ID, 0)
@@ -155,7 +155,7 @@ func (u *UserManagerController) runLeaseRenewerForMongodb(duration time.Duration
 		for _, m := range mRBList {
 			err = u.RenewLeaseForMongodb(m, duration)
 			if err != nil {
-				glog.Errorf("Mongodb credential lease renewer: for MongodbRoleBinding(%s/%s): %v", m.Namespace, m.Name, err)
+				glog.Errorf("Mongodb credential lease renewer: for MongodbRoleBinding %s/%s: %v", m.Namespace, m.Name, err)
 			}
 		}
 	}
@@ -176,12 +176,12 @@ func (u *UserManagerController) RenewLeaseForMongodb(m *api.MongodbRoleBinding, 
 
 	mRole, err := u.dbClient.AuthorizationV1alpha1().MongodbRoles(m.Namespace).Get(m.Spec.RoleRef, metav1.GetOptions{})
 	if err != nil {
-		return errors.Wrapf(err, "failed to get mongodb role(%s/%s)", m.Namespace, m.Spec.RoleRef)
+		return errors.Wrapf(err, "failed to get mongodb role %s/%s", m.Namespace, m.Spec.RoleRef)
 	}
 
 	v, err := vault.NewClient(u.kubeClient, m.Namespace, mRole.Spec.Provider.Vault)
 	if err != nil {
-		return errors.Wrapf(err, "failed to create vault client from mongodb role(%s/%s) spec.provider.vault", m.Namespace, m.Spec.RoleRef)
+		return errors.Wrapf(err, "failed to create vault client from mongodb role %s/%s spec.provider.vault", m.Namespace, m.Spec.RoleRef)
 	}
 
 	_, err = v.Sys().Renew(m.Status.Lease.ID, 0)
