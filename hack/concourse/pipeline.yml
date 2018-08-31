@@ -6,6 +6,13 @@ resource_types:
     repository: appscodeci/github-pr-resource
     tag: latest
 
+- name: github-status
+  type: docker-image
+  tags: [cncf]
+  source:
+    repository: dpb587/github-status-resource
+    tag: master
+
 resources:
 - name: user-manager
   type: git
@@ -14,6 +21,13 @@ resources:
     uri: https://github.com/kubedb/user-manager
     branch: master
 
+- name: repo-status
+  type: github-status
+  tags: [cncf]
+  source:
+    repository: kubedb/user-manager
+    access_token: ((access_token))
+
 - name: cncf
   type: pull-request
   tags: [cncf]
@@ -21,7 +35,7 @@ resources:
     owner: kubedb
     repo: user-manager
     label: ok-to-test/cncf
-    org: kubedb
+    # org: kubedb
     access_token: ((access_token))
 
 - name: gke
@@ -80,7 +94,6 @@ resources:
 
 - name: creds
   type: s3
-  tags: [cncf]
   source:
     bucket: kubedbci
     access_key_id: ((s3-access-key))
@@ -97,7 +110,7 @@ resources:
     private_key: ((private_key))
 
 jobs:
-- name: test-user-manager-master
+- name: test-master
   plan:
   - get: user-manager
     trigger: true
@@ -107,6 +120,11 @@ jobs:
   - put: concourse-locks
     params:
       acquire: true
+  - put: repo-status
+    params:
+      state: pending
+      commit: user-manager
+      description: "concourse-ci"
   - task: test-e2e
     privileged: true
     file: user-manager/hack/concourse/task.yml
@@ -115,13 +133,24 @@ jobs:
       DOCKER_USER: ((docker_user))
       DOCKER_PASS: ((docker_pass))
     tags: [cncf]
+    on_success:
+      put: repo-status
+      params:
+        state: success
+        commit: user-manager
+        description: "concourse-ci"
+    on_failure:
+      put: repo-status
+      params:
+        state: failure
+        commit: user-manager
+        description: "concourse-ci"
     ensure:
       put: concourse-locks
       params:
         release: concourse-locks
 
-
-- name: test-user-manager-cncf
+- name: test-cncf
   plan:
   - get: cncf
     trigger: true
@@ -155,7 +184,7 @@ jobs:
       put: cncf
       params: {path: cncf, status: failure}
 
-- name: test-user-manager-gke
+- name: test-gke
   plan:
   - get: gke
     trigger: true
@@ -181,7 +210,7 @@ jobs:
       put: gke
       params: {path: gke, status: failure}
 
-- name: test-user-manager-aws
+- name: test-aws
   plan:
   - get: aws
     version: every
@@ -209,7 +238,7 @@ jobs:
       put: aws
       params: {path: aws, status: failure}
 
-- name: test-azure-aks
+- name: test-azur-aks
   plan:
   - get: azure-aks
     version: every
@@ -267,7 +296,7 @@ jobs:
       put: azure-acs
       params: {path: azure-acs, status: failure}
 
-- name: test-user-manager-do
+- name: test-do
   plan:
   - get: do
     version: every
@@ -293,7 +322,7 @@ jobs:
       put: do
       params: {path: do, status: failure}
 
-- name: test-user-manager-kubespray
+- name: test-kubespray
   plan:
   - get: kubespray
     version: every
