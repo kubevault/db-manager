@@ -9,6 +9,11 @@ type VaultSpec struct {
 	// Specifies the address of the vault server, e.g:'http://127.0.0.1:8200'
 	Address string `json:"address"`
 
+	// Specifies the path at which database is enabled.
+	// If it is not enabled at this path, then it will be enabled first.
+	// default path: database
+	Path string `json:"path,omitempty"`
+
 	// Name of the secret containing the vault token
 	// access permission:
 	// secret data:

@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"path/filepath"
 
 	vaultapi "github.com/hashicorp/vault/api"
 	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
@@ -13,6 +14,10 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+const (
+	DefaultDatabasePath = "database"
+)
+
 type DatabaseRole struct {
 	RoleInterface
 	vaultClient *vaultapi.Client
@@ -20,63 +25,60 @@ type DatabaseRole struct {
 }
 
 func NewDatabaseRoleForPostgres(kClient kubernetes.Interface, role *api.PostgresRole) (DatabaseRoleInterface, error) {
-	if role.Spec.Provider == nil {
-		return nil, errors.New("spec.provider is not provided")
-	}
-	if role.Spec.Provider.Vault == nil {
-		return nil, errors.New("spec.provider.vault is not provided")
+	vClient, err := getVaultClient(kClient, role.Namespace, role.Spec.Provider)
+	if err != nil {
+		return nil, errors.WithStack(err)
 	}
 
-	vClient, err := vault.NewClient(kClient, role.Namespace, role.Spec.Provider.Vault)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create vault client")
+	path := DefaultDatabasePath
+	if role.Spec.Provider.Vault.Path != "" {
+		// remove trailing slash if have any
+		path = filepath.Clean(role.Spec.Provider.Vault.Path)
 	}
 
 	d := &DatabaseRole{
-		RoleInterface: postgres.NewPostgresRole(kClient, vClient, role, "database"),
-		path:          "database",
+		RoleInterface: postgres.NewPostgresRole(kClient, vClient, role, path),
+		path:          path,
 		vaultClient:   vClient,
 	}
 	return d, nil
 }
 
 func NewDatabaseRoleForMysql(kClient kubernetes.Interface, role *api.MysqlRole) (DatabaseRoleInterface, error) {
-	if role.Spec.Provider == nil {
-		return nil, errors.New("spec.provider is not provided")
-	}
-	if role.Spec.Provider.Vault == nil {
-		return nil, errors.New("spec.provider.vault is not provided")
+	vClient, err := getVaultClient(kClient, role.Namespace, role.Spec.Provider)
+	if err != nil {
+		return nil, errors.WithStack(err)
 	}
 
-	vClient, err := vault.NewClient(kClient, role.Namespace, role.Spec.Provider.Vault)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create vault client")
+	path := DefaultDatabasePath
+	if role.Spec.Provider.Vault.Path != "" {
+		// remove trailing slash if have any
+		path = filepath.Clean(role.Spec.Provider.Vault.Path)
 	}
 
 	d := &DatabaseRole{
-		RoleInterface: mysql.NewMysqlRole(kClient, vClient, role, "database"),
-		path:          "database",
+		RoleInterface: mysql.NewMysqlRole(kClient, vClient, role, path),
+		path:          path,
 		vaultClient:   vClient,
 	}
 	return d, nil
 }
 
 func NewDatabaseRoleForMongodb(kClient kubernetes.Interface, role *api.MongodbRole) (DatabaseRoleInterface, error) {
-	if role.Spec.Provider == nil {
-		return nil, errors.New("spec.provider is not provided")
-	}
-	if role.Spec.Provider.Vault == nil {
-		return nil, errors.New("spec.provider.vault is not provided")
+	vClient, err := getVaultClient(kClient, role.Namespace, role.Spec.Provider)
+	if err != nil {
+		return nil, errors.WithStack(err)
 	}
 
-	vClient, err := vault.NewClient(kClient, role.Namespace, role.Spec.Provider.Vault)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create vault client")
+	path := DefaultDatabasePath
+	if role.Spec.Provider.Vault.Path != "" {
+		// remove trailing slash if have any
+		path = filepath.Clean(role.Spec.Provider.Vault.Path)
 	}
 
 	d := &DatabaseRole{
-		RoleInterface: mongodb.NewMongodbRole(kClient, vClient, role, "database"),
-		path:          "database",
+		RoleInterface: mongodb.NewMongodbRole(kClient, vClient, role, path),
+		path:          path,
 		vaultClient:   vClient,
 	}
 	return d, nil
@@ -133,4 +135,19 @@ func (d *DatabaseRole) DeleteRole(name string) error {
 		return errors.Wrapf(err, "failed to delete database role %s", name)
 	}
 	return nil
+}
+
+func getVaultClient(k kubernetes.Interface, namespace string, p *api.ProviderSpec) (*vaultapi.Client, error) {
+	if p == nil {
+		return nil, errors.New("spec.provider is not provided")
+	}
+	if p.Vault == nil {
+		return nil, errors.New("spec.provider.vault is not provided")
+	}
+
+	v, err := vault.NewClient(k, namespace, p.Vault)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create vault client")
+	}
+	return v, nil
 }

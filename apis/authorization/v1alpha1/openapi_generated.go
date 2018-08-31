@@ -1995,6 +1995,13 @@ func schema_user_manager_apis_authorization_v1alpha1_VaultSpec(ref common.Refere
 							Format:      "",
 						},
 					},
+					"path": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specifies the path at which database is enabled. If it is not enabled at this path, then it will be enabled first. default path: database",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"tokenSecret": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Name of the secret containing the vault token access permission: secret data:\n\t- token:<value>",

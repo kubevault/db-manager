@@ -33,25 +33,23 @@ func NewDatabaseRoleBindingForPostgres(k kubernetes.Interface, cr crd.Interface,
 		return nil, errors.Wrapf(err, "failed to get postgres role %s/%s", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
-	if pgRole.Spec.Provider == nil {
-		return nil, errors.Errorf("in postgres role %s/%s spec.provider is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
-	}
-	if pgRole.Spec.Provider.Vault == nil {
-		return nil, errors.Errorf("in postgres role %s/%s spec.provider.vault is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
-	}
-
-	v, err := vault.NewClient(k, roleBinding.Namespace, pgRole.Spec.Provider.Vault)
+	v, err := getVaultClient(k, roleBinding.Namespace, pgRole.Spec.Provider)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to create vault client from postgres role %s/%s spec.provider.vault", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
-	p := postgres.NewPostgresRoleBinding(k, v, roleBinding, "database")
+	path := DefaultDatabasePath
+	if pgRole.Spec.Provider.Vault.Path != "" {
+		path = pgRole.Spec.Provider.Vault.Path
+	}
+
+	p := postgres.NewPostgresRoleBinding(k, v, roleBinding, path)
 
 	return &DatabaseRoleBinding{
 		CredentialGetter: p,
 		kubeClient:       k,
 		vaultClient:      v,
-		path:             "database",
+		path:             path,
 	}, nil
 }
 
@@ -61,25 +59,23 @@ func NewDatabaseRoleBindingForMysql(k kubernetes.Interface, cr crd.Interface, ro
 		return nil, errors.Wrapf(err, "failed to get mysql role %s/%s", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
-	if mRole.Spec.Provider == nil {
-		return nil, errors.Errorf("in mysql role %s/%s spec.provider is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
-	}
-	if mRole.Spec.Provider.Vault == nil {
-		return nil, errors.Errorf("in mysql role %s/%s spec.provider.vault is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
-	}
-
-	v, err := vault.NewClient(k, roleBinding.Namespace, mRole.Spec.Provider.Vault)
+	v, err := getVaultClient(k, roleBinding.Namespace, mRole.Spec.Provider)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to create vault client from mysql role %s/%s spec.provider.vault", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
-	m := mysql.NewMysqlRoleBinding(k, v, roleBinding, "database")
+	path := DefaultDatabasePath
+	if mRole.Spec.Provider.Vault.Path != "" {
+		path = mRole.Spec.Provider.Vault.Path
+	}
+
+	m := mysql.NewMysqlRoleBinding(k, v, roleBinding, path)
 
 	return &DatabaseRoleBinding{
 		CredentialGetter: m,
 		kubeClient:       k,
 		vaultClient:      v,
-		path:             "database",
+		path:             path,
 	}, nil
 }
 
@@ -89,25 +85,23 @@ func NewDatabaseRoleBindingForMongodb(k kubernetes.Interface, cr crd.Interface, 
 		return nil, errors.Wrapf(err, "failed to get mongodb role %s/%s", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
-	if mRole.Spec.Provider == nil {
-		return nil, errors.Errorf("in mongodb role %s/%s spec.provider is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
-	}
-	if mRole.Spec.Provider.Vault == nil {
-		return nil, errors.Errorf("in mongodb role %s/%s spec.provider.vault is empty", roleBinding.Namespace, roleBinding.Spec.RoleRef)
-	}
-
-	v, err := vault.NewClient(k, roleBinding.Namespace, mRole.Spec.Provider.Vault)
+	v, err := getVaultClient(k, roleBinding.Namespace, mRole.Spec.Provider)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to create vault client from mongodb role %s/%s spec.provider.vault", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
-	m := mongodb.NewMongodbRoleBinding(k, v, roleBinding, "database")
+	path := DefaultDatabasePath
+	if mRole.Spec.Provider.Vault.Path != "" {
+		path = mRole.Spec.Provider.Vault.Path
+	}
+
+	m := mongodb.NewMongodbRoleBinding(k, v, roleBinding, path)
 
 	return &DatabaseRoleBinding{
 		CredentialGetter: m,
 		kubeClient:       k,
 		vaultClient:      v,
-		path:             "database",
+		path:             path,
 	}, nil
 }
 
