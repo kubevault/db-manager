@@ -519,4 +519,133 @@ var _ = Describe("Postgres role and role binding", func() {
 			})
 		})
 	})
+
+	Describe("Database in different path", func() {
+		var (
+			pgRole        api.PostgresRole
+			pgRoleBinding api.PostgresRoleBinding
+		)
+
+		BeforeEach(func() {
+			pgRole = api.PostgresRole{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "pg-role-test1",
+					Namespace: f.Namespace(),
+				},
+				Spec: api.PostgresRoleSpec{
+					Provider: &api.ProviderSpec{
+						Vault: &api.VaultSpec{
+							Address:             f.VaultUrl,
+							Path: "pg",
+							TokenSecret:         framework.VaultTokenSecret,
+							SkipTLSVerification: true,
+						},
+					},
+					Database: &api.DatabaseConfigForPostgres{
+						Name:             "postgres-test1",
+						CredentialSecret: framework.PostgresCredentialSecret,
+						ConnectionUrl:    fmt.Sprintf("postgresql://{{username}}:{{password}}@%s/postgres?sslmode=disable", f.PostgresUrl),
+						AllowedRoles:     "*",
+					},
+					DBName: "postgres-test1",
+					CreationStatements: []string{
+						"CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}';",
+						"GRANT SELECT ON ALL TABLES IN SCHEMA public TO \"{{name}}\";",
+					},
+					MaxTTL:     "1h",
+					DefaultTTL: "300",
+				},
+			}
+
+			pgRoleBinding = api.PostgresRoleBinding{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "pg-read",
+					Namespace: f.Namespace(),
+				},
+				Spec: api.PostgresRoleBindingSpec{
+					RoleRef: pgRole.Name,
+					Subjects: []rbacv1.Subject{
+						{
+							Name:      "pg-sa",
+							Kind:      rbacv1.ServiceAccountKind,
+							Namespace: f.Namespace(),
+						},
+					},
+					Store: api.Store{
+						Secret: "pg-cred",
+					},
+				},
+			}
+		})
+
+		Context("for postgresRole and postgresRoleBinding", func() {
+			BeforeEach(func() {
+				_, err := f.DBClient.AuthorizationV1alpha1().PostgresRoles(pgRole.Namespace).Create(&pgRole)
+				Expect(err).NotTo(HaveOccurred(), "Create PostgresRole")
+				IsPostgresRoleCreated(pgRole.Name, pgRole.Namespace)
+
+				_, err = f.DBClient.AuthorizationV1alpha1().PostgresRoleBindings(pgRoleBinding.Namespace).Create(&pgRoleBinding)
+				Expect(err).NotTo(HaveOccurred(), "Create PostgresRoleBinding")
+				IsPostgresRoleBindingCreated(pgRoleBinding.Name, pgRoleBinding.Namespace)
+				IsSecretCreated(pgRoleBinding.Spec.Store.Secret, pgRoleBinding.Namespace)
+				IsSecretCreated(pgRoleBinding.Spec.Store.Secret, pgRoleBinding.Namespace)
+				IsRbacRoleCreated(fmt.Sprintf("postgresrolebinding-%s-credential-reader", pgRoleBinding.Name), pgRoleBinding.Namespace)
+				IsRbacRoleBindingCreated(fmt.Sprintf("postgresrolebinding-%s-credential-reader", pgRoleBinding.Name), pgRoleBinding.Namespace)
+			})
+
+			AfterEach(func() {
+				err := f.DBClient.AuthorizationV1alpha1().PostgresRoles(pgRole.Namespace).Delete(pgRole.Name, &metav1.DeleteOptions{})
+				Expect(err).NotTo(HaveOccurred(), "Delete PostgresRole")
+
+				IsPostgresRoleDeleted(pgRole.Name, pgRole.Namespace)
+				IsVaultDatabaseRoleDeleted(pgRole.Name)
+
+				err = f.DBClient.AuthorizationV1alpha1().PostgresRoleBindings(pgRoleBinding.Namespace).Delete(pgRoleBinding.Name, &metav1.DeleteOptions{})
+				Expect(err).NotTo(HaveOccurred(), "Delete PostgresRoleBindings")
+
+				IsPostgresRoleBindingDeleted(pgRoleBinding.Name, pgRoleBinding.Namespace)
+
+				IsSecretDeleted(pgRoleBinding.Spec.Store.Secret, pgRoleBinding.Namespace)
+				IsRbacRoleDeleted(fmt.Sprintf("postgresrolebinding-%s-credential-reader", pgRoleBinding.Name), pgRoleBinding.Namespace)
+				IsRbacRoleBindingDeleted(fmt.Sprintf("postgresrolebinding-%s-credential-reader", pgRoleBinding.Name), pgRoleBinding.Namespace)
+
+			})
+
+			It("create, delete should be successfully", func() {
+				pRB, err := f.DBClient.AuthorizationV1alpha1().PostgresRoleBindings(pgRoleBinding.Namespace).Get(pgRoleBinding.Name, metav1.GetOptions{})
+				Expect(err).NotTo(HaveOccurred(), "Get PostgresRoleBinding")
+				Expect(pRB.Status.Lease.ID != "").To(BeTrue(), "status.lease.id should be non empty")
+				previousLease := pRB.Status.Lease
+
+				dRB, err := database.NewDatabaseRoleBindingForPostgres(f.KubeClient, f.DBClient, pRB)
+				Expect(err).NotTo(HaveOccurred())
+				IsVaultLeaseValid(dRB, previousLease.ID)
+
+				// delete role
+				err = f.DBClient.AuthorizationV1alpha1().PostgresRoles(pgRole.Namespace).Delete(pgRole.Name, &metav1.DeleteOptions{})
+				Expect(err).NotTo(HaveOccurred(), "Delete PostgresRole")
+				IsPostgresRoleDeleted(pgRole.Name, pgRole.Namespace)
+
+				IsVaultLeaseRevoked(dRB, previousLease.ID)
+
+				// recreate role
+				_, err = f.DBClient.AuthorizationV1alpha1().PostgresRoles(pgRole.Namespace).Create(&pgRole)
+				Expect(err).NotTo(HaveOccurred(), "Create PostgresRole")
+				IsPostgresRoleCreated(pgRole.Name, pgRole.Namespace)
+
+				Eventually(func() bool {
+					pRB, err = f.DBClient.AuthorizationV1alpha1().PostgresRoleBindings(pgRoleBinding.Namespace).Get(pgRoleBinding.Name, metav1.GetOptions{})
+					return err == nil && pRB.Status.Lease.ID != ""
+				}, timeOut, pollingInterval).Should(BeTrue(), "PostgresRoleBinding status.lease.id should be non empty")
+
+				curLease := pRB.Status.Lease
+				IsVaultLeaseValid(dRB, curLease.ID)
+
+				sr, err := f.KubeClient.CoreV1().Secrets(pgRoleBinding.Namespace).Get(pgRoleBinding.Spec.Store.Secret, metav1.GetOptions{})
+				Expect(err).NotTo(HaveOccurred(), "Get secret")
+				Expect(sr.Data != nil &&
+					string(sr.Data["lease_id"]) == curLease.ID).To(BeTrue(), "lease in the secret should be updated")
+			})
+		})
+	})
 })

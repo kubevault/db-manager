@@ -513,4 +513,132 @@ var _ = Describe("Mongodb role and role binding", func() {
 		})
 	})
 
+	Describe("Database in different path", func() {
+		var (
+			mRole        api.MongodbRole
+			mRoleBinding api.MongodbRoleBinding
+		)
+
+		BeforeEach(func() {
+			mRole = api.MongodbRole{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "mdb-role-test1",
+					Namespace: f.Namespace(),
+				},
+				Spec: api.MongodbRoleSpec{
+					Provider: &api.ProviderSpec{
+						Vault: &api.VaultSpec{
+							Address:             f.VaultUrl,
+							Path:                "mg",
+							TokenSecret:         framework.VaultTokenSecret,
+							SkipTLSVerification: true,
+						},
+					},
+					Database: &api.DatabaseConfigForMongodb{
+						Name:             "mongodb-test1",
+						CredentialSecret: framework.MongodbCredentialSecret,
+						ConnectionUrl:    fmt.Sprintf("mongodb://{{username}}:{{password}}@%s/admin?ssl=false", f.MongodbUrl),
+						AllowedRoles:     "*",
+					},
+					DBName: "mongodb-test1",
+					CreationStatements: []string{
+						"{ \"db\": \"admin\", \"roles\": [{ \"role\": \"readWrite\" }, {\"role\": \"read\", \"db\": \"foo\"}] }",
+					},
+					MaxTTL:     "1h",
+					DefaultTTL: "300",
+				},
+			}
+
+			mRoleBinding = api.MongodbRoleBinding{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "mdb-read",
+					Namespace: f.Namespace(),
+				},
+				Spec: api.MongodbRoleBindingSpec{
+					RoleRef: mRole.Name,
+					Subjects: []rbacv1.Subject{
+						{
+							Name:      "mdb-sa",
+							Kind:      rbacv1.ServiceAccountKind,
+							Namespace: f.Namespace(),
+						},
+					},
+					Store: api.Store{
+						Secret: "mdb-cred",
+					},
+				},
+			}
+		})
+
+		Context("for MongodbRole and MongodbRoleBinding", func() {
+			BeforeEach(func() {
+				_, err := f.DBClient.AuthorizationV1alpha1().MongodbRoles(mRole.Namespace).Create(&mRole)
+				Expect(err).NotTo(HaveOccurred(), "Create MongodbRole")
+				IsMongodbRoleCreated(mRole.Name, mRole.Namespace)
+
+				_, err = f.DBClient.AuthorizationV1alpha1().MongodbRoleBindings(mRoleBinding.Namespace).Create(&mRoleBinding)
+				Expect(err).NotTo(HaveOccurred(), "Create MongodbRoleBinding")
+				IsMongodbRoleBindingCreated(mRoleBinding.Name, mRoleBinding.Namespace)
+				IsSecretCreated(mRoleBinding.Spec.Store.Secret, mRoleBinding.Namespace)
+				IsSecretCreated(mRoleBinding.Spec.Store.Secret, mRoleBinding.Namespace)
+				IsRbacRoleCreated(fmt.Sprintf("mongodbrolebinding-%s-credential-reader", mRoleBinding.Name), mRoleBinding.Namespace)
+				IsRbacRoleBindingCreated(fmt.Sprintf("mongodbrolebinding-%s-credential-reader", mRoleBinding.Name), mRoleBinding.Namespace)
+			})
+
+			AfterEach(func() {
+				err := f.DBClient.AuthorizationV1alpha1().MongodbRoles(mRole.Namespace).Delete(mRole.Name, &metav1.DeleteOptions{})
+				Expect(err).NotTo(HaveOccurred(), "Delete MongodbRole")
+
+				IsMongodbRoleDeleted(mRole.Name, mRole.Namespace)
+				IsVaultDatabaseRoleDeleted(mRole.Name)
+
+				err = f.DBClient.AuthorizationV1alpha1().MongodbRoleBindings(mRoleBinding.Namespace).Delete(mRoleBinding.Name, &metav1.DeleteOptions{})
+				Expect(err).NotTo(HaveOccurred(), "Delete MongodbRoleBindings")
+
+				IsMongodbRoleBindingDeleted(mRoleBinding.Name, mRoleBinding.Namespace)
+
+				IsSecretDeleted(mRoleBinding.Spec.Store.Secret, mRoleBinding.Namespace)
+				IsRbacRoleDeleted(fmt.Sprintf("Mongodbrolebinding-%s-credential-reader", mRoleBinding.Name), mRoleBinding.Namespace)
+				IsRbacRoleBindingDeleted(fmt.Sprintf("Mongodbrolebinding-%s-credential-reader", mRoleBinding.Name), mRoleBinding.Namespace)
+
+			})
+
+			It("create, delete should be successfully", func() {
+				mRB, err := f.DBClient.AuthorizationV1alpha1().MongodbRoleBindings(mRoleBinding.Namespace).Get(mRoleBinding.Name, metav1.GetOptions{})
+				Expect(err).NotTo(HaveOccurred(), "Get MongodbRoleBinding")
+				Expect(mRB.Status.Lease.ID != "").To(BeTrue(), "status.lease.id should be non empty")
+				previousLease := mRB.Status.Lease
+
+				dRB, err := database.NewDatabaseRoleBindingForMongodb(f.KubeClient, f.DBClient, mRB)
+				Expect(err).NotTo(HaveOccurred())
+				IsVaultLeaseValid(dRB, previousLease.ID)
+
+				// delete role
+				err = f.DBClient.AuthorizationV1alpha1().MongodbRoles(mRole.Namespace).Delete(mRole.Name, &metav1.DeleteOptions{})
+				Expect(err).NotTo(HaveOccurred(), "Delete MongodbRole")
+				IsMongodbRoleDeleted(mRole.Name, mRole.Namespace)
+
+				IsVaultLeaseRevoked(dRB, previousLease.ID)
+
+				// recreate role
+				_, err = f.DBClient.AuthorizationV1alpha1().MongodbRoles(mRole.Namespace).Create(&mRole)
+				Expect(err).NotTo(HaveOccurred(), "Create MongodbRole")
+				IsMongodbRoleCreated(mRole.Name, mRole.Namespace)
+
+				Eventually(func() bool {
+					mRB, err = f.DBClient.AuthorizationV1alpha1().MongodbRoleBindings(mRoleBinding.Namespace).Get(mRoleBinding.Name, metav1.GetOptions{})
+					return err == nil && mRB.Status.Lease.ID != ""
+				}, timeOut, pollingInterval).Should(BeTrue(), "MongodbRoleBinding status.lease.id should be non empty")
+
+				curLease := mRB.Status.Lease
+				IsVaultLeaseValid(dRB, curLease.ID)
+
+				sr, err := f.KubeClient.CoreV1().Secrets(mRoleBinding.Namespace).Get(mRoleBinding.Spec.Store.Secret, metav1.GetOptions{})
+				Expect(err).NotTo(HaveOccurred(), "Get secret")
+				Expect(sr.Data != nil &&
+					string(sr.Data["lease_id"]) == curLease.ID).To(BeTrue(), "lease in the secret should be updated")
+			})
+		})
+	})
+
 })

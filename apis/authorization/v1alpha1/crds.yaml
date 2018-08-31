@@ -392,6 +392,11 @@ spec:
                         client.key secret data:\n\t- client.crt: <value>\n\t- client.srt:
                         <value>"
                       type: string
+                    path:
+                      description: 'Specifies the path at which database is enabled.
+                        If it is not enabled at this path, then it will be enabled
+                        first. default path: database'
+                      type: string
                     server_ca_secret:
                       description: "Name of the secret containing the ca cert to verify
                         vault server secret data:\n\t- ca.crt:<value>"

@@ -2277,6 +2277,10 @@
           "description": "Name of the secret containing the client.srt and client.key secret data:\n\t- client.crt: \u003cvalue\u003e\n\t- client.srt: \u003cvalue\u003e",
           "type": "string"
         },
+        "path": {
+          "description": "Specifies the path at which database is enabled. If it is not enabled at this path, then it will be enabled first. default path: database",
+          "type": "string"
+        },
         "server_ca_secret": {
           "description": "Name of the secret containing the ca cert to verify vault server secret data:\n\t- ca.crt:\u003cvalue\u003e",
           "type": "string"
