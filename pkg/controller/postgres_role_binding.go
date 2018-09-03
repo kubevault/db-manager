@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	kutilcorev1 "github.com/appscode/kutil/core/v1"
+	"github.com/appscode/go/encoding/json/types"
+	core_util "github.com/appscode/kutil/core/v1"
+	meta_util "github.com/appscode/kutil/meta"
 	"github.com/appscode/kutil/tools/queue"
 	"github.com/golang/glog"
 	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
@@ -23,11 +25,7 @@ const (
 func (c *UserManagerController) initPostgresRoleBindingWatcher() {
 	c.pgRoleBindingInformer = c.dbInformerFactory.Authorization().V1alpha1().PostgresRoleBindings().Informer()
 	c.pgRoleBindingQueue = queue.New(api.ResourceKindPostgresRoleBinding, c.MaxNumRequeues, c.NumThreads, c.runPostgresRoleBindingInjector)
-	c.pgRoleBindingInformer.AddEventHandler(queue.NewEventHandler(c.pgRoleBindingQueue.GetQueue(), func(old interface{}, new interface{}) bool {
-		oldObj := old.(*api.PostgresRoleBinding)
-		newObj := new.(*api.PostgresRoleBinding)
-		return newObj.DeletionTimestamp != nil || !newObj.AlreadyObserved(oldObj)
-	}))
+	c.pgRoleBindingInformer.AddEventHandler(queue.NewObservableHandler(c.pgRoleBindingQueue.GetQueue(), api.EnableStatusSubresource))
 	c.pgRoleBindingLister = c.dbInformerFactory.Authorization().V1alpha1().PostgresRoleBindings().Lister()
 }
 
@@ -47,15 +45,15 @@ func (c *UserManagerController) runPostgresRoleBindingInjector(key string) error
 		glog.Infof("Sync/Add/Update for PostgresRoleBinding %s/%s", pgRoleBinding.Namespace, pgRoleBinding.Name)
 
 		if pgRoleBinding.DeletionTimestamp != nil {
-			if kutilcorev1.HasFinalizer(pgRoleBinding.ObjectMeta, PostgresRoleBindingFinalizer) {
+			if core_util.HasFinalizer(pgRoleBinding.ObjectMeta, PostgresRoleBindingFinalizer) {
 				go c.runPostgresRoleBindingFinalizer(pgRoleBinding, 1*time.Minute, 10*time.Second)
 			}
 
 		} else {
-			if !kutilcorev1.HasFinalizer(pgRoleBinding.ObjectMeta, PostgresRoleBindingFinalizer) {
+			if !core_util.HasFinalizer(pgRoleBinding.ObjectMeta, PostgresRoleBindingFinalizer) {
 				// Add finalizer
 				_, _, err = patchutil.PatchPostgresRoleBinding(c.dbClient.AuthorizationV1alpha1(), pgRoleBinding, func(binding *api.PostgresRoleBinding) *api.PostgresRoleBinding {
-					binding.ObjectMeta = kutilcorev1.AddFinalizer(binding.ObjectMeta, PostgresRoleBindingFinalizer)
+					binding.ObjectMeta = core_util.AddFinalizer(binding.ObjectMeta, PostgresRoleBindingFinalizer)
 					return binding
 				})
 				if err != nil {
@@ -91,7 +89,7 @@ func (c *UserManagerController) reconcilePostgresRoleBinding(dbRBClient database
 	)
 
 	var (
-		pRBName    = pgRoleBinding.Name
+		pgRBName   = pgRoleBinding.Name
 		ns         = pgRoleBinding.Namespace
 		secretName = pgRoleBinding.Spec.Store.Secret
 		status     = pgRoleBinding.Status
@@ -167,7 +165,7 @@ func (c *UserManagerController) reconcilePostgresRoleBinding(dbRBClient database
 		}
 	}
 
-	err = dbRBClient.CreateRole(getPostgresRoleName(pRBName), ns, secretName)
+	err = dbRBClient.CreateRole(getPostgresRoleName(pgRBName), ns, secretName)
 	if err != nil {
 		status.Conditions = []api.PostgresRoleBindingCondition{
 			{
@@ -185,7 +183,7 @@ func (c *UserManagerController) reconcilePostgresRoleBinding(dbRBClient database
 		return errors.WithStack(err)
 	}
 
-	err = dbRBClient.CreateRoleBinding(getPostgresRoleBindingName(pRBName), ns, getPostgresRoleName(pRBName), pgRoleBinding.Spec.Subjects)
+	err = dbRBClient.CreateRoleBinding(getPostgresRoleBindingName(pgRBName), ns, getPostgresRoleName(pgRBName), pgRoleBinding.Spec.Subjects)
 	if err != nil {
 		status.Conditions = []api.PostgresRoleBindingCondition{
 			{
@@ -204,7 +202,7 @@ func (c *UserManagerController) reconcilePostgresRoleBinding(dbRBClient database
 	}
 
 	status.Conditions = []api.PostgresRoleBindingCondition{}
-	status.ObservedGeneration = pgRoleBinding.Generation
+	status.ObservedGeneration = types.NewIntHash(pgRoleBinding.Generation, meta_util.GenerationHash(pgRoleBinding))
 
 	err = c.updatePostgresRoleBindingStatus(&status, pgRoleBinding)
 	if err != nil {
@@ -218,10 +216,7 @@ func (c *UserManagerController) updatePostgresRoleBindingStatus(status *api.Post
 		s = status
 		return s
 	})
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func (c *UserManagerController) runPostgresRoleBindingFinalizer(pgRoleBinding *api.PostgresRoleBinding, timeout time.Duration, interval time.Duration) {
@@ -312,7 +307,7 @@ func (c *UserManagerController) finalizePostgresRoleBinding(dbRBClient database.
 
 func (c *UserManagerController) removePostgresRoleBindingFinalizer(pgRoleBinding *api.PostgresRoleBinding) error {
 	_, _, err := patchutil.PatchPostgresRoleBinding(c.dbClient.AuthorizationV1alpha1(), pgRoleBinding, func(r *api.PostgresRoleBinding) *api.PostgresRoleBinding {
-		r.ObjectMeta = kutilcorev1.RemoveFinalizer(r.ObjectMeta, PostgresRoleBindingFinalizer)
+		r.ObjectMeta = core_util.RemoveFinalizer(r.ObjectMeta, PostgresRoleBindingFinalizer)
 		return r
 	})
 	if err != nil {

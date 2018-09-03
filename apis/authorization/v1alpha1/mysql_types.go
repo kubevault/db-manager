@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"github.com/appscode/go/encoding/json/types"
 	"k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -117,7 +118,7 @@ type MysqlRoleStatus struct {
 
 	// observedGeneration is the most recent generation observed for this MysqlRole. It corresponds to the
 	// MysqlRole's generation, which is updated on mutation by the API Server.
-	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+	ObservedGeneration *types.IntHash `json:"observedGeneration,omitempty"`
 
 	// Represents the latest available observations of a MysqlRole current state.
 	Conditions []MysqlRoleCondition `json:"conditions,omitempty"`
@@ -164,7 +165,7 @@ type MysqlRoleBindingPhase string
 type MysqlRoleBindingStatus struct {
 	// observedGeneration is the most recent generation observed for this MysqlRoleBinding. It corresponds to the
 	// MysqlRoleBinding's generation, which is updated on mutation by the API Server.
-	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+	ObservedGeneration *types.IntHash `json:"observedGeneration,omitempty"`
 
 	// contains lease info of the credentials
 	Lease LeaseData `json:"lease,omitempty"`

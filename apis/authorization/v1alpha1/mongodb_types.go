@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"github.com/appscode/go/encoding/json/types"
 	"k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -109,7 +110,7 @@ type MongodbRoleStatus struct {
 
 	// observedGeneration is the most recent generation observed for this MongodbRole. It corresponds to the
 	// MongodbRole's generation, which is updated on mutation by the API Server.
-	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+	ObservedGeneration *types.IntHash `json:"observedGeneration,omitempty"`
 
 	// Represents the latest available observations of a MongodbRole current state.
 	Conditions []MongodbRoleCondition `json:"conditions,omitempty"`
@@ -156,7 +157,7 @@ type MongodbRoleBindingPhase string
 type MongodbRoleBindingStatus struct {
 	// observedGeneration is the most recent generation observed for this MongodbRoleBinding. It corresponds to the
 	// MongodbRoleBinding's generation, which is updated on mutation by the API Server.
-	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+	ObservedGeneration *types.IntHash `json:"observedGeneration,omitempty"`
 
 	// contains lease info of the credentials
 	Lease LeaseData `json:"lease,omitempty"`
