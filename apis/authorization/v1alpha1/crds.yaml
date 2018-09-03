@@ -458,11 +458,9 @@ spec:
                     type: string
               type: array
             observedGeneration:
-              description: observedGeneration is the most recent generation observed
-                for this PostgresROle. It corresponds to the PostgresROle's generation,
-                which is updated on mutation by the API Server.
-              format: int64
-              type: integer
+              description: IntHash represents as int64 Generation and string Hash.
+                It is json serialized into <int64>$<hash_string>.
+              type: string
             phase:
               description: Specifies the phase of the PostgresRole
               type: string
@@ -865,11 +863,9 @@ spec:
                   format: int64
                   type: integer
             observedGeneration:
-              description: observedGeneration is the most recent generation observed
-                for this PostgresRoleBinding. It corresponds to the PostgresRoleBinding's
-                generation, which is updated on mutation by the API Server.
-              format: int64
-              type: integer
+              description: IntHash represents as int64 Generation and string Hash.
+                It is json serialized into <int64>$<hash_string>.
+              type: string
             phase:
               description: Specifies the phase of the postgres role binding
               type: string

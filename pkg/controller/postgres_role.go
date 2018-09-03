@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	kutilcorev1 "github.com/appscode/kutil/core/v1"
+	"github.com/appscode/go/encoding/json/types"
+	core_util "github.com/appscode/kutil/core/v1"
+	meta_util "github.com/appscode/kutil/meta"
 	"github.com/appscode/kutil/tools/queue"
 	"github.com/golang/glog"
 	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
@@ -26,11 +28,7 @@ const (
 func (c *UserManagerController) initPostgresRoleWatcher() {
 	c.pgRoleInformer = c.dbInformerFactory.Authorization().V1alpha1().PostgresRoles().Informer()
 	c.pgRoleQueue = queue.New(api.ResourceKindPostgresRole, c.MaxNumRequeues, c.NumThreads, c.runPostgresRoleInjector)
-	c.pgRoleInformer.AddEventHandler(queue.NewEventHandler(c.pgRoleQueue.GetQueue(), func(old interface{}, new interface{}) bool {
-		oldObj := old.(*api.PostgresRole)
-		newObj := new.(*api.PostgresRole)
-		return newObj.DeletionTimestamp != nil || !newObj.AlreadyObserved(oldObj)
-	}))
+	c.pgRoleInformer.AddEventHandler(queue.NewObservableHandler(c.pgRoleQueue.GetQueue(), api.EnableStatusSubresource))
 	c.pgRoleLister = c.dbInformerFactory.Authorization().V1alpha1().PostgresRoles().Lister()
 }
 
@@ -50,15 +48,15 @@ func (c *UserManagerController) runPostgresRoleInjector(key string) error {
 		glog.Infof("Sync/Add/Update for PostgresRole %s/%s", pgRole.Namespace, pgRole.Name)
 
 		if pgRole.DeletionTimestamp != nil {
-			if kutilcorev1.HasFinalizer(pgRole.ObjectMeta, PostgresRoleFinalizer) {
+			if core_util.HasFinalizer(pgRole.ObjectMeta, PostgresRoleFinalizer) {
 				go c.runPostgresRoleFinalizer(pgRole, 1*time.Minute, 10*time.Second)
 			}
 
 		} else {
-			if !kutilcorev1.HasFinalizer(pgRole.ObjectMeta, PostgresRoleFinalizer) {
+			if !core_util.HasFinalizer(pgRole.ObjectMeta, PostgresRoleFinalizer) {
 				// Add finalizer
 				_, _, err := patchutil.PatchPostgresRole(c.dbClient.AuthorizationV1alpha1(), pgRole, func(role *api.PostgresRole) *api.PostgresRole {
-					role.ObjectMeta = kutilcorev1.AddFinalizer(role.ObjectMeta, PostgresRoleFinalizer)
+					role.ObjectMeta = core_util.AddFinalizer(role.ObjectMeta, PostgresRoleFinalizer)
 					return role
 				})
 				if err != nil {
@@ -146,7 +144,7 @@ func (c *UserManagerController) reconcilePostgresRole(dbRClient database.Databas
 		return errors.Wrap(err, "for postgresRole %s/%s: failed to create role")
 	}
 
-	status.ObservedGeneration = pgRole.Generation
+	status.ObservedGeneration = types.NewIntHash(pgRole.Generation, meta_util.GenerationHash(pgRole))
 	status.Conditions = []api.PostgresRoleCondition{}
 	status.Phase = PostgresRolePhaseSuccess
 
@@ -303,7 +301,7 @@ func (c *UserManagerController) finalizePostgresRole(dbRClient database.Database
 func (c *UserManagerController) removePostgresRoleFinalizer(pgRole *api.PostgresRole) error {
 	// remove finalizer
 	_, _, err := patchutil.PatchPostgresRole(c.dbClient.AuthorizationV1alpha1(), pgRole, func(role *api.PostgresRole) *api.PostgresRole {
-		role.ObjectMeta = kutilcorev1.RemoveFinalizer(role.ObjectMeta, PostgresRoleFinalizer)
+		role.ObjectMeta = core_util.RemoveFinalizer(role.ObjectMeta, PostgresRoleFinalizer)
 		return role
 	})
 	if err != nil {

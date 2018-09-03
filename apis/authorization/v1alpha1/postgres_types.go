@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"github.com/appscode/go/encoding/json/types"
 	"k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -82,7 +83,7 @@ type PostgresRolePhase string
 type PostgresRoleStatus struct {
 	// observedGeneration is the most recent generation observed for this PostgresROle. It corresponds to the
 	// PostgresROle's generation, which is updated on mutation by the API Server.
-	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+	ObservedGeneration *types.IntHash `json:"observedGeneration,omitempty"`
 
 	// Specifies the phase of the PostgresRole
 	Phase PostgresRolePhase `json:"phase,omitempty"`
@@ -173,7 +174,7 @@ type PostgresRoleBindingPhase string
 type PostgresRoleBindingStatus struct {
 	// observedGeneration is the most recent generation observed for this PostgresRoleBinding. It corresponds to the
 	// PostgresRoleBinding's generation, which is updated on mutation by the API Server.
-	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+	ObservedGeneration *types.IntHash `json:"observedGeneration,omitempty"`
 
 	// contains lease info of the credentials
 	Lease LeaseData `json:"lease,omitempty"`

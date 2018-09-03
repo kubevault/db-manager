@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	kutilcorev1 "github.com/appscode/kutil/core/v1"
+	"github.com/appscode/go/encoding/json/types"
+	core_util "github.com/appscode/kutil/core/v1"
+	meta_util "github.com/appscode/kutil/meta"
 	"github.com/appscode/kutil/tools/queue"
 	"github.com/golang/glog"
 	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
@@ -26,11 +28,7 @@ const (
 func (c *UserManagerController) initMongodbRoleWatcher() {
 	c.mgRoleInformer = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoles().Informer()
 	c.mgRoleQueue = queue.New(api.ResourceKindMongodbRole, c.MaxNumRequeues, c.NumThreads, c.runMongodbRoleInjector)
-	c.mgRoleInformer.AddEventHandler(queue.NewEventHandler(c.mgRoleQueue.GetQueue(), func(old interface{}, new interface{}) bool {
-		oldObj := old.(*api.MongodbRole)
-		newObj := new.(*api.MongodbRole)
-		return newObj.DeletionTimestamp != nil || !newObj.AlreadyObserved(oldObj)
-	}))
+	c.mgRoleInformer.AddEventHandler(queue.NewObservableHandler(c.mgRoleQueue.GetQueue(), api.EnableStatusSubresource))
 	c.mgRoleLister = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoles().Lister()
 }
 
@@ -50,14 +48,14 @@ func (c *UserManagerController) runMongodbRoleInjector(key string) error {
 		glog.Infof("Sync/Add/Update for MongodbRole %s/%s", mRole.Namespace, mRole.Name)
 
 		if mRole.DeletionTimestamp != nil {
-			if kutilcorev1.HasFinalizer(mRole.ObjectMeta, MongodbRoleFinalizer) {
+			if core_util.HasFinalizer(mRole.ObjectMeta, MongodbRoleFinalizer) {
 				go c.runMongodbRoleFinalizer(mRole, 1*time.Minute, 10*time.Second)
 			}
 		} else {
-			if !kutilcorev1.HasFinalizer(mRole.ObjectMeta, MongodbRoleFinalizer) {
+			if !core_util.HasFinalizer(mRole.ObjectMeta, MongodbRoleFinalizer) {
 				// Add finalizer
 				_, _, err := patchutil.PatchMongodbRole(c.dbClient.AuthorizationV1alpha1(), mRole, func(role *api.MongodbRole) *api.MongodbRole {
-					role.ObjectMeta = kutilcorev1.AddFinalizer(role.ObjectMeta, MongodbRoleFinalizer)
+					role.ObjectMeta = core_util.AddFinalizer(role.ObjectMeta, MongodbRoleFinalizer)
 					return role
 				})
 				if err != nil {
@@ -86,8 +84,8 @@ func (c *UserManagerController) runMongodbRoleInjector(key string) error {
 // 	  - configure a role that maps a name in Vault to an SQL statement to execute to create the database credential.
 //    - sync role
 //	  - revoke previous lease of all the respective mongodbRoleBinding and reissue a new lease
-func (c *UserManagerController) reconcileMongodbRole(dbRClient database.DatabaseRoleInterface, mRole *api.MongodbRole) error {
-	status := mRole.Status
+func (c *UserManagerController) reconcileMongodbRole(dbRClient database.DatabaseRoleInterface, mgRole *api.MongodbRole) error {
+	status := mgRole.Status
 	// enable the database secrets engine if it is not already enabled
 	err := dbRClient.EnableDatabase()
 	if err != nil {
@@ -100,7 +98,7 @@ func (c *UserManagerController) reconcileMongodbRole(dbRClient database.Database
 			},
 		}
 
-		err2 := c.updatedMongodbRoleStatus(&status, mRole)
+		err2 := c.updatedMongodbRoleStatus(&status, mgRole)
 		if err2 != nil {
 			return errors.Wrap(err2, "failed to update status")
 		}
@@ -119,11 +117,11 @@ func (c *UserManagerController) reconcileMongodbRole(dbRClient database.Database
 			},
 		}
 
-		err2 := c.updatedMongodbRoleStatus(&status, mRole)
+		err2 := c.updatedMongodbRoleStatus(&status, mgRole)
 		if err2 != nil {
 			return errors.Wrap(err2, "failed to update status")
 		}
-		return errors.Wrapf(err, "failed to created database connection config %s", mRole.Spec.Database.Name)
+		return errors.Wrapf(err, "failed to created database connection config %s", mgRole.Spec.Database.Name)
 	}
 
 	// create role
@@ -138,7 +136,7 @@ func (c *UserManagerController) reconcileMongodbRole(dbRClient database.Database
 			},
 		}
 
-		err2 := c.updatedMongodbRoleStatus(&status, mRole)
+		err2 := c.updatedMongodbRoleStatus(&status, mgRole)
 		if err2 != nil {
 			return errors.Wrap(err2, "failed to update status")
 		}
@@ -147,23 +145,23 @@ func (c *UserManagerController) reconcileMongodbRole(dbRClient database.Database
 
 	status.Conditions = []api.MongodbRoleCondition{}
 	status.Phase = MongodbRolePhaseSuccess
-	status.ObservedGeneration = mRole.Generation
+	status.ObservedGeneration = types.NewIntHash(mgRole.Generation, meta_util.GenerationHash(mgRole))
 
-	err = c.updatedMongodbRoleStatus(&status, mRole)
+	err = c.updatedMongodbRoleStatus(&status, mgRole)
 	if err != nil {
 		return errors.Wrapf(err, "failed to update MongodbRole status")
 	}
 
-	if mRole.Spec.Provider == nil || mRole.Spec.Provider.Vault == nil {
+	if mgRole.Spec.Provider == nil || mgRole.Spec.Provider.Vault == nil {
 		return errors.New("spec.provider.vault is nil")
 	}
 
-	mList, err := c.mgRoleBindingLister.MongodbRoleBindings(mRole.Namespace).List(labels.SelectorFromSet(map[string]string{}))
+	mList, err := c.mgRoleBindingLister.MongodbRoleBindings(mgRole.Namespace).List(labels.SelectorFromSet(map[string]string{}))
 	for _, m := range mList {
-		if m.Spec.RoleRef == mRole.Name {
+		if m.Spec.RoleRef == mgRole.Name {
 			// revoke lease if have any lease
 			if m.Status.Lease.ID != "" {
-				err = c.RevokeLease(mRole.Spec.Provider.Vault, mRole.Namespace, m.Status.Lease.ID)
+				err = c.RevokeLease(mgRole.Spec.Provider.Vault, mgRole.Namespace, m.Status.Lease.ID)
 				if err != nil {
 					return errors.Wrap(err, "failed to revoke lease")
 				}
@@ -306,7 +304,7 @@ func (c *UserManagerController) finalizeMongodbRole(dbRClient database.DatabaseR
 func (c *UserManagerController) removeMongodbRoleFinalizer(mRole *api.MongodbRole) error {
 	// remove finalizer
 	_, _, err := patchutil.PatchMongodbRole(c.dbClient.AuthorizationV1alpha1(), mRole, func(role *api.MongodbRole) *api.MongodbRole {
-		role.ObjectMeta = kutilcorev1.RemoveFinalizer(role.ObjectMeta, MongodbRoleFinalizer)
+		role.ObjectMeta = core_util.RemoveFinalizer(role.ObjectMeta, MongodbRoleFinalizer)
 		return role
 	})
 	if err != nil {
