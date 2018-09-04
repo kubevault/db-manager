@@ -21,19 +21,29 @@ import (
 
 func generateCRDDefinitions() {
 	filename := gort.GOPath() + "/src/github.com/kubedb/user-manager/apis/authorization/v1alpha1/crds.yaml"
+	os.Remove(filename)
 
-	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	err := os.MkdirAll(filepath.Join(gort.GOPath(), "/src/github.com/kubedb/user-manager/api/crds"), 0755)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer f.Close()
 
 	crds := []*crd_api.CustomResourceDefinition{
 		v1alpha1.PostgresRole{}.CustomResourceDefinition(),
 		v1alpha1.PostgresRoleBinding{}.CustomResourceDefinition(),
+		v1alpha1.MongodbRole{}.CustomResourceDefinition(),
+		v1alpha1.MongodbRoleBinding{}.CustomResourceDefinition(),
+		v1alpha1.MysqlRole{}.CustomResourceDefinition(),
+		v1alpha1.MysqlRoleBinding{}.CustomResourceDefinition(),
 	}
 	for _, crd := range crds {
+		filename := filepath.Join(gort.GOPath(), "/src/github.com/kubedb/user-manager/api/crds", crd.Spec.Names.Singular+".yaml")
+		f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+		if err != nil {
+			log.Fatal(err)
+		}
 		crdutils.MarshallCrd(f, crd, "yaml")
+		f.Close()
 	}
 }
 
@@ -67,6 +77,10 @@ func generateSwaggerJson() {
 		Resources: []openapi.TypeInfo{
 			{v1alpha1.SchemeGroupVersion, v1alpha1.ResourcePostgresRoles, v1alpha1.ResourceKindPostgresRole, true},
 			{v1alpha1.SchemeGroupVersion, v1alpha1.ResourcePostgresRoleBindings, v1alpha1.ResourceKindPostgresRoleBinding, true},
+			{v1alpha1.SchemeGroupVersion, v1alpha1.ResourceMongodbRoles, v1alpha1.ResourceKindMongodbRole, true},
+			{v1alpha1.SchemeGroupVersion, v1alpha1.ResourceMongodbRoleBindings, v1alpha1.ResourceKindMongodbRoleBinding, true},
+			{v1alpha1.SchemeGroupVersion, v1alpha1.ResourceMysqlRoles, v1alpha1.ResourceKindMysqlRole, true},
+			{v1alpha1.SchemeGroupVersion, v1alpha1.ResourceMysqlRoleBindings, v1alpha1.ResourceKindMysqlRoleBinding, true},
 		},
 	})
 	if err != nil {
