@@ -14,7 +14,7 @@ import:
 - package: github.com/golang/glog
 - package: github.com/jpillora/go-ogle-analytics
 - package: github.com/json-iterator/go
-  version: 1.1.4
+  version: 1.1.5
 - package: github.com/onsi/ginkgo
   version: v1.5.0
 - package: github.com/onsi/gomega
@@ -26,25 +26,27 @@ import:
 - package: github.com/spf13/pflag
   version: v1.0.1
 - package: k8s.io/api
-  version: kubernetes-1.11.0
+  version: kubernetes-1.11.3
 - package: k8s.io/apiextensions-apiserver
-  version: kubernetes-1.11.0
+  version: kubernetes-1.11.3
 - package: k8s.io/apimachinery
   repo: https://github.com/pharmer/apimachinery.git
   vcs: git
-  version: release-1.11
+  version: release-1.11.3
 - package: k8s.io/apiserver
   repo: https://github.com/pharmer/apiserver.git
   vcs: git
-  version: k-1.11
+  version: release-1.11.3
 - package: k8s.io/client-go
-  version: v8.0.0
+  repo: https://github.com/pharmer/client-go.git
+  vcs: git
+  version: release-1.11.3
 - package: k8s.io/kube-aggregator
-  version: kubernetes-1.11.0
+  version: kubernetes-1.11.3
 - package: k8s.io/kube-openapi
   version: master
 - package: k8s.io/kubernetes
-  version: v1.11.0
+  version: v1.11.3
 - package: github.com/appscode/kutil
   version: release-8.0
 - package: github.com/appscode/kubernetes-webhook-util
