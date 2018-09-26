@@ -19,17 +19,17 @@ import (
 )
 
 const (
-	MongodbRoleBindingFinalizer = "database.mongodb.rolebinding"
+	MongoDBRoleBindingFinalizer = "database.mongodb.rolebinding"
 )
 
-func (c *UserManagerController) initMongodbRoleBindingWatcher() {
-	c.mgRoleBindingInformer = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoleBindings().Informer()
-	c.mgRoleBindingQueue = queue.New(api.ResourceKindMongodbRoleBinding, c.MaxNumRequeues, c.NumThreads, c.runMongodbRoleBindingInjector)
+func (c *UserManagerController) initMongoDBRoleBindingWatcher() {
+	c.mgRoleBindingInformer = c.dbInformerFactory.Authorization().V1alpha1().MongoDBRoleBindings().Informer()
+	c.mgRoleBindingQueue = queue.New(api.ResourceKindMongoDBRoleBinding, c.MaxNumRequeues, c.NumThreads, c.runMongoDBRoleBindingInjector)
 	c.mgRoleBindingInformer.AddEventHandler(queue.NewObservableHandler(c.mgRoleBindingQueue.GetQueue(), api.EnableStatusSubresource))
-	c.mgRoleBindingLister = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoleBindings().Lister()
+	c.mgRoleBindingLister = c.dbInformerFactory.Authorization().V1alpha1().MongoDBRoleBindings().Lister()
 }
 
-func (c *UserManagerController) runMongodbRoleBindingInjector(key string) error {
+func (c *UserManagerController) runMongoDBRoleBindingInjector(key string) error {
 	obj, exist, err := c.mgRoleBindingInformer.GetIndexer().GetByKey(key)
 	if err != nil {
 		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
@@ -37,26 +37,26 @@ func (c *UserManagerController) runMongodbRoleBindingInjector(key string) error 
 	}
 
 	if !exist {
-		glog.Warningf("MongodbRoleBinding %s does not exist anymore", key)
+		glog.Warningf("MongoDBRoleBinding %s does not exist anymore", key)
 
 	} else {
-		mRoleBinding := obj.(*api.MongodbRoleBinding).DeepCopy()
+		mRoleBinding := obj.(*api.MongoDBRoleBinding).DeepCopy()
 
-		glog.Infof("Sync/Add/Update for MongodbRoleBinding %s/%s", mRoleBinding.Namespace, mRoleBinding.Name)
+		glog.Infof("Sync/Add/Update for MongoDBRoleBinding %s/%s", mRoleBinding.Namespace, mRoleBinding.Name)
 
 		if mRoleBinding.DeletionTimestamp != nil {
-			if core_util.HasFinalizer(mRoleBinding.ObjectMeta, MongodbRoleBindingFinalizer) {
-				go c.runMongodbRoleBindingFinalizer(mRoleBinding, 1*time.Minute, 10*time.Second)
+			if core_util.HasFinalizer(mRoleBinding.ObjectMeta, MongoDBRoleBindingFinalizer) {
+				go c.runMongoDBRoleBindingFinalizer(mRoleBinding, 1*time.Minute, 10*time.Second)
 			}
 		} else {
-			if !core_util.HasFinalizer(mRoleBinding.ObjectMeta, MongodbRoleBindingFinalizer) {
+			if !core_util.HasFinalizer(mRoleBinding.ObjectMeta, MongoDBRoleBindingFinalizer) {
 				// Add finalizer
-				_, _, err = patchutil.PatchMongodbRoleBinding(c.dbClient.AuthorizationV1alpha1(), mRoleBinding, func(binding *api.MongodbRoleBinding) *api.MongodbRoleBinding {
-					binding.ObjectMeta = core_util.AddFinalizer(binding.ObjectMeta, MongodbRoleBindingFinalizer)
+				_, _, err = patchutil.PatchMongoDBRoleBinding(c.dbClient.AuthorizationV1alpha1(), mRoleBinding, func(binding *api.MongoDBRoleBinding) *api.MongoDBRoleBinding {
+					binding.ObjectMeta = core_util.AddFinalizer(binding.ObjectMeta, MongoDBRoleBindingFinalizer)
 					return binding
 				})
 				if err != nil {
-					return errors.Wrapf(err, "failed to set MongodbRoleBinding finalizer for %s/%s", mRoleBinding.Namespace, mRoleBinding.Name)
+					return errors.Wrapf(err, "failed to set MongoDBRoleBinding finalizer for %s/%s", mRoleBinding.Namespace, mRoleBinding.Name)
 				}
 			}
 
@@ -65,9 +65,9 @@ func (c *UserManagerController) runMongodbRoleBindingInjector(key string) error 
 				return err
 			}
 
-			err = c.reconcileMongodbRoleBinding(dbRBClient, mRoleBinding)
+			err = c.reconcileMongoDBRoleBinding(dbRBClient, mRoleBinding)
 			if err != nil {
-				return errors.Wrapf(err, "For MongodbRoleBinding %s/%s", mRoleBinding.Namespace, mRoleBinding.Name)
+				return errors.Wrapf(err, "For MongoDBRoleBinding %s/%s", mRoleBinding.Namespace, mRoleBinding.Name)
 			}
 		}
 	}
@@ -80,7 +80,7 @@ func (c *UserManagerController) runMongodbRoleBindingInjector(key string) error 
 //	  - create secret containing credential
 //	  - create rbac role and role binding
 //    - sync role binding
-func (c *UserManagerController) reconcileMongodbRoleBinding(dbRBClient database.DatabaseRoleBindingInterface, mgRoleBinding *api.MongodbRoleBinding) error {
+func (c *UserManagerController) reconcileMongoDBRoleBinding(dbRBClient database.DatabaseRoleBindingInterface, mgRoleBinding *api.MongoDBRoleBinding) error {
 	var (
 		err   error
 		credS *corev1.Secret
@@ -116,7 +116,7 @@ func (c *UserManagerController) reconcileMongodbRoleBinding(dbRBClient database.
 		// get database credential
 		cred, err := dbRBClient.GetCredential()
 		if err != nil {
-			status.Conditions = []api.MongodbRoleBindingCondition{
+			status.Conditions = []api.MongoDBRoleBindingCondition{
 				{
 					Type:    "Available",
 					Status:  corev1.ConditionFalse,
@@ -125,7 +125,7 @@ func (c *UserManagerController) reconcileMongodbRoleBinding(dbRBClient database.
 				},
 			}
 
-			err2 := c.updateMongodbRoleBindingStatus(&status, mgRoleBinding)
+			err2 := c.updateMongoDBRoleBindingStatus(&status, mgRoleBinding)
 			if err2 != nil {
 				return errors.Wrapf(err2, "failed to update status")
 			}
@@ -139,7 +139,7 @@ func (c *UserManagerController) reconcileMongodbRoleBinding(dbRBClient database.
 				return errors.Wrapf(err2, "failed to revoke lease")
 			}
 
-			status.Conditions = []api.MongodbRoleBindingCondition{
+			status.Conditions = []api.MongoDBRoleBindingCondition{
 				{
 					Type:    "Available",
 					Status:  corev1.ConditionFalse,
@@ -148,7 +148,7 @@ func (c *UserManagerController) reconcileMongodbRoleBinding(dbRBClient database.
 				},
 			}
 
-			err2 = c.updateMongodbRoleBindingStatus(&status, mgRoleBinding)
+			err2 = c.updateMongoDBRoleBindingStatus(&status, mgRoleBinding)
 			if err2 != nil {
 				return errors.Wrapf(err2, "failed to update status")
 			}
@@ -163,9 +163,9 @@ func (c *UserManagerController) reconcileMongodbRoleBinding(dbRBClient database.
 		}
 	}
 
-	err = dbRBClient.CreateRole(getMongodbRoleName(mgRBName), ns, secretName)
+	err = dbRBClient.CreateRole(getMongoDBRoleName(mgRBName), ns, secretName)
 	if err != nil {
-		status.Conditions = []api.MongodbRoleBindingCondition{
+		status.Conditions = []api.MongoDBRoleBindingCondition{
 			{
 				Type:    "Available",
 				Status:  corev1.ConditionFalse,
@@ -174,16 +174,16 @@ func (c *UserManagerController) reconcileMongodbRoleBinding(dbRBClient database.
 			},
 		}
 
-		err2 := c.updateMongodbRoleBindingStatus(&status, mgRoleBinding)
+		err2 := c.updateMongoDBRoleBindingStatus(&status, mgRoleBinding)
 		if err2 != nil {
 			return errors.Wrapf(err2, "failed to update status")
 		}
 		return errors.WithStack(err)
 	}
 
-	err = dbRBClient.CreateRoleBinding(getMongodbRoleBindingName(mgRBName), ns, getMongodbRoleName(mgRBName), mgRoleBinding.Spec.Subjects)
+	err = dbRBClient.CreateRoleBinding(getMongoDBRoleBindingName(mgRBName), ns, getMongoDBRoleName(mgRBName), mgRoleBinding.Spec.Subjects)
 	if err != nil {
-		status.Conditions = []api.MongodbRoleBindingCondition{
+		status.Conditions = []api.MongoDBRoleBindingCondition{
 			{
 				Type:    "Available",
 				Status:  corev1.ConditionFalse,
@@ -192,25 +192,25 @@ func (c *UserManagerController) reconcileMongodbRoleBinding(dbRBClient database.
 			},
 		}
 
-		err2 := c.updateMongodbRoleBindingStatus(&status, mgRoleBinding)
+		err2 := c.updateMongoDBRoleBindingStatus(&status, mgRoleBinding)
 		if err2 != nil {
 			return errors.Wrapf(err2, "failed to update status")
 		}
 		return errors.WithStack(err)
 	}
 
-	status.Conditions = []api.MongodbRoleBindingCondition{}
+	status.Conditions = []api.MongoDBRoleBindingCondition{}
 	status.ObservedGeneration = types.NewIntHash(mgRoleBinding.Generation, meta_util.GenerationHash(mgRoleBinding))
 
-	err = c.updateMongodbRoleBindingStatus(&status, mgRoleBinding)
+	err = c.updateMongoDBRoleBindingStatus(&status, mgRoleBinding)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
 }
 
-func (c *UserManagerController) updateMongodbRoleBindingStatus(status *api.MongodbRoleBindingStatus, mRoleBinding *api.MongodbRoleBinding) error {
-	_, err := patchutil.UpdateMongodbRoleBindingStatus(c.dbClient.AuthorizationV1alpha1(), mRoleBinding, func(s *api.MongodbRoleBindingStatus) *api.MongodbRoleBindingStatus {
+func (c *UserManagerController) updateMongoDBRoleBindingStatus(status *api.MongoDBRoleBindingStatus, mRoleBinding *api.MongoDBRoleBinding) error {
+	_, err := patchutil.UpdateMongoDBRoleBindingStatus(c.dbClient.AuthorizationV1alpha1(), mRoleBinding, func(s *api.MongoDBRoleBindingStatus) *api.MongoDBRoleBindingStatus {
 		s = status
 		return s
 	})
@@ -221,8 +221,8 @@ func (c *UserManagerController) updateMongodbRoleBindingStatus(status *api.Mongo
 	return nil
 }
 
-func (c *UserManagerController) runMongodbRoleBindingFinalizer(mRoleBinding *api.MongodbRoleBinding, timeout time.Duration, interval time.Duration) {
-	id := getMongodbRoleBindingId(mRoleBinding)
+func (c *UserManagerController) runMongoDBRoleBindingFinalizer(mRoleBinding *api.MongoDBRoleBinding, timeout time.Duration, interval time.Duration) {
+	id := getMongoDBRoleBindingId(mRoleBinding)
 
 	if _, ok := c.processingFinalizer[id]; ok {
 		// already processing
@@ -235,12 +235,12 @@ func (c *UserManagerController) runMongodbRoleBindingFinalizer(mRoleBinding *api
 	finalizationDone := false
 
 	for {
-		m, err := c.dbClient.AuthorizationV1alpha1().MongodbRoleBindings(mRoleBinding.Namespace).Get(mRoleBinding.Name, metav1.GetOptions{})
+		m, err := c.dbClient.AuthorizationV1alpha1().MongoDBRoleBindings(mRoleBinding.Namespace).Get(mRoleBinding.Name, metav1.GetOptions{})
 		if kerr.IsNotFound(err) {
 			delete(c.processingFinalizer, id)
 			return
 		} else if err != nil {
-			glog.Errorf("MongodbRoleBinding %s/%s finalizer: %v", mRoleBinding.Namespace, mRoleBinding.Name, err)
+			glog.Errorf("MongoDBRoleBinding %s/%s finalizer: %v", mRoleBinding.Namespace, mRoleBinding.Name, err)
 		}
 
 		// to make sure m is not nil
@@ -250,9 +250,9 @@ func (c *UserManagerController) runMongodbRoleBindingFinalizer(mRoleBinding *api
 
 		select {
 		case <-stopCh:
-			err := c.removeMongodbRoleBindingFinalizer(m)
+			err := c.removeMongoDBRoleBindingFinalizer(m)
 			if err != nil {
-				glog.Errorf("MongodbRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
+				glog.Errorf("MongoDBRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return
@@ -262,11 +262,11 @@ func (c *UserManagerController) runMongodbRoleBindingFinalizer(mRoleBinding *api
 		if !finalizationDone {
 			d, err := database.NewDatabaseRoleBindingForMongodb(c.kubeClient, c.dbClient, m)
 			if err != nil {
-				glog.Errorf("MongodbRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
+				glog.Errorf("MongoDBRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			} else {
-				err = c.finalizeMongodbRoleBinding(d, m.Status.Lease.ID)
+				err = c.finalizeMongoDBRoleBinding(d, m.Status.Lease.ID)
 				if err != nil {
-					glog.Errorf("MongodbRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
+					glog.Errorf("MongoDBRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
 				} else {
 					finalizationDone = true
 				}
@@ -274,9 +274,9 @@ func (c *UserManagerController) runMongodbRoleBindingFinalizer(mRoleBinding *api
 		}
 
 		if finalizationDone {
-			err := c.removeMongodbRoleBindingFinalizer(m)
+			err := c.removeMongoDBRoleBindingFinalizer(m)
 			if err != nil {
-				glog.Errorf("MongodbRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
+				glog.Errorf("MongoDBRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return
@@ -284,9 +284,9 @@ func (c *UserManagerController) runMongodbRoleBindingFinalizer(mRoleBinding *api
 
 		select {
 		case <-stopCh:
-			err := c.removeMongodbRoleBindingFinalizer(m)
+			err := c.removeMongoDBRoleBindingFinalizer(m)
 			if err != nil {
-				glog.Errorf("MongodbRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
+				glog.Errorf("MongoDBRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return
@@ -295,7 +295,7 @@ func (c *UserManagerController) runMongodbRoleBindingFinalizer(mRoleBinding *api
 	}
 }
 
-func (c *UserManagerController) finalizeMongodbRoleBinding(dbRBClient database.DatabaseRoleBindingInterface, leaseID string) error {
+func (c *UserManagerController) finalizeMongoDBRoleBinding(dbRBClient database.DatabaseRoleBindingInterface, leaseID string) error {
 	if leaseID == "" {
 		return nil
 	}
@@ -307,9 +307,9 @@ func (c *UserManagerController) finalizeMongodbRoleBinding(dbRBClient database.D
 	return nil
 }
 
-func (c *UserManagerController) removeMongodbRoleBindingFinalizer(mRoleBinding *api.MongodbRoleBinding) error {
-	_, _, err := patchutil.PatchMongodbRoleBinding(c.dbClient.AuthorizationV1alpha1(), mRoleBinding, func(r *api.MongodbRoleBinding) *api.MongodbRoleBinding {
-		r.ObjectMeta = core_util.RemoveFinalizer(r.ObjectMeta, MongodbRoleBindingFinalizer)
+func (c *UserManagerController) removeMongoDBRoleBindingFinalizer(mRoleBinding *api.MongoDBRoleBinding) error {
+	_, _, err := patchutil.PatchMongoDBRoleBinding(c.dbClient.AuthorizationV1alpha1(), mRoleBinding, func(r *api.MongoDBRoleBinding) *api.MongoDBRoleBinding {
+		r.ObjectMeta = core_util.RemoveFinalizer(r.ObjectMeta, MongoDBRoleBindingFinalizer)
 		return r
 	})
 	if err != nil {
@@ -318,14 +318,14 @@ func (c *UserManagerController) removeMongodbRoleBindingFinalizer(mRoleBinding *
 	return nil
 }
 
-func getMongodbRoleBindingId(mRoleBinding *api.MongodbRoleBinding) string {
-	return fmt.Sprintf("%s/%s/%s", api.ResourceMongodbRoleBinding, mRoleBinding.Namespace, mRoleBinding.Name)
+func getMongoDBRoleBindingId(mRoleBinding *api.MongoDBRoleBinding) string {
+	return fmt.Sprintf("%s/%s/%s", api.ResourceMongoDBRoleBinding, mRoleBinding.Namespace, mRoleBinding.Name)
 }
 
-func getMongodbRoleName(name string) string {
+func getMongoDBRoleName(name string) string {
 	return fmt.Sprintf("mongodbrolebinding-%s-credential-reader", name)
 }
 
-func getMongodbRoleBindingName(name string) string {
+func getMongoDBRoleBindingName(name string) string {
 	return fmt.Sprintf("mongodbrolebinding-%s-credential-reader", name)
 }

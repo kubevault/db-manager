@@ -31,59 +31,59 @@ import (
 	cache "k8s.io/client-go/tools/cache"
 )
 
-// MysqlRoleInformer provides access to a shared informer and lister for
-// MysqlRoles.
-type MysqlRoleInformer interface {
+// MySQLRoleInformer provides access to a shared informer and lister for
+// MySQLRoles.
+type MySQLRoleInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.MysqlRoleLister
+	Lister() v1alpha1.MySQLRoleLister
 }
 
-type mysqlRoleInformer struct {
+type mySQLRoleInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
 	tweakListOptions internalinterfaces.TweakListOptionsFunc
 	namespace        string
 }
 
-// NewMysqlRoleInformer constructs a new informer for MysqlRole type.
+// NewMySQLRoleInformer constructs a new informer for MySQLRole type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewMysqlRoleInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
-	return NewFilteredMysqlRoleInformer(client, namespace, resyncPeriod, indexers, nil)
+func NewMySQLRoleInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
+	return NewFilteredMySQLRoleInformer(client, namespace, resyncPeriod, indexers, nil)
 }
 
-// NewFilteredMysqlRoleInformer constructs a new informer for MysqlRole type.
+// NewFilteredMySQLRoleInformer constructs a new informer for MySQLRole type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewFilteredMysqlRoleInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
+func NewFilteredMySQLRoleInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.AuthorizationV1alpha1().MysqlRoles(namespace).List(options)
+				return client.AuthorizationV1alpha1().MySQLRoles(namespace).List(options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.AuthorizationV1alpha1().MysqlRoles(namespace).Watch(options)
+				return client.AuthorizationV1alpha1().MySQLRoles(namespace).Watch(options)
 			},
 		},
-		&authorization_v1alpha1.MysqlRole{},
+		&authorization_v1alpha1.MySQLRole{},
 		resyncPeriod,
 		indexers,
 	)
 }
 
-func (f *mysqlRoleInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredMysqlRoleInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+func (f *mySQLRoleInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
+	return NewFilteredMySQLRoleInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
 }
 
-func (f *mysqlRoleInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&authorization_v1alpha1.MysqlRole{}, f.defaultInformer)
+func (f *mySQLRoleInformer) Informer() cache.SharedIndexInformer {
+	return f.factory.InformerFor(&authorization_v1alpha1.MySQLRole{}, f.defaultInformer)
 }
 
-func (f *mysqlRoleInformer) Lister() v1alpha1.MysqlRoleLister {
-	return v1alpha1.NewMysqlRoleLister(f.Informer().GetIndexer())
+func (f *mySQLRoleInformer) Lister() v1alpha1.MySQLRoleLister {
+	return v1alpha1.NewMySQLRoleLister(f.Informer().GetIndexer())
 }

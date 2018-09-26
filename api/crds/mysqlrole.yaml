@@ -14,7 +14,7 @@ spec:
     - kubedb
     - appscode
     - all
-    kind: MysqlRole
+    kind: MySQLRole
     plural: mysqlroles
     singular: mysqlrole
   scope: Namespaced
@@ -309,7 +309,7 @@ spec:
                 Populated by the system. Read-only. More info: http://kubernetes.io/docs/user-guide/identifiers#uids
               type: string
         spec:
-          description: MysqlRoleSpec contains connection information, mysql role info
+          description: MySQLRoleSpec contains connection information, mysql role info
             etc
           properties:
             creationStatements:
@@ -425,10 +425,10 @@ spec:
         status:
           properties:
             conditions:
-              description: Represents the latest available observations of a MysqlRole
+              description: Represents the latest available observations of a MySQLRole
                 current state.
               items:
-                description: MysqlRoleCondition describes the state of a MysqlRole
+                description: MySQLRoleCondition describes the state of a MySQLRole
                   at a certain point.
                 properties:
                   message:
@@ -442,7 +442,7 @@ spec:
                     description: Status of the condition, one of True, False, Unknown.
                     type: string
                   type:
-                    description: Type of MysqlRole condition.
+                    description: Type of MySQLRole condition.
                     type: string
               type: array
             observedGeneration:

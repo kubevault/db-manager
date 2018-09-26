@@ -86,7 +86,7 @@ func setupVaultServer() *httptest.Server {
 	return httptest.NewServer(m)
 }
 
-func TestMysqlRole_CreateConfig(t *testing.T) {
+func TestMySQLRole_CreateConfig(t *testing.T) {
 	srv := setupVaultServer()
 	defer srv.Close()
 
@@ -98,13 +98,13 @@ func TestMysqlRole_CreateConfig(t *testing.T) {
 		return
 	}
 
-	mySql := &MysqlRole{
-		mRole: &api.MysqlRole{
+	mySql := &MySQLRole{
+		mRole: &api.MySQLRole{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "m-role",
 				Namespace: "m",
 			},
-			Spec: api.MysqlRoleSpec{
+			Spec: api.MySQLRoleSpec{
 				Database: &api.DatabaseConfigForMysql{
 					Name:             "mysql",
 					AllowedRoles:     "*",
@@ -119,7 +119,7 @@ func TestMysqlRole_CreateConfig(t *testing.T) {
 
 	testData := []struct {
 		testName               string
-		mClient                *MysqlRole
+		mClient                *MySQLRole
 		createCredentialSecret bool
 		expectedErr            bool
 	}{
@@ -137,14 +137,14 @@ func TestMysqlRole_CreateConfig(t *testing.T) {
 		},
 		{
 			testName: "Create Config failed, connection_url not provided",
-			mClient: func() *MysqlRole {
-				p := &MysqlRole{
-					mRole: &api.MysqlRole{
+			mClient: func() *MySQLRole {
+				p := &MySQLRole{
+					mRole: &api.MySQLRole{
 						ObjectMeta: metav1.ObjectMeta{
 							Name:      "m-role",
 							Namespace: "m",
 						},
-						Spec: api.MysqlRoleSpec{
+						Spec: api.MySQLRoleSpec{
 							Database: &api.DatabaseConfigForMysql{
 								Name:             "mysql",
 								AllowedRoles:     "*",
@@ -192,7 +192,7 @@ func TestMysqlRole_CreateConfig(t *testing.T) {
 	}
 }
 
-func TestMysqlRole_CreateRole(t *testing.T) {
+func TestMySQLRole_CreateRole(t *testing.T) {
 	srv := setupVaultServer()
 	defer srv.Close()
 
@@ -206,18 +206,18 @@ func TestMysqlRole_CreateRole(t *testing.T) {
 
 	testData := []struct {
 		testName    string
-		mClient     *MysqlRole
+		mClient     *MySQLRole
 		expectedErr bool
 	}{
 		{
 			testName: "Create Role successful",
-			mClient: &MysqlRole{
-				mRole: &api.MysqlRole{
+			mClient: &MySQLRole{
+				mRole: &api.MySQLRole{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "m-read",
 						Namespace: "m",
 					},
-					Spec: api.MysqlRoleSpec{
+					Spec: api.MySQLRoleSpec{
 						DBName:             "mysql",
 						CreationStatements: []string{"create table"},
 					},
@@ -229,13 +229,13 @@ func TestMysqlRole_CreateRole(t *testing.T) {
 		},
 		{
 			testName: "Create Role failed",
-			mClient: &MysqlRole{
-				mRole: &api.MysqlRole{
+			mClient: &MySQLRole{
+				mRole: &api.MySQLRole{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "m-read",
 						Namespace: "m",
 					},
-					Spec: api.MysqlRoleSpec{
+					Spec: api.MySQLRoleSpec{
 						CreationStatements: []string{"create table"},
 					},
 				},

@@ -27,43 +27,43 @@ import (
 	rest "k8s.io/client-go/rest"
 )
 
-// MysqlRolesGetter has a method to return a MysqlRoleInterface.
+// MySQLRolesGetter has a method to return a MySQLRoleInterface.
 // A group's client should implement this interface.
-type MysqlRolesGetter interface {
-	MysqlRoles(namespace string) MysqlRoleInterface
+type MySQLRolesGetter interface {
+	MySQLRoles(namespace string) MySQLRoleInterface
 }
 
-// MysqlRoleInterface has methods to work with MysqlRole resources.
-type MysqlRoleInterface interface {
-	Create(*v1alpha1.MysqlRole) (*v1alpha1.MysqlRole, error)
-	Update(*v1alpha1.MysqlRole) (*v1alpha1.MysqlRole, error)
-	UpdateStatus(*v1alpha1.MysqlRole) (*v1alpha1.MysqlRole, error)
+// MySQLRoleInterface has methods to work with MySQLRole resources.
+type MySQLRoleInterface interface {
+	Create(*v1alpha1.MySQLRole) (*v1alpha1.MySQLRole, error)
+	Update(*v1alpha1.MySQLRole) (*v1alpha1.MySQLRole, error)
+	UpdateStatus(*v1alpha1.MySQLRole) (*v1alpha1.MySQLRole, error)
 	Delete(name string, options *v1.DeleteOptions) error
 	DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error
-	Get(name string, options v1.GetOptions) (*v1alpha1.MysqlRole, error)
-	List(opts v1.ListOptions) (*v1alpha1.MysqlRoleList, error)
+	Get(name string, options v1.GetOptions) (*v1alpha1.MySQLRole, error)
+	List(opts v1.ListOptions) (*v1alpha1.MySQLRoleList, error)
 	Watch(opts v1.ListOptions) (watch.Interface, error)
-	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.MysqlRole, err error)
-	MysqlRoleExpansion
+	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.MySQLRole, err error)
+	MySQLRoleExpansion
 }
 
-// mysqlRoles implements MysqlRoleInterface
-type mysqlRoles struct {
+// mySQLRoles implements MySQLRoleInterface
+type mySQLRoles struct {
 	client rest.Interface
 	ns     string
 }
 
-// newMysqlRoles returns a MysqlRoles
-func newMysqlRoles(c *AuthorizationV1alpha1Client, namespace string) *mysqlRoles {
-	return &mysqlRoles{
+// newMySQLRoles returns a MySQLRoles
+func newMySQLRoles(c *AuthorizationV1alpha1Client, namespace string) *mySQLRoles {
+	return &mySQLRoles{
 		client: c.RESTClient(),
 		ns:     namespace,
 	}
 }
 
-// Get takes name of the mysqlRole, and returns the corresponding mysqlRole object, and an error if there is any.
-func (c *mysqlRoles) Get(name string, options v1.GetOptions) (result *v1alpha1.MysqlRole, err error) {
-	result = &v1alpha1.MysqlRole{}
+// Get takes name of the mySQLRole, and returns the corresponding mySQLRole object, and an error if there is any.
+func (c *mySQLRoles) Get(name string, options v1.GetOptions) (result *v1alpha1.MySQLRole, err error) {
+	result = &v1alpha1.MySQLRole{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("mysqlroles").
@@ -74,9 +74,9 @@ func (c *mysqlRoles) Get(name string, options v1.GetOptions) (result *v1alpha1.M
 	return
 }
 
-// List takes label and field selectors, and returns the list of MysqlRoles that match those selectors.
-func (c *mysqlRoles) List(opts v1.ListOptions) (result *v1alpha1.MysqlRoleList, err error) {
-	result = &v1alpha1.MysqlRoleList{}
+// List takes label and field selectors, and returns the list of MySQLRoles that match those selectors.
+func (c *mySQLRoles) List(opts v1.ListOptions) (result *v1alpha1.MySQLRoleList, err error) {
+	result = &v1alpha1.MySQLRoleList{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("mysqlroles").
@@ -86,8 +86,8 @@ func (c *mysqlRoles) List(opts v1.ListOptions) (result *v1alpha1.MysqlRoleList, 
 	return
 }
 
-// Watch returns a watch.Interface that watches the requested mysqlRoles.
-func (c *mysqlRoles) Watch(opts v1.ListOptions) (watch.Interface, error) {
+// Watch returns a watch.Interface that watches the requested mySQLRoles.
+func (c *mySQLRoles) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	opts.Watch = true
 	return c.client.Get().
 		Namespace(c.ns).
@@ -96,26 +96,26 @@ func (c *mysqlRoles) Watch(opts v1.ListOptions) (watch.Interface, error) {
 		Watch()
 }
 
-// Create takes the representation of a mysqlRole and creates it.  Returns the server's representation of the mysqlRole, and an error, if there is any.
-func (c *mysqlRoles) Create(mysqlRole *v1alpha1.MysqlRole) (result *v1alpha1.MysqlRole, err error) {
-	result = &v1alpha1.MysqlRole{}
+// Create takes the representation of a mySQLRole and creates it.  Returns the server's representation of the mySQLRole, and an error, if there is any.
+func (c *mySQLRoles) Create(mySQLRole *v1alpha1.MySQLRole) (result *v1alpha1.MySQLRole, err error) {
+	result = &v1alpha1.MySQLRole{}
 	err = c.client.Post().
 		Namespace(c.ns).
 		Resource("mysqlroles").
-		Body(mysqlRole).
+		Body(mySQLRole).
 		Do().
 		Into(result)
 	return
 }
 
-// Update takes the representation of a mysqlRole and updates it. Returns the server's representation of the mysqlRole, and an error, if there is any.
-func (c *mysqlRoles) Update(mysqlRole *v1alpha1.MysqlRole) (result *v1alpha1.MysqlRole, err error) {
-	result = &v1alpha1.MysqlRole{}
+// Update takes the representation of a mySQLRole and updates it. Returns the server's representation of the mySQLRole, and an error, if there is any.
+func (c *mySQLRoles) Update(mySQLRole *v1alpha1.MySQLRole) (result *v1alpha1.MySQLRole, err error) {
+	result = &v1alpha1.MySQLRole{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("mysqlroles").
-		Name(mysqlRole.Name).
-		Body(mysqlRole).
+		Name(mySQLRole.Name).
+		Body(mySQLRole).
 		Do().
 		Into(result)
 	return
@@ -124,21 +124,21 @@ func (c *mysqlRoles) Update(mysqlRole *v1alpha1.MysqlRole) (result *v1alpha1.Mys
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
 
-func (c *mysqlRoles) UpdateStatus(mysqlRole *v1alpha1.MysqlRole) (result *v1alpha1.MysqlRole, err error) {
-	result = &v1alpha1.MysqlRole{}
+func (c *mySQLRoles) UpdateStatus(mySQLRole *v1alpha1.MySQLRole) (result *v1alpha1.MySQLRole, err error) {
+	result = &v1alpha1.MySQLRole{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("mysqlroles").
-		Name(mysqlRole.Name).
+		Name(mySQLRole.Name).
 		SubResource("status").
-		Body(mysqlRole).
+		Body(mySQLRole).
 		Do().
 		Into(result)
 	return
 }
 
-// Delete takes name of the mysqlRole and deletes it. Returns an error if one occurs.
-func (c *mysqlRoles) Delete(name string, options *v1.DeleteOptions) error {
+// Delete takes name of the mySQLRole and deletes it. Returns an error if one occurs.
+func (c *mySQLRoles) Delete(name string, options *v1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("mysqlroles").
@@ -149,7 +149,7 @@ func (c *mysqlRoles) Delete(name string, options *v1.DeleteOptions) error {
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *mysqlRoles) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+func (c *mySQLRoles) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("mysqlroles").
@@ -159,9 +159,9 @@ func (c *mysqlRoles) DeleteCollection(options *v1.DeleteOptions, listOptions v1.
 		Error()
 }
 
-// Patch applies the patch and returns the patched mysqlRole.
-func (c *mysqlRoles) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.MysqlRole, err error) {
-	result = &v1alpha1.MysqlRole{}
+// Patch applies the patch and returns the patched mySQLRole.
+func (c *mySQLRoles) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.MySQLRole, err error) {
+	result = &v1alpha1.MySQLRole{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
 		Resource("mysqlroles").

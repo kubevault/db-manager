@@ -86,7 +86,7 @@ func setupVaultServer() *httptest.Server {
 	return httptest.NewServer(m)
 }
 
-func TestMongodbRole_CreateConfig(t *testing.T) {
+func TestMongoDBRole_CreateConfig(t *testing.T) {
 	srv := setupVaultServer()
 	defer srv.Close()
 
@@ -98,13 +98,13 @@ func TestMongodbRole_CreateConfig(t *testing.T) {
 		return
 	}
 
-	mySql := &MongodbRole{
-		mdbRole: &api.MongodbRole{
+	mySql := &MongoDBRole{
+		mdbRole: &api.MongoDBRole{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "m-role",
 				Namespace: "m",
 			},
-			Spec: api.MongodbRoleSpec{
+			Spec: api.MongoDBRoleSpec{
 				Database: &api.DatabaseConfigForMongodb{
 					Name:             "mongodb",
 					AllowedRoles:     "*",
@@ -119,7 +119,7 @@ func TestMongodbRole_CreateConfig(t *testing.T) {
 
 	testData := []struct {
 		testName               string
-		mClient                *MongodbRole
+		mClient                *MongoDBRole
 		createCredentialSecret bool
 		expectedErr            bool
 	}{
@@ -137,14 +137,14 @@ func TestMongodbRole_CreateConfig(t *testing.T) {
 		},
 		{
 			testName: "Create Config failed, connection_url not provided",
-			mClient: func() *MongodbRole {
-				p := &MongodbRole{
-					mdbRole: &api.MongodbRole{
+			mClient: func() *MongoDBRole {
+				p := &MongoDBRole{
+					mdbRole: &api.MongoDBRole{
 						ObjectMeta: metav1.ObjectMeta{
 							Name:      "m-role",
 							Namespace: "m",
 						},
-						Spec: api.MongodbRoleSpec{
+						Spec: api.MongoDBRoleSpec{
 							Database: &api.DatabaseConfigForMongodb{
 								Name:             "mongodb",
 								AllowedRoles:     "*",
@@ -192,7 +192,7 @@ func TestMongodbRole_CreateConfig(t *testing.T) {
 	}
 }
 
-func TestMongodbRole_CreateRole(t *testing.T) {
+func TestMongoDBRole_CreateRole(t *testing.T) {
 	srv := setupVaultServer()
 	defer srv.Close()
 
@@ -206,18 +206,18 @@ func TestMongodbRole_CreateRole(t *testing.T) {
 
 	testData := []struct {
 		testName    string
-		mClient     *MongodbRole
+		mClient     *MongoDBRole
 		expectedErr bool
 	}{
 		{
 			testName: "Create Role successful",
-			mClient: &MongodbRole{
-				mdbRole: &api.MongodbRole{
+			mClient: &MongoDBRole{
+				mdbRole: &api.MongoDBRole{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "m-read",
 						Namespace: "m",
 					},
-					Spec: api.MongodbRoleSpec{
+					Spec: api.MongoDBRoleSpec{
 						DBName:             "mongodb",
 						CreationStatements: []string{"create table"},
 					},
@@ -229,13 +229,13 @@ func TestMongodbRole_CreateRole(t *testing.T) {
 		},
 		{
 			testName: "Create Role failed",
-			mClient: &MongodbRole{
-				mdbRole: &api.MongodbRole{
+			mClient: &MongoDBRole{
+				mdbRole: &api.MongoDBRole{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "m-read",
 						Namespace: "m",
 					},
-					Spec: api.MongodbRoleSpec{
+					Spec: api.MongoDBRoleSpec{
 						CreationStatements: []string{"create table"},
 					},
 				},
@@ -260,7 +260,7 @@ func TestMongodbRole_CreateRole(t *testing.T) {
 	}
 }
 
-func TestNewMongodbRoleBindingCreatConfig(t *testing.T) {
+func TestNewMongoDBRoleBindingCreatConfig(t *testing.T) {
 	cfg := vaultapi.DefaultConfig()
 	cfg.ConfigureTLS(&vaultapi.TLSConfig{
 		Insecure: true,
@@ -287,16 +287,16 @@ func TestNewMongodbRoleBindingCreatConfig(t *testing.T) {
 	v.SetAddress("http://192.168.99.100:30001")
 	v.SetToken("root")
 
-	m := &MongodbRole{
+	m := &MongoDBRole{
 		vaultClient:  v,
 		kubeClient:   k,
 		databasePath: "database",
-		mdbRole: &api.MongodbRole{
+		mdbRole: &api.MongoDBRole{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "default",
 				Name:      "mg",
 			},
-			Spec: api.MongodbRoleSpec{
+			Spec: api.MongoDBRoleSpec{
 				Database: &api.DatabaseConfigForMongodb{
 					Name:             "mongo-test",
 					AllowedRoles:     "*",
@@ -311,7 +311,7 @@ func TestNewMongodbRoleBindingCreatConfig(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestNewMongodbRoleBindingCreatRole(t *testing.T) {
+func TestNewMongoDBRoleBindingCreatRole(t *testing.T) {
 	cfg := vaultapi.DefaultConfig()
 	cfg.ConfigureTLS(&vaultapi.TLSConfig{
 		Insecure: true,
@@ -338,16 +338,16 @@ func TestNewMongodbRoleBindingCreatRole(t *testing.T) {
 	v.SetAddress("http://192.168.99.100:30001")
 	v.SetToken("root")
 
-	m := &MongodbRole{
+	m := &MongoDBRole{
 		vaultClient:  v,
 		kubeClient:   k,
 		databasePath: "database",
-		mdbRole: &api.MongodbRole{
+		mdbRole: &api.MongoDBRole{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "default",
 				Name:      "mg",
 			},
-			Spec: api.MongodbRoleSpec{
+			Spec: api.MongoDBRoleSpec{
 				DBName:     "mongo-test",
 				MaxTTL:     "1h",
 				DefaultTTL: "300",

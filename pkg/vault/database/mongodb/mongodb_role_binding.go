@@ -12,15 +12,15 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-type MongodbRoleBinding struct {
-	mRoleBinding *api.MongodbRoleBinding
+type MongoDBRoleBinding struct {
+	mRoleBinding *api.MongoDBRoleBinding
 	vaultClient  *vaultapi.Client
 	kubeClient   kubernetes.Interface
 	databasePath string
 }
 
-func NewMongodbRoleBinding(k kubernetes.Interface, v *vaultapi.Client, mRoleBinding *api.MongodbRoleBinding, databasePath string) *MongodbRoleBinding {
-	return &MongodbRoleBinding{
+func NewMongoDBRoleBinding(k kubernetes.Interface, v *vaultapi.Client, mRoleBinding *api.MongoDBRoleBinding, databasePath string) *MongoDBRoleBinding {
+	return &MongoDBRoleBinding{
 		mRoleBinding: mRoleBinding,
 		vaultClient:  v,
 		kubeClient:   k,
@@ -29,7 +29,7 @@ func NewMongodbRoleBinding(k kubernetes.Interface, v *vaultapi.Client, mRoleBind
 }
 
 // Gets credential from vault
-func (p *MongodbRoleBinding) GetCredential() (*vault.DatabaseCredential, error) {
+func (p *MongoDBRoleBinding) GetCredential() (*vault.DatabaseCredential, error) {
 	path := fmt.Sprintf("/v1/%s/creds/%s", p.databasePath, p.mRoleBinding.Spec.RoleRef)
 	req := p.vaultClient.NewRequest("GET", path)
 
@@ -48,11 +48,11 @@ func (p *MongodbRoleBinding) GetCredential() (*vault.DatabaseCredential, error) 
 }
 
 // asOwner returns an owner reference
-func (p *MongodbRoleBinding) AsOwner() metav1.OwnerReference {
+func (p *MongoDBRoleBinding) AsOwner() metav1.OwnerReference {
 	trueVar := true
 	return metav1.OwnerReference{
 		APIVersion: api.SchemeGroupVersion.String(),
-		Kind:       api.ResourceKindMongodbRoleBinding,
+		Kind:       api.ResourceKindMongoDBRoleBinding,
 		Name:       p.mRoleBinding.Name,
 		UID:        p.mRoleBinding.UID,
 		Controller: &trueVar,

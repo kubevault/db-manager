@@ -10,15 +10,15 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-type MysqlRole struct {
-	mRole        *api.MysqlRole
+type MySQLRole struct {
+	mRole        *api.MySQLRole
 	vaultClient  *vaultapi.Client
 	kubeClient   kubernetes.Interface
 	databasePath string
 }
 
-func NewMysqlRole(k kubernetes.Interface, v *vaultapi.Client, mRole *api.MysqlRole, databasePath string) *MysqlRole {
-	return &MysqlRole{
+func NewMySQLRole(k kubernetes.Interface, v *vaultapi.Client, mRole *api.MySQLRole, databasePath string) *MySQLRole {
+	return &MySQLRole{
 		mRole:        mRole,
 		vaultClient:  v,
 		kubeClient:   k,
@@ -30,7 +30,7 @@ func NewMysqlRole(k kubernetes.Interface, v *vaultapi.Client, mRole *api.MysqlRo
 // https:https://www.vaultproject.io/api/secret/databases/mysql-maria.html#configure-connection
 //
 // CreateConfig creates database configuration
-func (m *MysqlRole) CreateConfig() error {
+func (m *MySQLRole) CreateConfig() error {
 	if m.mRole.Spec.Database == nil {
 		return errors.New("spec.database is not provided")
 	}
@@ -83,7 +83,7 @@ func (m *MysqlRole) CreateConfig() error {
 // https://www.vaultproject.io/api/secret/databases/index.html#create-role
 //
 // CreateRole creates role
-func (m *MysqlRole) CreateRole() error {
+func (m *MySQLRole) CreateRole() error {
 	name := m.mRole.Name
 	pg := m.mRole.Spec
 

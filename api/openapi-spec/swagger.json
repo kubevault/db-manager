@@ -106,7 +106,7 @@
     },
     "/apis/authorization.kubedb.com/v1alpha1/mongodbrolebindings": {
       "get": {
-        "description": "list or watch objects of kind MongodbRoleBinding",
+        "description": "list or watch objects of kind MongoDBRoleBinding",
         "consumes": [
           "*/*"
         ],
@@ -123,12 +123,12 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "listAuthorizationKubedbComV1alpha1MongodbRoleBindingForAllNamespaces",
+        "operationId": "listAuthorizationKubedbComV1alpha1MongoDBRoleBindingForAllNamespaces",
         "responses": {
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleBindingList"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleBindingList"
             }
           }
         },
@@ -136,7 +136,7 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MongodbRoleBinding"
+          "kind": "MongoDBRoleBinding"
         }
       },
       "parameters": [
@@ -207,7 +207,7 @@
     },
     "/apis/authorization.kubedb.com/v1alpha1/mongodbroles": {
       "get": {
-        "description": "list or watch objects of kind MongodbRole",
+        "description": "list or watch objects of kind MongoDBRole",
         "consumes": [
           "*/*"
         ],
@@ -224,12 +224,12 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "listAuthorizationKubedbComV1alpha1MongodbRoleForAllNamespaces",
+        "operationId": "listAuthorizationKubedbComV1alpha1MongoDBRoleForAllNamespaces",
         "responses": {
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleList"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleList"
             }
           }
         },
@@ -237,7 +237,7 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MongodbRole"
+          "kind": "MongoDBRole"
         }
       },
       "parameters": [
@@ -308,7 +308,7 @@
     },
     "/apis/authorization.kubedb.com/v1alpha1/mysqlrolebindings": {
       "get": {
-        "description": "list or watch objects of kind MysqlRoleBinding",
+        "description": "list or watch objects of kind MySQLRoleBinding",
         "consumes": [
           "*/*"
         ],
@@ -325,12 +325,12 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "listAuthorizationKubedbComV1alpha1MysqlRoleBindingForAllNamespaces",
+        "operationId": "listAuthorizationKubedbComV1alpha1MySQLRoleBindingForAllNamespaces",
         "responses": {
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleBindingList"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleBindingList"
             }
           }
         },
@@ -338,7 +338,7 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MysqlRoleBinding"
+          "kind": "MySQLRoleBinding"
         }
       },
       "parameters": [
@@ -409,7 +409,7 @@
     },
     "/apis/authorization.kubedb.com/v1alpha1/mysqlroles": {
       "get": {
-        "description": "list or watch objects of kind MysqlRole",
+        "description": "list or watch objects of kind MySQLRole",
         "consumes": [
           "*/*"
         ],
@@ -426,12 +426,12 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "listAuthorizationKubedbComV1alpha1MysqlRoleForAllNamespaces",
+        "operationId": "listAuthorizationKubedbComV1alpha1MySQLRoleForAllNamespaces",
         "responses": {
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleList"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleList"
             }
           }
         },
@@ -439,7 +439,7 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MysqlRole"
+          "kind": "MySQLRole"
         }
       },
       "parameters": [
@@ -510,7 +510,7 @@
     },
     "/apis/authorization.kubedb.com/v1alpha1/namespaces/{namespace}/mongodbrolebindings": {
       "get": {
-        "description": "list or watch objects of kind MongodbRoleBinding",
+        "description": "list or watch objects of kind MongoDBRoleBinding",
         "consumes": [
           "*/*"
         ],
@@ -527,7 +527,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "listAuthorizationKubedbComV1alpha1NamespacedMongodbRoleBinding",
+        "operationId": "listAuthorizationKubedbComV1alpha1NamespacedMongoDBRoleBinding",
         "parameters": [
           {
             "uniqueItems": true,
@@ -590,7 +590,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleBindingList"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleBindingList"
             }
           }
         },
@@ -598,11 +598,11 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MongodbRoleBinding"
+          "kind": "MongoDBRoleBinding"
         }
       },
       "post": {
-        "description": "create a MongodbRoleBinding",
+        "description": "create a MongoDBRoleBinding",
         "consumes": [
           "*/*"
         ],
@@ -617,14 +617,14 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "createAuthorizationKubedbComV1alpha1NamespacedMongodbRoleBinding",
+        "operationId": "createAuthorizationKubedbComV1alpha1NamespacedMongoDBRoleBinding",
         "parameters": [
           {
             "name": "body",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleBinding"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleBinding"
             }
           }
         ],
@@ -632,19 +632,19 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleBinding"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleBinding"
             }
           },
           "201": {
             "description": "Created",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleBinding"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleBinding"
             }
           },
           "202": {
             "description": "Accepted",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleBinding"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleBinding"
             }
           }
         },
@@ -652,11 +652,11 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MongodbRoleBinding"
+          "kind": "MongoDBRoleBinding"
         }
       },
       "delete": {
-        "description": "delete collection of MongodbRoleBinding",
+        "description": "delete collection of MongoDBRoleBinding",
         "consumes": [
           "*/*"
         ],
@@ -671,7 +671,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "deleteAuthorizationKubedbComV1alpha1CollectionNamespacedMongodbRoleBinding",
+        "operationId": "deleteAuthorizationKubedbComV1alpha1CollectionNamespacedMongoDBRoleBinding",
         "parameters": [
           {
             "uniqueItems": true,
@@ -742,7 +742,7 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MongodbRoleBinding"
+          "kind": "MongoDBRoleBinding"
         }
       },
       "parameters": [
@@ -765,7 +765,7 @@
     },
     "/apis/authorization.kubedb.com/v1alpha1/namespaces/{namespace}/mongodbrolebindings/{name}": {
       "get": {
-        "description": "read the specified MongodbRoleBinding",
+        "description": "read the specified MongoDBRoleBinding",
         "consumes": [
           "*/*"
         ],
@@ -780,12 +780,12 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "readAuthorizationKubedbComV1alpha1NamespacedMongodbRoleBinding",
+        "operationId": "readAuthorizationKubedbComV1alpha1NamespacedMongoDBRoleBinding",
         "responses": {
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleBinding"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleBinding"
             }
           }
         },
@@ -793,11 +793,11 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MongodbRoleBinding"
+          "kind": "MongoDBRoleBinding"
         }
       },
       "put": {
-        "description": "replace the specified MongodbRoleBinding",
+        "description": "replace the specified MongoDBRoleBinding",
         "consumes": [
           "*/*"
         ],
@@ -812,14 +812,14 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "replaceAuthorizationKubedbComV1alpha1NamespacedMongodbRoleBinding",
+        "operationId": "replaceAuthorizationKubedbComV1alpha1NamespacedMongoDBRoleBinding",
         "parameters": [
           {
             "name": "body",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleBinding"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleBinding"
             }
           }
         ],
@@ -827,13 +827,13 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleBinding"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleBinding"
             }
           },
           "201": {
             "description": "Created",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleBinding"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleBinding"
             }
           }
         },
@@ -841,11 +841,11 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MongodbRoleBinding"
+          "kind": "MongoDBRoleBinding"
         }
       },
       "delete": {
-        "description": "delete a MongodbRoleBinding",
+        "description": "delete a MongoDBRoleBinding",
         "consumes": [
           "*/*"
         ],
@@ -860,7 +860,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "deleteAuthorizationKubedbComV1alpha1NamespacedMongodbRoleBinding",
+        "operationId": "deleteAuthorizationKubedbComV1alpha1NamespacedMongoDBRoleBinding",
         "parameters": [
           {
             "name": "body",
@@ -904,11 +904,11 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MongodbRoleBinding"
+          "kind": "MongoDBRoleBinding"
         }
       },
       "patch": {
-        "description": "partially update the specified MongodbRoleBinding",
+        "description": "partially update the specified MongoDBRoleBinding",
         "consumes": [
           "application/json-patch+json",
           "application/merge-patch+json",
@@ -925,7 +925,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "patchAuthorizationKubedbComV1alpha1NamespacedMongodbRoleBinding",
+        "operationId": "patchAuthorizationKubedbComV1alpha1NamespacedMongoDBRoleBinding",
         "parameters": [
           {
             "name": "body",
@@ -940,7 +940,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleBinding"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleBinding"
             }
           }
         },
@@ -948,14 +948,14 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MongodbRoleBinding"
+          "kind": "MongoDBRoleBinding"
         }
       },
       "parameters": [
         {
           "uniqueItems": true,
           "type": "string",
-          "description": "name of the MongodbRoleBinding",
+          "description": "name of the MongoDBRoleBinding",
           "name": "name",
           "in": "path",
           "required": true
@@ -979,7 +979,7 @@
     },
     "/apis/authorization.kubedb.com/v1alpha1/namespaces/{namespace}/mongodbroles": {
       "get": {
-        "description": "list or watch objects of kind MongodbRole",
+        "description": "list or watch objects of kind MongoDBRole",
         "consumes": [
           "*/*"
         ],
@@ -996,7 +996,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "listAuthorizationKubedbComV1alpha1NamespacedMongodbRole",
+        "operationId": "listAuthorizationKubedbComV1alpha1NamespacedMongoDBRole",
         "parameters": [
           {
             "uniqueItems": true,
@@ -1059,7 +1059,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleList"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleList"
             }
           }
         },
@@ -1067,11 +1067,11 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MongodbRole"
+          "kind": "MongoDBRole"
         }
       },
       "post": {
-        "description": "create a MongodbRole",
+        "description": "create a MongoDBRole",
         "consumes": [
           "*/*"
         ],
@@ -1086,14 +1086,14 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "createAuthorizationKubedbComV1alpha1NamespacedMongodbRole",
+        "operationId": "createAuthorizationKubedbComV1alpha1NamespacedMongoDBRole",
         "parameters": [
           {
             "name": "body",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRole"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRole"
             }
           }
         ],
@@ -1101,19 +1101,19 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRole"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRole"
             }
           },
           "201": {
             "description": "Created",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRole"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRole"
             }
           },
           "202": {
             "description": "Accepted",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRole"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRole"
             }
           }
         },
@@ -1121,11 +1121,11 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MongodbRole"
+          "kind": "MongoDBRole"
         }
       },
       "delete": {
-        "description": "delete collection of MongodbRole",
+        "description": "delete collection of MongoDBRole",
         "consumes": [
           "*/*"
         ],
@@ -1140,7 +1140,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "deleteAuthorizationKubedbComV1alpha1CollectionNamespacedMongodbRole",
+        "operationId": "deleteAuthorizationKubedbComV1alpha1CollectionNamespacedMongoDBRole",
         "parameters": [
           {
             "uniqueItems": true,
@@ -1211,7 +1211,7 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MongodbRole"
+          "kind": "MongoDBRole"
         }
       },
       "parameters": [
@@ -1234,7 +1234,7 @@
     },
     "/apis/authorization.kubedb.com/v1alpha1/namespaces/{namespace}/mongodbroles/{name}": {
       "get": {
-        "description": "read the specified MongodbRole",
+        "description": "read the specified MongoDBRole",
         "consumes": [
           "*/*"
         ],
@@ -1249,12 +1249,12 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "readAuthorizationKubedbComV1alpha1NamespacedMongodbRole",
+        "operationId": "readAuthorizationKubedbComV1alpha1NamespacedMongoDBRole",
         "responses": {
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRole"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRole"
             }
           }
         },
@@ -1262,11 +1262,11 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MongodbRole"
+          "kind": "MongoDBRole"
         }
       },
       "put": {
-        "description": "replace the specified MongodbRole",
+        "description": "replace the specified MongoDBRole",
         "consumes": [
           "*/*"
         ],
@@ -1281,14 +1281,14 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "replaceAuthorizationKubedbComV1alpha1NamespacedMongodbRole",
+        "operationId": "replaceAuthorizationKubedbComV1alpha1NamespacedMongoDBRole",
         "parameters": [
           {
             "name": "body",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRole"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRole"
             }
           }
         ],
@@ -1296,13 +1296,13 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRole"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRole"
             }
           },
           "201": {
             "description": "Created",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRole"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRole"
             }
           }
         },
@@ -1310,11 +1310,11 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MongodbRole"
+          "kind": "MongoDBRole"
         }
       },
       "delete": {
-        "description": "delete a MongodbRole",
+        "description": "delete a MongoDBRole",
         "consumes": [
           "*/*"
         ],
@@ -1329,7 +1329,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "deleteAuthorizationKubedbComV1alpha1NamespacedMongodbRole",
+        "operationId": "deleteAuthorizationKubedbComV1alpha1NamespacedMongoDBRole",
         "parameters": [
           {
             "name": "body",
@@ -1373,11 +1373,11 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MongodbRole"
+          "kind": "MongoDBRole"
         }
       },
       "patch": {
-        "description": "partially update the specified MongodbRole",
+        "description": "partially update the specified MongoDBRole",
         "consumes": [
           "application/json-patch+json",
           "application/merge-patch+json",
@@ -1394,7 +1394,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "patchAuthorizationKubedbComV1alpha1NamespacedMongodbRole",
+        "operationId": "patchAuthorizationKubedbComV1alpha1NamespacedMongoDBRole",
         "parameters": [
           {
             "name": "body",
@@ -1409,7 +1409,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRole"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRole"
             }
           }
         },
@@ -1417,14 +1417,14 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MongodbRole"
+          "kind": "MongoDBRole"
         }
       },
       "parameters": [
         {
           "uniqueItems": true,
           "type": "string",
-          "description": "name of the MongodbRole",
+          "description": "name of the MongoDBRole",
           "name": "name",
           "in": "path",
           "required": true
@@ -1448,7 +1448,7 @@
     },
     "/apis/authorization.kubedb.com/v1alpha1/namespaces/{namespace}/mysqlrolebindings": {
       "get": {
-        "description": "list or watch objects of kind MysqlRoleBinding",
+        "description": "list or watch objects of kind MySQLRoleBinding",
         "consumes": [
           "*/*"
         ],
@@ -1465,7 +1465,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "listAuthorizationKubedbComV1alpha1NamespacedMysqlRoleBinding",
+        "operationId": "listAuthorizationKubedbComV1alpha1NamespacedMySQLRoleBinding",
         "parameters": [
           {
             "uniqueItems": true,
@@ -1528,7 +1528,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleBindingList"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleBindingList"
             }
           }
         },
@@ -1536,11 +1536,11 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MysqlRoleBinding"
+          "kind": "MySQLRoleBinding"
         }
       },
       "post": {
-        "description": "create a MysqlRoleBinding",
+        "description": "create a MySQLRoleBinding",
         "consumes": [
           "*/*"
         ],
@@ -1555,14 +1555,14 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "createAuthorizationKubedbComV1alpha1NamespacedMysqlRoleBinding",
+        "operationId": "createAuthorizationKubedbComV1alpha1NamespacedMySQLRoleBinding",
         "parameters": [
           {
             "name": "body",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleBinding"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleBinding"
             }
           }
         ],
@@ -1570,19 +1570,19 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleBinding"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleBinding"
             }
           },
           "201": {
             "description": "Created",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleBinding"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleBinding"
             }
           },
           "202": {
             "description": "Accepted",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleBinding"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleBinding"
             }
           }
         },
@@ -1590,11 +1590,11 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MysqlRoleBinding"
+          "kind": "MySQLRoleBinding"
         }
       },
       "delete": {
-        "description": "delete collection of MysqlRoleBinding",
+        "description": "delete collection of MySQLRoleBinding",
         "consumes": [
           "*/*"
         ],
@@ -1609,7 +1609,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "deleteAuthorizationKubedbComV1alpha1CollectionNamespacedMysqlRoleBinding",
+        "operationId": "deleteAuthorizationKubedbComV1alpha1CollectionNamespacedMySQLRoleBinding",
         "parameters": [
           {
             "uniqueItems": true,
@@ -1680,7 +1680,7 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MysqlRoleBinding"
+          "kind": "MySQLRoleBinding"
         }
       },
       "parameters": [
@@ -1703,7 +1703,7 @@
     },
     "/apis/authorization.kubedb.com/v1alpha1/namespaces/{namespace}/mysqlrolebindings/{name}": {
       "get": {
-        "description": "read the specified MysqlRoleBinding",
+        "description": "read the specified MySQLRoleBinding",
         "consumes": [
           "*/*"
         ],
@@ -1718,12 +1718,12 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "readAuthorizationKubedbComV1alpha1NamespacedMysqlRoleBinding",
+        "operationId": "readAuthorizationKubedbComV1alpha1NamespacedMySQLRoleBinding",
         "responses": {
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleBinding"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleBinding"
             }
           }
         },
@@ -1731,11 +1731,11 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MysqlRoleBinding"
+          "kind": "MySQLRoleBinding"
         }
       },
       "put": {
-        "description": "replace the specified MysqlRoleBinding",
+        "description": "replace the specified MySQLRoleBinding",
         "consumes": [
           "*/*"
         ],
@@ -1750,14 +1750,14 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "replaceAuthorizationKubedbComV1alpha1NamespacedMysqlRoleBinding",
+        "operationId": "replaceAuthorizationKubedbComV1alpha1NamespacedMySQLRoleBinding",
         "parameters": [
           {
             "name": "body",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleBinding"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleBinding"
             }
           }
         ],
@@ -1765,13 +1765,13 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleBinding"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleBinding"
             }
           },
           "201": {
             "description": "Created",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleBinding"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleBinding"
             }
           }
         },
@@ -1779,11 +1779,11 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MysqlRoleBinding"
+          "kind": "MySQLRoleBinding"
         }
       },
       "delete": {
-        "description": "delete a MysqlRoleBinding",
+        "description": "delete a MySQLRoleBinding",
         "consumes": [
           "*/*"
         ],
@@ -1798,7 +1798,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "deleteAuthorizationKubedbComV1alpha1NamespacedMysqlRoleBinding",
+        "operationId": "deleteAuthorizationKubedbComV1alpha1NamespacedMySQLRoleBinding",
         "parameters": [
           {
             "name": "body",
@@ -1842,11 +1842,11 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MysqlRoleBinding"
+          "kind": "MySQLRoleBinding"
         }
       },
       "patch": {
-        "description": "partially update the specified MysqlRoleBinding",
+        "description": "partially update the specified MySQLRoleBinding",
         "consumes": [
           "application/json-patch+json",
           "application/merge-patch+json",
@@ -1863,7 +1863,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "patchAuthorizationKubedbComV1alpha1NamespacedMysqlRoleBinding",
+        "operationId": "patchAuthorizationKubedbComV1alpha1NamespacedMySQLRoleBinding",
         "parameters": [
           {
             "name": "body",
@@ -1878,7 +1878,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleBinding"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleBinding"
             }
           }
         },
@@ -1886,14 +1886,14 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MysqlRoleBinding"
+          "kind": "MySQLRoleBinding"
         }
       },
       "parameters": [
         {
           "uniqueItems": true,
           "type": "string",
-          "description": "name of the MysqlRoleBinding",
+          "description": "name of the MySQLRoleBinding",
           "name": "name",
           "in": "path",
           "required": true
@@ -1917,7 +1917,7 @@
     },
     "/apis/authorization.kubedb.com/v1alpha1/namespaces/{namespace}/mysqlroles": {
       "get": {
-        "description": "list or watch objects of kind MysqlRole",
+        "description": "list or watch objects of kind MySQLRole",
         "consumes": [
           "*/*"
         ],
@@ -1934,7 +1934,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "listAuthorizationKubedbComV1alpha1NamespacedMysqlRole",
+        "operationId": "listAuthorizationKubedbComV1alpha1NamespacedMySQLRole",
         "parameters": [
           {
             "uniqueItems": true,
@@ -1997,7 +1997,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleList"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleList"
             }
           }
         },
@@ -2005,11 +2005,11 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MysqlRole"
+          "kind": "MySQLRole"
         }
       },
       "post": {
-        "description": "create a MysqlRole",
+        "description": "create a MySQLRole",
         "consumes": [
           "*/*"
         ],
@@ -2024,14 +2024,14 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "createAuthorizationKubedbComV1alpha1NamespacedMysqlRole",
+        "operationId": "createAuthorizationKubedbComV1alpha1NamespacedMySQLRole",
         "parameters": [
           {
             "name": "body",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRole"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRole"
             }
           }
         ],
@@ -2039,19 +2039,19 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRole"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRole"
             }
           },
           "201": {
             "description": "Created",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRole"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRole"
             }
           },
           "202": {
             "description": "Accepted",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRole"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRole"
             }
           }
         },
@@ -2059,11 +2059,11 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MysqlRole"
+          "kind": "MySQLRole"
         }
       },
       "delete": {
-        "description": "delete collection of MysqlRole",
+        "description": "delete collection of MySQLRole",
         "consumes": [
           "*/*"
         ],
@@ -2078,7 +2078,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "deleteAuthorizationKubedbComV1alpha1CollectionNamespacedMysqlRole",
+        "operationId": "deleteAuthorizationKubedbComV1alpha1CollectionNamespacedMySQLRole",
         "parameters": [
           {
             "uniqueItems": true,
@@ -2149,7 +2149,7 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MysqlRole"
+          "kind": "MySQLRole"
         }
       },
       "parameters": [
@@ -2172,7 +2172,7 @@
     },
     "/apis/authorization.kubedb.com/v1alpha1/namespaces/{namespace}/mysqlroles/{name}": {
       "get": {
-        "description": "read the specified MysqlRole",
+        "description": "read the specified MySQLRole",
         "consumes": [
           "*/*"
         ],
@@ -2187,12 +2187,12 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "readAuthorizationKubedbComV1alpha1NamespacedMysqlRole",
+        "operationId": "readAuthorizationKubedbComV1alpha1NamespacedMySQLRole",
         "responses": {
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRole"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRole"
             }
           }
         },
@@ -2200,11 +2200,11 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MysqlRole"
+          "kind": "MySQLRole"
         }
       },
       "put": {
-        "description": "replace the specified MysqlRole",
+        "description": "replace the specified MySQLRole",
         "consumes": [
           "*/*"
         ],
@@ -2219,14 +2219,14 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "replaceAuthorizationKubedbComV1alpha1NamespacedMysqlRole",
+        "operationId": "replaceAuthorizationKubedbComV1alpha1NamespacedMySQLRole",
         "parameters": [
           {
             "name": "body",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRole"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRole"
             }
           }
         ],
@@ -2234,13 +2234,13 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRole"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRole"
             }
           },
           "201": {
             "description": "Created",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRole"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRole"
             }
           }
         },
@@ -2248,11 +2248,11 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MysqlRole"
+          "kind": "MySQLRole"
         }
       },
       "delete": {
-        "description": "delete a MysqlRole",
+        "description": "delete a MySQLRole",
         "consumes": [
           "*/*"
         ],
@@ -2267,7 +2267,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "deleteAuthorizationKubedbComV1alpha1NamespacedMysqlRole",
+        "operationId": "deleteAuthorizationKubedbComV1alpha1NamespacedMySQLRole",
         "parameters": [
           {
             "name": "body",
@@ -2311,11 +2311,11 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MysqlRole"
+          "kind": "MySQLRole"
         }
       },
       "patch": {
-        "description": "partially update the specified MysqlRole",
+        "description": "partially update the specified MySQLRole",
         "consumes": [
           "application/json-patch+json",
           "application/merge-patch+json",
@@ -2332,7 +2332,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "patchAuthorizationKubedbComV1alpha1NamespacedMysqlRole",
+        "operationId": "patchAuthorizationKubedbComV1alpha1NamespacedMySQLRole",
         "parameters": [
           {
             "name": "body",
@@ -2347,7 +2347,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRole"
+              "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRole"
             }
           }
         },
@@ -2355,14 +2355,14 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MysqlRole"
+          "kind": "MySQLRole"
         }
       },
       "parameters": [
         {
           "uniqueItems": true,
           "type": "string",
-          "description": "name of the MysqlRole",
+          "description": "name of the MySQLRole",
           "name": "name",
           "in": "path",
           "required": true
@@ -3526,7 +3526,7 @@
     },
     "/apis/authorization.kubedb.com/v1alpha1/watch/mongodbrolebindings": {
       "get": {
-        "description": "watch individual changes to a list of MongodbRoleBinding",
+        "description": "watch individual changes to a list of MongoDBRoleBinding",
         "consumes": [
           "*/*"
         ],
@@ -3543,7 +3543,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "watchAuthorizationKubedbComV1alpha1MongodbRoleBindingListForAllNamespaces",
+        "operationId": "watchAuthorizationKubedbComV1alpha1MongoDBRoleBindingListForAllNamespaces",
         "responses": {
           "200": {
             "description": "OK",
@@ -3556,7 +3556,7 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MongodbRoleBinding"
+          "kind": "MongoDBRoleBinding"
         }
       },
       "parameters": [
@@ -3627,7 +3627,7 @@
     },
     "/apis/authorization.kubedb.com/v1alpha1/watch/mongodbroles": {
       "get": {
-        "description": "watch individual changes to a list of MongodbRole",
+        "description": "watch individual changes to a list of MongoDBRole",
         "consumes": [
           "*/*"
         ],
@@ -3644,7 +3644,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "watchAuthorizationKubedbComV1alpha1MongodbRoleListForAllNamespaces",
+        "operationId": "watchAuthorizationKubedbComV1alpha1MongoDBRoleListForAllNamespaces",
         "responses": {
           "200": {
             "description": "OK",
@@ -3657,7 +3657,7 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MongodbRole"
+          "kind": "MongoDBRole"
         }
       },
       "parameters": [
@@ -3728,7 +3728,7 @@
     },
     "/apis/authorization.kubedb.com/v1alpha1/watch/mysqlrolebindings": {
       "get": {
-        "description": "watch individual changes to a list of MysqlRoleBinding",
+        "description": "watch individual changes to a list of MySQLRoleBinding",
         "consumes": [
           "*/*"
         ],
@@ -3745,7 +3745,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "watchAuthorizationKubedbComV1alpha1MysqlRoleBindingListForAllNamespaces",
+        "operationId": "watchAuthorizationKubedbComV1alpha1MySQLRoleBindingListForAllNamespaces",
         "responses": {
           "200": {
             "description": "OK",
@@ -3758,7 +3758,7 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MysqlRoleBinding"
+          "kind": "MySQLRoleBinding"
         }
       },
       "parameters": [
@@ -3829,7 +3829,7 @@
     },
     "/apis/authorization.kubedb.com/v1alpha1/watch/mysqlroles": {
       "get": {
-        "description": "watch individual changes to a list of MysqlRole",
+        "description": "watch individual changes to a list of MySQLRole",
         "consumes": [
           "*/*"
         ],
@@ -3846,7 +3846,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "watchAuthorizationKubedbComV1alpha1MysqlRoleListForAllNamespaces",
+        "operationId": "watchAuthorizationKubedbComV1alpha1MySQLRoleListForAllNamespaces",
         "responses": {
           "200": {
             "description": "OK",
@@ -3859,7 +3859,7 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MysqlRole"
+          "kind": "MySQLRole"
         }
       },
       "parameters": [
@@ -3930,7 +3930,7 @@
     },
     "/apis/authorization.kubedb.com/v1alpha1/watch/namespaces/{namespace}/mongodbrolebindings": {
       "get": {
-        "description": "watch individual changes to a list of MongodbRoleBinding",
+        "description": "watch individual changes to a list of MongoDBRoleBinding",
         "consumes": [
           "*/*"
         ],
@@ -3947,7 +3947,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "watchAuthorizationKubedbComV1alpha1NamespacedMongodbRoleBindingList",
+        "operationId": "watchAuthorizationKubedbComV1alpha1NamespacedMongoDBRoleBindingList",
         "responses": {
           "200": {
             "description": "OK",
@@ -3960,7 +3960,7 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MongodbRoleBinding"
+          "kind": "MongoDBRoleBinding"
         }
       },
       "parameters": [
@@ -4039,7 +4039,7 @@
     },
     "/apis/authorization.kubedb.com/v1alpha1/watch/namespaces/{namespace}/mongodbrolebindings/{name}": {
       "get": {
-        "description": "watch changes to an object of kind MongodbRoleBinding",
+        "description": "watch changes to an object of kind MongoDBRoleBinding",
         "consumes": [
           "*/*"
         ],
@@ -4056,7 +4056,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "watchAuthorizationKubedbComV1alpha1NamespacedMongodbRoleBinding",
+        "operationId": "watchAuthorizationKubedbComV1alpha1NamespacedMongoDBRoleBinding",
         "responses": {
           "200": {
             "description": "OK",
@@ -4069,7 +4069,7 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MongodbRoleBinding"
+          "kind": "MongoDBRoleBinding"
         }
       },
       "parameters": [
@@ -4111,7 +4111,7 @@
         {
           "uniqueItems": true,
           "type": "string",
-          "description": "name of the MongodbRoleBinding",
+          "description": "name of the MongoDBRoleBinding",
           "name": "name",
           "in": "path",
           "required": true
@@ -4156,7 +4156,7 @@
     },
     "/apis/authorization.kubedb.com/v1alpha1/watch/namespaces/{namespace}/mongodbroles": {
       "get": {
-        "description": "watch individual changes to a list of MongodbRole",
+        "description": "watch individual changes to a list of MongoDBRole",
         "consumes": [
           "*/*"
         ],
@@ -4173,7 +4173,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "watchAuthorizationKubedbComV1alpha1NamespacedMongodbRoleList",
+        "operationId": "watchAuthorizationKubedbComV1alpha1NamespacedMongoDBRoleList",
         "responses": {
           "200": {
             "description": "OK",
@@ -4186,7 +4186,7 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MongodbRole"
+          "kind": "MongoDBRole"
         }
       },
       "parameters": [
@@ -4265,7 +4265,7 @@
     },
     "/apis/authorization.kubedb.com/v1alpha1/watch/namespaces/{namespace}/mongodbroles/{name}": {
       "get": {
-        "description": "watch changes to an object of kind MongodbRole",
+        "description": "watch changes to an object of kind MongoDBRole",
         "consumes": [
           "*/*"
         ],
@@ -4282,7 +4282,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "watchAuthorizationKubedbComV1alpha1NamespacedMongodbRole",
+        "operationId": "watchAuthorizationKubedbComV1alpha1NamespacedMongoDBRole",
         "responses": {
           "200": {
             "description": "OK",
@@ -4295,7 +4295,7 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MongodbRole"
+          "kind": "MongoDBRole"
         }
       },
       "parameters": [
@@ -4337,7 +4337,7 @@
         {
           "uniqueItems": true,
           "type": "string",
-          "description": "name of the MongodbRole",
+          "description": "name of the MongoDBRole",
           "name": "name",
           "in": "path",
           "required": true
@@ -4382,7 +4382,7 @@
     },
     "/apis/authorization.kubedb.com/v1alpha1/watch/namespaces/{namespace}/mysqlrolebindings": {
       "get": {
-        "description": "watch individual changes to a list of MysqlRoleBinding",
+        "description": "watch individual changes to a list of MySQLRoleBinding",
         "consumes": [
           "*/*"
         ],
@@ -4399,7 +4399,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "watchAuthorizationKubedbComV1alpha1NamespacedMysqlRoleBindingList",
+        "operationId": "watchAuthorizationKubedbComV1alpha1NamespacedMySQLRoleBindingList",
         "responses": {
           "200": {
             "description": "OK",
@@ -4412,7 +4412,7 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MysqlRoleBinding"
+          "kind": "MySQLRoleBinding"
         }
       },
       "parameters": [
@@ -4491,7 +4491,7 @@
     },
     "/apis/authorization.kubedb.com/v1alpha1/watch/namespaces/{namespace}/mysqlrolebindings/{name}": {
       "get": {
-        "description": "watch changes to an object of kind MysqlRoleBinding",
+        "description": "watch changes to an object of kind MySQLRoleBinding",
         "consumes": [
           "*/*"
         ],
@@ -4508,7 +4508,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "watchAuthorizationKubedbComV1alpha1NamespacedMysqlRoleBinding",
+        "operationId": "watchAuthorizationKubedbComV1alpha1NamespacedMySQLRoleBinding",
         "responses": {
           "200": {
             "description": "OK",
@@ -4521,7 +4521,7 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MysqlRoleBinding"
+          "kind": "MySQLRoleBinding"
         }
       },
       "parameters": [
@@ -4563,7 +4563,7 @@
         {
           "uniqueItems": true,
           "type": "string",
-          "description": "name of the MysqlRoleBinding",
+          "description": "name of the MySQLRoleBinding",
           "name": "name",
           "in": "path",
           "required": true
@@ -4608,7 +4608,7 @@
     },
     "/apis/authorization.kubedb.com/v1alpha1/watch/namespaces/{namespace}/mysqlroles": {
       "get": {
-        "description": "watch individual changes to a list of MysqlRole",
+        "description": "watch individual changes to a list of MySQLRole",
         "consumes": [
           "*/*"
         ],
@@ -4625,7 +4625,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "watchAuthorizationKubedbComV1alpha1NamespacedMysqlRoleList",
+        "operationId": "watchAuthorizationKubedbComV1alpha1NamespacedMySQLRoleList",
         "responses": {
           "200": {
             "description": "OK",
@@ -4638,7 +4638,7 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MysqlRole"
+          "kind": "MySQLRole"
         }
       },
       "parameters": [
@@ -4717,7 +4717,7 @@
     },
     "/apis/authorization.kubedb.com/v1alpha1/watch/namespaces/{namespace}/mysqlroles/{name}": {
       "get": {
-        "description": "watch changes to an object of kind MysqlRole",
+        "description": "watch changes to an object of kind MySQLRole",
         "consumes": [
           "*/*"
         ],
@@ -4734,7 +4734,7 @@
         "tags": [
           "authorizationKubedbCom_v1alpha1"
         ],
-        "operationId": "watchAuthorizationKubedbComV1alpha1NamespacedMysqlRole",
+        "operationId": "watchAuthorizationKubedbComV1alpha1NamespacedMySQLRole",
         "responses": {
           "200": {
             "description": "OK",
@@ -4747,7 +4747,7 @@
         "x-kubernetes-group-version-kind": {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MysqlRole"
+          "kind": "MySQLRole"
         }
       },
       "parameters": [
@@ -4789,7 +4789,7 @@
         {
           "uniqueItems": true,
           "type": "string",
-          "description": "name of the MysqlRole",
+          "description": "name of the MySQLRole",
           "name": "name",
           "in": "path",
           "required": true
@@ -5633,8 +5633,8 @@
         }
       }
     },
-    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRole": {
-      "description": "MongodbRole",
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRole": {
+      "description": "MongoDBRole",
       "properties": {
         "apiVersion": {
           "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
@@ -5648,22 +5648,22 @@
           "$ref": "#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta"
         },
         "spec": {
-          "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleSpec"
+          "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleSpec"
         },
         "status": {
-          "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleStatus"
+          "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleStatus"
         }
       },
       "x-kubernetes-group-version-kind": [
         {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MongodbRole"
+          "kind": "MongoDBRole"
         }
       ]
     },
-    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleBinding": {
-      "description": "MongodbRoleBinding binds mongodb credential to user",
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleBinding": {
+      "description": "MongoDBRoleBinding binds mongodb credential to user",
       "properties": {
         "apiVersion": {
           "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
@@ -5677,22 +5677,22 @@
           "$ref": "#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta"
         },
         "spec": {
-          "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleBindingSpec"
+          "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleBindingSpec"
         },
         "status": {
-          "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleBindingStatus"
+          "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleBindingStatus"
         }
       },
       "x-kubernetes-group-version-kind": [
         {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MongodbRoleBinding"
+          "kind": "MongoDBRoleBinding"
         }
       ]
     },
-    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleBindingCondition": {
-      "description": "MongodbRoleBindingCondition describes the state of a MongodbRoleBinding at a certain point.",
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleBindingCondition": {
+      "description": "MongoDBRoleBindingCondition describes the state of a MongoDBRoleBinding at a certain point.",
       "properties": {
         "message": {
           "description": "A human readable message indicating details about the transition.",
@@ -5707,22 +5707,22 @@
           "type": "string"
         },
         "type": {
-          "description": "Type of MongodbRoleBinding condition.",
+          "description": "Type of MongoDBRoleBinding condition.",
           "type": "string"
         }
       }
     },
-    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleBindingList": {
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleBindingList": {
       "properties": {
         "apiVersion": {
           "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
           "type": "string"
         },
         "items": {
-          "description": "Items is a list of MongodbRoleBinding objects",
+          "description": "Items is a list of MongoDBRoleBinding objects",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleBinding"
+            "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleBinding"
           }
         },
         "kind": {
@@ -5737,11 +5737,11 @@
         {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MongodbRoleBindingList"
+          "kind": "MongoDBRoleBindingList"
         }
       ]
     },
-    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleBindingSpec": {
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleBindingSpec": {
       "required": [
         "roleRef",
         "subjects",
@@ -5749,7 +5749,7 @@
       ],
       "properties": {
         "roleRef": {
-          "description": "Specifies the name of the MongodbRole",
+          "description": "Specifies the name of the MongoDBRole",
           "type": "string"
         },
         "store": {
@@ -5763,13 +5763,13 @@
         }
       }
     },
-    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleBindingStatus": {
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleBindingStatus": {
       "properties": {
         "conditions": {
-          "description": "Represents the latest available observations of a MongodbRoleBinding current state.",
+          "description": "Represents the latest available observations of a MongoDBRoleBinding current state.",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleBindingCondition"
+            "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleBindingCondition"
           }
         },
         "lease": {
@@ -5777,17 +5777,17 @@
           "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.LeaseData"
         },
         "observedGeneration": {
-          "description": "observedGeneration is the most recent generation observed for this MongodbRoleBinding. It corresponds to the MongodbRoleBinding's generation, which is updated on mutation by the API Server.",
+          "description": "observedGeneration is the most recent generation observed for this MongoDBRoleBinding. It corresponds to the MongoDBRoleBinding's generation, which is updated on mutation by the API Server.",
           "$ref": "#/definitions/com.github.appscode.go.encoding.json.types.IntHash"
         },
         "phase": {
-          "description": "Specifies the phase of the MongodbRoleBinding",
+          "description": "Specifies the phase of the MongoDBRoleBinding",
           "type": "string"
         }
       }
     },
-    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleCondition": {
-      "description": "MongodbRoleCondition describes the state of a MongodbRole at a certain point.",
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleCondition": {
+      "description": "MongoDBRoleCondition describes the state of a MongoDBRole at a certain point.",
       "properties": {
         "message": {
           "description": "A human readable message indicating details about the transition.",
@@ -5802,22 +5802,22 @@
           "type": "string"
         },
         "type": {
-          "description": "Type of MongodbRole condition.",
+          "description": "Type of MongoDBRole condition.",
           "type": "string"
         }
       }
     },
-    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleList": {
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleList": {
       "properties": {
         "apiVersion": {
           "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
           "type": "string"
         },
         "items": {
-          "description": "Items is a list of MongodbRole objects",
+          "description": "Items is a list of MongoDBRole objects",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRole"
+            "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRole"
           }
         },
         "kind": {
@@ -5832,12 +5832,12 @@
         {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MongodbRoleList"
+          "kind": "MongoDBRoleList"
         }
       ]
     },
-    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleSpec": {
-      "description": "MongodbRoleSpec contains connection information, Mongodb role info etc",
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleSpec": {
+      "description": "MongoDBRoleSpec contains connection information, Mongodb role info etc",
       "required": [
         "provider",
         "dbName",
@@ -5878,17 +5878,17 @@
         }
       }
     },
-    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleStatus": {
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleStatus": {
       "properties": {
         "conditions": {
-          "description": "Represents the latest available observations of a MongodbRole current state.",
+          "description": "Represents the latest available observations of a MongoDBRole current state.",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongodbRoleCondition"
+            "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MongoDBRoleCondition"
           }
         },
         "observedGeneration": {
-          "description": "observedGeneration is the most recent generation observed for this MongodbRole. It corresponds to the MongodbRole's generation, which is updated on mutation by the API Server.",
+          "description": "observedGeneration is the most recent generation observed for this MongoDBRole. It corresponds to the MongoDBRole's generation, which is updated on mutation by the API Server.",
           "$ref": "#/definitions/com.github.appscode.go.encoding.json.types.IntHash"
         },
         "phase": {
@@ -5896,8 +5896,8 @@
         }
       }
     },
-    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRole": {
-      "description": "MysqlRole",
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRole": {
+      "description": "MySQLRole",
       "properties": {
         "apiVersion": {
           "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
@@ -5911,22 +5911,22 @@
           "$ref": "#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta"
         },
         "spec": {
-          "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleSpec"
+          "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleSpec"
         },
         "status": {
-          "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleStatus"
+          "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleStatus"
         }
       },
       "x-kubernetes-group-version-kind": [
         {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MysqlRole"
+          "kind": "MySQLRole"
         }
       ]
     },
-    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleBinding": {
-      "description": "MysqlRoleBinding binds mysql credential to user",
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleBinding": {
+      "description": "MySQLRoleBinding binds mysql credential to user",
       "properties": {
         "apiVersion": {
           "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
@@ -5940,22 +5940,22 @@
           "$ref": "#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta"
         },
         "spec": {
-          "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleBindingSpec"
+          "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleBindingSpec"
         },
         "status": {
-          "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleBindingStatus"
+          "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleBindingStatus"
         }
       },
       "x-kubernetes-group-version-kind": [
         {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MysqlRoleBinding"
+          "kind": "MySQLRoleBinding"
         }
       ]
     },
-    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleBindingCondition": {
-      "description": "MysqlRoleBindingCondition describes the state of a MysqlRoleBinding at a certain point.",
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleBindingCondition": {
+      "description": "MySQLRoleBindingCondition describes the state of a MySQLRoleBinding at a certain point.",
       "properties": {
         "message": {
           "description": "A human readable message indicating details about the transition.",
@@ -5970,22 +5970,22 @@
           "type": "string"
         },
         "type": {
-          "description": "Type of MysqlRoleBinding condition.",
+          "description": "Type of MySQLRoleBinding condition.",
           "type": "string"
         }
       }
     },
-    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleBindingList": {
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleBindingList": {
       "properties": {
         "apiVersion": {
           "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
           "type": "string"
         },
         "items": {
-          "description": "Items is a list of MysqlRoleBinding objects",
+          "description": "Items is a list of MySQLRoleBinding objects",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleBinding"
+            "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleBinding"
           }
         },
         "kind": {
@@ -6000,11 +6000,11 @@
         {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MysqlRoleBindingList"
+          "kind": "MySQLRoleBindingList"
         }
       ]
     },
-    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleBindingSpec": {
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleBindingSpec": {
       "required": [
         "roleRef",
         "subjects",
@@ -6012,7 +6012,7 @@
       ],
       "properties": {
         "roleRef": {
-          "description": "Specifies the name of the MysqlRole",
+          "description": "Specifies the name of the MySQLRole",
           "type": "string"
         },
         "store": {
@@ -6026,13 +6026,13 @@
         }
       }
     },
-    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleBindingStatus": {
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleBindingStatus": {
       "properties": {
         "conditions": {
-          "description": "Represents the latest available observations of a MysqlRoleBinding current state.",
+          "description": "Represents the latest available observations of a MySQLRoleBinding current state.",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleBindingCondition"
+            "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleBindingCondition"
           }
         },
         "lease": {
@@ -6040,17 +6040,17 @@
           "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.LeaseData"
         },
         "observedGeneration": {
-          "description": "observedGeneration is the most recent generation observed for this MysqlRoleBinding. It corresponds to the MysqlRoleBinding's generation, which is updated on mutation by the API Server.",
+          "description": "observedGeneration is the most recent generation observed for this MySQLRoleBinding. It corresponds to the MySQLRoleBinding's generation, which is updated on mutation by the API Server.",
           "$ref": "#/definitions/com.github.appscode.go.encoding.json.types.IntHash"
         },
         "phase": {
-          "description": "Specifies the phase of the MysqlRoleBinding",
+          "description": "Specifies the phase of the MySQLRoleBinding",
           "type": "string"
         }
       }
     },
-    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleCondition": {
-      "description": "MysqlRoleCondition describes the state of a MysqlRole at a certain point.",
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleCondition": {
+      "description": "MySQLRoleCondition describes the state of a MySQLRole at a certain point.",
       "properties": {
         "message": {
           "description": "A human readable message indicating details about the transition.",
@@ -6065,22 +6065,22 @@
           "type": "string"
         },
         "type": {
-          "description": "Type of MysqlRole condition.",
+          "description": "Type of MySQLRole condition.",
           "type": "string"
         }
       }
     },
-    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleList": {
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleList": {
       "properties": {
         "apiVersion": {
           "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
           "type": "string"
         },
         "items": {
-          "description": "Items is a list of MysqlRole objects",
+          "description": "Items is a list of MySQLRole objects",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRole"
+            "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRole"
           }
         },
         "kind": {
@@ -6095,12 +6095,12 @@
         {
           "group": "authorization.kubedb.com",
           "version": "v1alpha1",
-          "kind": "MysqlRoleList"
+          "kind": "MySQLRoleList"
         }
       ]
     },
-    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleSpec": {
-      "description": "MysqlRoleSpec contains connection information, mysql role info etc",
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleSpec": {
+      "description": "MySQLRoleSpec contains connection information, mysql role info etc",
       "required": [
         "provider",
         "dbName",
@@ -6141,17 +6141,17 @@
         }
       }
     },
-    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleStatus": {
+    "com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleStatus": {
       "properties": {
         "conditions": {
-          "description": "Represents the latest available observations of a MysqlRole current state.",
+          "description": "Represents the latest available observations of a MySQLRole current state.",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MysqlRoleCondition"
+            "$ref": "#/definitions/com.github.kubedb.user-manager.apis.authorization.v1alpha1.MySQLRoleCondition"
           }
         },
         "observedGeneration": {
-          "description": "observedGeneration is the most recent generation observed for this MysqlRole. It corresponds to the MysqlRole's generation, which is updated on mutation by the API Server.",
+          "description": "observedGeneration is the most recent generation observed for this MySQLRole. It corresponds to the MySQLRole's generation, which is updated on mutation by the API Server.",
           "$ref": "#/definitions/com.github.appscode.go.encoding.json.types.IntHash"
         },
         "phase": {

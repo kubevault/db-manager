@@ -5,12 +5,12 @@ import (
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 )
 
-func (r MysqlRole) CustomResourceDefinition() *apiextensions.CustomResourceDefinition {
+func (r MySQLRole) CustomResourceDefinition() *apiextensions.CustomResourceDefinition {
 	return crdutils.NewCustomResourceDefinition(crdutils.Config{
 		Group:         SchemeGroupVersion.Group,
-		Plural:        ResourceMysqlRoles,
-		Singular:      ResourceMysqlRole,
-		Kind:          ResourceKindMysqlRole,
+		Plural:        ResourceMySQLRoles,
+		Singular:      ResourceMySQLRole,
+		Kind:          ResourceKindMySQLRole,
 		Categories:    []string{"datastore", "kubedb", "appscode", "all"},
 		ResourceScope: string(apiextensions.NamespaceScoped),
 		Versions: []apiextensions.CustomResourceDefinitionVersion{
@@ -23,23 +23,23 @@ func (r MysqlRole) CustomResourceDefinition() *apiextensions.CustomResourceDefin
 		Labels: crdutils.Labels{
 			LabelsMap: map[string]string{"app": "kubedb"},
 		},
-		SpecDefinitionName:      "github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRole",
+		SpecDefinitionName:      "github.com/kubedb/user-manager/apis/authorization/v1alpha1.MySQLRole",
 		EnableValidation:        true,
 		GetOpenAPIDefinitions:   GetOpenAPIDefinitions,
 		EnableStatusSubresource: EnableStatusSubresource,
 	})
 }
 
-func (r MysqlRole) IsValid() error {
+func (r MySQLRole) IsValid() error {
 	return nil
 }
 
-func (b MysqlRoleBinding) CustomResourceDefinition() *apiextensions.CustomResourceDefinition {
+func (b MySQLRoleBinding) CustomResourceDefinition() *apiextensions.CustomResourceDefinition {
 	return crdutils.NewCustomResourceDefinition(crdutils.Config{
 		Group:         SchemeGroupVersion.Group,
-		Plural:        ResourceMysqlRoleBindings,
-		Singular:      ResourceMysqlRoleBinding,
-		Kind:          ResourceKindMysqlRoleBinding,
+		Plural:        ResourceMySQLRoleBindings,
+		Singular:      ResourceMySQLRoleBinding,
+		Kind:          ResourceKindMySQLRoleBinding,
 		Categories:    []string{"datastore", "kubedb", "appscode", "all"},
 		ResourceScope: string(apiextensions.NamespaceScoped),
 		Versions: []apiextensions.CustomResourceDefinitionVersion{
@@ -52,13 +52,13 @@ func (b MysqlRoleBinding) CustomResourceDefinition() *apiextensions.CustomResour
 		Labels: crdutils.Labels{
 			LabelsMap: map[string]string{"app": "kubedb"},
 		},
-		SpecDefinitionName:      "github.com/kubedb/user-manager/apis/authorization/v1alpha1.MysqlRoleBinding",
+		SpecDefinitionName:      "github.com/kubedb/user-manager/apis/authorization/v1alpha1.MySQLRoleBinding",
 		EnableValidation:        true,
 		GetOpenAPIDefinitions:   GetOpenAPIDefinitions,
 		EnableStatusSubresource: EnableStatusSubresource,
 	})
 }
 
-func (b MysqlRoleBinding) IsValid() error {
+func (b MySQLRoleBinding) IsValid() error {
 	return nil
 }

@@ -8,29 +8,29 @@ import (
 )
 
 const (
-	ResourceKindMysqlRole = "MysqlRole"
-	ResourceMysqlRole     = "mysqlrole"
-	ResourceMysqlRoles    = "mysqlroles"
+	ResourceKindMySQLRole = "MySQLRole"
+	ResourceMySQLRole     = "mysqlrole"
+	ResourceMySQLRoles    = "mysqlroles"
 
-	ResourceKindMysqlRoleBinding = "MysqlRoleBinding"
-	ResourceMysqlRoleBinding     = "mysqlrolebinding"
-	ResourceMysqlRoleBindings    = "mysqlrolebindings"
+	ResourceKindMySQLRoleBinding = "MySQLRoleBinding"
+	ResourceMySQLRoleBinding     = "mysqlrolebinding"
+	ResourceMySQLRoleBindings    = "mysqlrolebindings"
 )
 
 // +genclient
 // +k8s:openapi-gen=true
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// MysqlRole
-type MysqlRole struct {
+// MySQLRole
+type MySQLRole struct {
 	metav1.TypeMeta   `json:",inline,omitempty"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              MysqlRoleSpec   `json:"spec,omitempty"`
-	Status            MysqlRoleStatus `json:"status,omitempty"`
+	Spec              MySQLRoleSpec   `json:"spec,omitempty"`
+	Status            MySQLRoleStatus `json:"status,omitempty"`
 }
 
-// MysqlRoleSpec contains connection information, mysql role info etc
-type MysqlRoleSpec struct {
+// MySQLRoleSpec contains connection information, mysql role info etc
+type MySQLRoleSpec struct {
 	Provider *ProviderSpec           `json:"provider"`
 	Database *DatabaseConfigForMysql `json:"database,omitempty"`
 
@@ -103,30 +103,30 @@ type DatabaseConfigForMysql struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type MysqlRoleList struct {
+type MySQLRoleList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 
-	// Items is a list of MysqlRole objects
-	Items []MysqlRole `json:"items,omitempty"`
+	// Items is a list of MySQLRole objects
+	Items []MySQLRole `json:"items,omitempty"`
 }
 
-type MysqlRolePhase string
+type MySQLRolePhase string
 
-type MysqlRoleStatus struct {
-	Phase MysqlRolePhase `json:"phase,omitempty"`
+type MySQLRoleStatus struct {
+	Phase MySQLRolePhase `json:"phase,omitempty"`
 
-	// observedGeneration is the most recent generation observed for this MysqlRole. It corresponds to the
-	// MysqlRole's generation, which is updated on mutation by the API Server.
+	// observedGeneration is the most recent generation observed for this MySQLRole. It corresponds to the
+	// MySQLRole's generation, which is updated on mutation by the API Server.
 	ObservedGeneration *types.IntHash `json:"observedGeneration,omitempty"`
 
-	// Represents the latest available observations of a MysqlRole current state.
-	Conditions []MysqlRoleCondition `json:"conditions,omitempty"`
+	// Represents the latest available observations of a MySQLRole current state.
+	Conditions []MySQLRoleCondition `json:"conditions,omitempty"`
 }
 
-// MysqlRoleCondition describes the state of a MysqlRole at a certain point.
-type MysqlRoleCondition struct {
-	// Type of MysqlRole condition.
+// MySQLRoleCondition describes the state of a MySQLRole at a certain point.
+type MySQLRoleCondition struct {
+	// Type of MySQLRole condition.
 	Type string `json:"type,omitempty"`
 
 	// Status of the condition, one of True, False, Unknown.
@@ -143,16 +143,16 @@ type MysqlRoleCondition struct {
 // +k8s:openapi-gen=true
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// MysqlRoleBinding binds mysql credential to user
-type MysqlRoleBinding struct {
+// MySQLRoleBinding binds mysql credential to user
+type MySQLRoleBinding struct {
 	metav1.TypeMeta   `json:",inline,omitempty"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              MysqlRoleBindingSpec   `json:"spec,omitempty"`
-	Status            MysqlRoleBindingStatus `json:"status,omitempty"`
+	Spec              MySQLRoleBindingSpec   `json:"spec,omitempty"`
+	Status            MySQLRoleBindingStatus `json:"status,omitempty"`
 }
 
-type MysqlRoleBindingSpec struct {
-	// Specifies the name of the MysqlRole
+type MySQLRoleBindingSpec struct {
+	// Specifies the name of the MySQLRole
 	RoleRef string `json:"roleRef"`
 
 	Subjects []rbacv1.Subject `json:"subjects"`
@@ -160,26 +160,26 @@ type MysqlRoleBindingSpec struct {
 	Store Store `json:"store"`
 }
 
-type MysqlRoleBindingPhase string
+type MySQLRoleBindingPhase string
 
-type MysqlRoleBindingStatus struct {
-	// observedGeneration is the most recent generation observed for this MysqlRoleBinding. It corresponds to the
-	// MysqlRoleBinding's generation, which is updated on mutation by the API Server.
+type MySQLRoleBindingStatus struct {
+	// observedGeneration is the most recent generation observed for this MySQLRoleBinding. It corresponds to the
+	// MySQLRoleBinding's generation, which is updated on mutation by the API Server.
 	ObservedGeneration *types.IntHash `json:"observedGeneration,omitempty"`
 
 	// contains lease info of the credentials
 	Lease LeaseData `json:"lease,omitempty"`
 
-	// Specifies the phase of the MysqlRoleBinding
-	Phase MysqlRoleBindingPhase `json:"phase,omitempty"`
+	// Specifies the phase of the MySQLRoleBinding
+	Phase MySQLRoleBindingPhase `json:"phase,omitempty"`
 
-	// Represents the latest available observations of a MysqlRoleBinding current state.
-	Conditions []MysqlRoleBindingCondition `json:"conditions,omitempty"`
+	// Represents the latest available observations of a MySQLRoleBinding current state.
+	Conditions []MySQLRoleBindingCondition `json:"conditions,omitempty"`
 }
 
-// MysqlRoleBindingCondition describes the state of a MysqlRoleBinding at a certain point.
-type MysqlRoleBindingCondition struct {
-	// Type of MysqlRoleBinding condition.
+// MySQLRoleBindingCondition describes the state of a MySQLRoleBinding at a certain point.
+type MySQLRoleBindingCondition struct {
+	// Type of MySQLRoleBinding condition.
 	Type string `json:"type,omitempty"`
 
 	// Status of the condition, one of True, False, Unknown.
@@ -194,10 +194,10 @@ type MysqlRoleBindingCondition struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type MysqlRoleBindingList struct {
+type MySQLRoleBindingList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 
-	// Items is a list of MysqlRoleBinding objects
-	Items []MysqlRoleBinding `json:"items,omitempty"`
+	// Items is a list of MySQLRoleBinding objects
+	Items []MySQLRoleBinding `json:"items,omitempty"`
 }

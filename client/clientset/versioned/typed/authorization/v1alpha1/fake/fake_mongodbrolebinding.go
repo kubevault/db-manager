@@ -28,31 +28,31 @@ import (
 	testing "k8s.io/client-go/testing"
 )
 
-// FakeMongodbRoleBindings implements MongodbRoleBindingInterface
-type FakeMongodbRoleBindings struct {
+// FakeMongoDBRoleBindings implements MongoDBRoleBindingInterface
+type FakeMongoDBRoleBindings struct {
 	Fake *FakeAuthorizationV1alpha1
 	ns   string
 }
 
 var mongodbrolebindingsResource = schema.GroupVersionResource{Group: "authorization.kubedb.com", Version: "v1alpha1", Resource: "mongodbrolebindings"}
 
-var mongodbrolebindingsKind = schema.GroupVersionKind{Group: "authorization.kubedb.com", Version: "v1alpha1", Kind: "MongodbRoleBinding"}
+var mongodbrolebindingsKind = schema.GroupVersionKind{Group: "authorization.kubedb.com", Version: "v1alpha1", Kind: "MongoDBRoleBinding"}
 
-// Get takes name of the mongodbRoleBinding, and returns the corresponding mongodbRoleBinding object, and an error if there is any.
-func (c *FakeMongodbRoleBindings) Get(name string, options v1.GetOptions) (result *v1alpha1.MongodbRoleBinding, err error) {
+// Get takes name of the mongoDBRoleBinding, and returns the corresponding mongoDBRoleBinding object, and an error if there is any.
+func (c *FakeMongoDBRoleBindings) Get(name string, options v1.GetOptions) (result *v1alpha1.MongoDBRoleBinding, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(mongodbrolebindingsResource, c.ns, name), &v1alpha1.MongodbRoleBinding{})
+		Invokes(testing.NewGetAction(mongodbrolebindingsResource, c.ns, name), &v1alpha1.MongoDBRoleBinding{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.MongodbRoleBinding), err
+	return obj.(*v1alpha1.MongoDBRoleBinding), err
 }
 
-// List takes label and field selectors, and returns the list of MongodbRoleBindings that match those selectors.
-func (c *FakeMongodbRoleBindings) List(opts v1.ListOptions) (result *v1alpha1.MongodbRoleBindingList, err error) {
+// List takes label and field selectors, and returns the list of MongoDBRoleBindings that match those selectors.
+func (c *FakeMongoDBRoleBindings) List(opts v1.ListOptions) (result *v1alpha1.MongoDBRoleBindingList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(mongodbrolebindingsResource, mongodbrolebindingsKind, c.ns, opts), &v1alpha1.MongodbRoleBindingList{})
+		Invokes(testing.NewListAction(mongodbrolebindingsResource, mongodbrolebindingsKind, c.ns, opts), &v1alpha1.MongoDBRoleBindingList{})
 
 	if obj == nil {
 		return nil, err
@@ -62,8 +62,8 @@ func (c *FakeMongodbRoleBindings) List(opts v1.ListOptions) (result *v1alpha1.Mo
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &v1alpha1.MongodbRoleBindingList{ListMeta: obj.(*v1alpha1.MongodbRoleBindingList).ListMeta}
-	for _, item := range obj.(*v1alpha1.MongodbRoleBindingList).Items {
+	list := &v1alpha1.MongoDBRoleBindingList{ListMeta: obj.(*v1alpha1.MongoDBRoleBindingList).ListMeta}
+	for _, item := range obj.(*v1alpha1.MongoDBRoleBindingList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
 		}
@@ -71,70 +71,70 @@ func (c *FakeMongodbRoleBindings) List(opts v1.ListOptions) (result *v1alpha1.Mo
 	return list, err
 }
 
-// Watch returns a watch.Interface that watches the requested mongodbRoleBindings.
-func (c *FakeMongodbRoleBindings) Watch(opts v1.ListOptions) (watch.Interface, error) {
+// Watch returns a watch.Interface that watches the requested mongoDBRoleBindings.
+func (c *FakeMongoDBRoleBindings) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(mongodbrolebindingsResource, c.ns, opts))
 
 }
 
-// Create takes the representation of a mongodbRoleBinding and creates it.  Returns the server's representation of the mongodbRoleBinding, and an error, if there is any.
-func (c *FakeMongodbRoleBindings) Create(mongodbRoleBinding *v1alpha1.MongodbRoleBinding) (result *v1alpha1.MongodbRoleBinding, err error) {
+// Create takes the representation of a mongoDBRoleBinding and creates it.  Returns the server's representation of the mongoDBRoleBinding, and an error, if there is any.
+func (c *FakeMongoDBRoleBindings) Create(mongoDBRoleBinding *v1alpha1.MongoDBRoleBinding) (result *v1alpha1.MongoDBRoleBinding, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(mongodbrolebindingsResource, c.ns, mongodbRoleBinding), &v1alpha1.MongodbRoleBinding{})
+		Invokes(testing.NewCreateAction(mongodbrolebindingsResource, c.ns, mongoDBRoleBinding), &v1alpha1.MongoDBRoleBinding{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.MongodbRoleBinding), err
+	return obj.(*v1alpha1.MongoDBRoleBinding), err
 }
 
-// Update takes the representation of a mongodbRoleBinding and updates it. Returns the server's representation of the mongodbRoleBinding, and an error, if there is any.
-func (c *FakeMongodbRoleBindings) Update(mongodbRoleBinding *v1alpha1.MongodbRoleBinding) (result *v1alpha1.MongodbRoleBinding, err error) {
+// Update takes the representation of a mongoDBRoleBinding and updates it. Returns the server's representation of the mongoDBRoleBinding, and an error, if there is any.
+func (c *FakeMongoDBRoleBindings) Update(mongoDBRoleBinding *v1alpha1.MongoDBRoleBinding) (result *v1alpha1.MongoDBRoleBinding, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(mongodbrolebindingsResource, c.ns, mongodbRoleBinding), &v1alpha1.MongodbRoleBinding{})
+		Invokes(testing.NewUpdateAction(mongodbrolebindingsResource, c.ns, mongoDBRoleBinding), &v1alpha1.MongoDBRoleBinding{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.MongodbRoleBinding), err
+	return obj.(*v1alpha1.MongoDBRoleBinding), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeMongodbRoleBindings) UpdateStatus(mongodbRoleBinding *v1alpha1.MongodbRoleBinding) (*v1alpha1.MongodbRoleBinding, error) {
+func (c *FakeMongoDBRoleBindings) UpdateStatus(mongoDBRoleBinding *v1alpha1.MongoDBRoleBinding) (*v1alpha1.MongoDBRoleBinding, error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(mongodbrolebindingsResource, "status", c.ns, mongodbRoleBinding), &v1alpha1.MongodbRoleBinding{})
+		Invokes(testing.NewUpdateSubresourceAction(mongodbrolebindingsResource, "status", c.ns, mongoDBRoleBinding), &v1alpha1.MongoDBRoleBinding{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.MongodbRoleBinding), err
+	return obj.(*v1alpha1.MongoDBRoleBinding), err
 }
 
-// Delete takes name of the mongodbRoleBinding and deletes it. Returns an error if one occurs.
-func (c *FakeMongodbRoleBindings) Delete(name string, options *v1.DeleteOptions) error {
+// Delete takes name of the mongoDBRoleBinding and deletes it. Returns an error if one occurs.
+func (c *FakeMongoDBRoleBindings) Delete(name string, options *v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(mongodbrolebindingsResource, c.ns, name), &v1alpha1.MongodbRoleBinding{})
+		Invokes(testing.NewDeleteAction(mongodbrolebindingsResource, c.ns, name), &v1alpha1.MongoDBRoleBinding{})
 
 	return err
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeMongodbRoleBindings) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+func (c *FakeMongoDBRoleBindings) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	action := testing.NewDeleteCollectionAction(mongodbrolebindingsResource, c.ns, listOptions)
 
-	_, err := c.Fake.Invokes(action, &v1alpha1.MongodbRoleBindingList{})
+	_, err := c.Fake.Invokes(action, &v1alpha1.MongoDBRoleBindingList{})
 	return err
 }
 
-// Patch applies the patch and returns the patched mongodbRoleBinding.
-func (c *FakeMongodbRoleBindings) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.MongodbRoleBinding, err error) {
+// Patch applies the patch and returns the patched mongoDBRoleBinding.
+func (c *FakeMongoDBRoleBindings) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.MongoDBRoleBinding, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(mongodbrolebindingsResource, c.ns, name, data, subresources...), &v1alpha1.MongodbRoleBinding{})
+		Invokes(testing.NewPatchSubresourceAction(mongodbrolebindingsResource, c.ns, name, data, subresources...), &v1alpha1.MongoDBRoleBinding{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.MongodbRoleBinding), err
+	return obj.(*v1alpha1.MongoDBRoleBinding), err
 }

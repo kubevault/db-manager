@@ -8,29 +8,29 @@ import (
 )
 
 const (
-	ResourceKindMongodbRole = "MongodbRole"
-	ResourceMongodbRole     = "mongodbrole"
-	ResourceMongodbRoles    = "mongodbroles"
+	ResourceKindMongoDBRole = "MongoDBRole"
+	ResourceMongoDBRole     = "mongodbrole"
+	ResourceMongoDBRoles    = "mongodbroles"
 
-	ResourceKindMongodbRoleBinding = "MongodbRoleBinding"
-	ResourceMongodbRoleBinding     = "mongodbrolebinding"
-	ResourceMongodbRoleBindings    = "mongodbrolebindings"
+	ResourceKindMongoDBRoleBinding = "MongoDBRoleBinding"
+	ResourceMongoDBRoleBinding     = "mongodbrolebinding"
+	ResourceMongoDBRoleBindings    = "mongodbrolebindings"
 )
 
 // +genclient
 // +k8s:openapi-gen=true
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// MongodbRole
-type MongodbRole struct {
+// MongoDBRole
+type MongoDBRole struct {
 	metav1.TypeMeta   `json:",inline,omitempty"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              MongodbRoleSpec   `json:"spec,omitempty"`
-	Status            MongodbRoleStatus `json:"status,omitempty"`
+	Spec              MongoDBRoleSpec   `json:"spec,omitempty"`
+	Status            MongoDBRoleStatus `json:"status,omitempty"`
 }
 
-// MongodbRoleSpec contains connection information, Mongodb role info etc
-type MongodbRoleSpec struct {
+// MongoDBRoleSpec contains connection information, Mongodb role info etc
+type MongoDBRoleSpec struct {
 	Provider *ProviderSpec             `json:"provider"`
 	Database *DatabaseConfigForMongodb `json:"database,omitempty"`
 
@@ -95,30 +95,30 @@ type DatabaseConfigForMongodb struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type MongodbRoleList struct {
+type MongoDBRoleList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 
-	// Items is a list of MongodbRole objects
-	Items []MongodbRole `json:"items,omitempty"`
+	// Items is a list of MongoDBRole objects
+	Items []MongoDBRole `json:"items,omitempty"`
 }
 
-type MongodbRolePhase string
+type MongoDBRolePhase string
 
-type MongodbRoleStatus struct {
-	Phase MongodbRolePhase `json:"phase,omitempty"`
+type MongoDBRoleStatus struct {
+	Phase MongoDBRolePhase `json:"phase,omitempty"`
 
-	// observedGeneration is the most recent generation observed for this MongodbRole. It corresponds to the
-	// MongodbRole's generation, which is updated on mutation by the API Server.
+	// observedGeneration is the most recent generation observed for this MongoDBRole. It corresponds to the
+	// MongoDBRole's generation, which is updated on mutation by the API Server.
 	ObservedGeneration *types.IntHash `json:"observedGeneration,omitempty"`
 
-	// Represents the latest available observations of a MongodbRole current state.
-	Conditions []MongodbRoleCondition `json:"conditions,omitempty"`
+	// Represents the latest available observations of a MongoDBRole current state.
+	Conditions []MongoDBRoleCondition `json:"conditions,omitempty"`
 }
 
-// MongodbRoleCondition describes the state of a MongodbRole at a certain point.
-type MongodbRoleCondition struct {
-	// Type of MongodbRole condition.
+// MongoDBRoleCondition describes the state of a MongoDBRole at a certain point.
+type MongoDBRoleCondition struct {
+	// Type of MongoDBRole condition.
 	Type string `json:"type,omitempty"`
 
 	// Status of the condition, one of True, False, Unknown.
@@ -135,16 +135,16 @@ type MongodbRoleCondition struct {
 // +k8s:openapi-gen=true
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// MongodbRoleBinding binds mongodb credential to user
-type MongodbRoleBinding struct {
+// MongoDBRoleBinding binds mongodb credential to user
+type MongoDBRoleBinding struct {
 	metav1.TypeMeta   `json:",inline,omitempty"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              MongodbRoleBindingSpec   `json:"spec,omitempty"`
-	Status            MongodbRoleBindingStatus `json:"status,omitempty"`
+	Spec              MongoDBRoleBindingSpec   `json:"spec,omitempty"`
+	Status            MongoDBRoleBindingStatus `json:"status,omitempty"`
 }
 
-type MongodbRoleBindingSpec struct {
-	// Specifies the name of the MongodbRole
+type MongoDBRoleBindingSpec struct {
+	// Specifies the name of the MongoDBRole
 	RoleRef string `json:"roleRef"`
 
 	Subjects []rbacv1.Subject `json:"subjects"`
@@ -152,26 +152,26 @@ type MongodbRoleBindingSpec struct {
 	Store Store `json:"store"`
 }
 
-type MongodbRoleBindingPhase string
+type MongoDBRoleBindingPhase string
 
-type MongodbRoleBindingStatus struct {
-	// observedGeneration is the most recent generation observed for this MongodbRoleBinding. It corresponds to the
-	// MongodbRoleBinding's generation, which is updated on mutation by the API Server.
+type MongoDBRoleBindingStatus struct {
+	// observedGeneration is the most recent generation observed for this MongoDBRoleBinding. It corresponds to the
+	// MongoDBRoleBinding's generation, which is updated on mutation by the API Server.
 	ObservedGeneration *types.IntHash `json:"observedGeneration,omitempty"`
 
 	// contains lease info of the credentials
 	Lease LeaseData `json:"lease,omitempty"`
 
-	// Specifies the phase of the MongodbRoleBinding
-	Phase MongodbRoleBindingPhase `json:"phase,omitempty"`
+	// Specifies the phase of the MongoDBRoleBinding
+	Phase MongoDBRoleBindingPhase `json:"phase,omitempty"`
 
-	// Represents the latest available observations of a MongodbRoleBinding current state.
-	Conditions []MongodbRoleBindingCondition `json:"conditions,omitempty"`
+	// Represents the latest available observations of a MongoDBRoleBinding current state.
+	Conditions []MongoDBRoleBindingCondition `json:"conditions,omitempty"`
 }
 
-// MongodbRoleBindingCondition describes the state of a MongodbRoleBinding at a certain point.
-type MongodbRoleBindingCondition struct {
-	// Type of MongodbRoleBinding condition.
+// MongoDBRoleBindingCondition describes the state of a MongoDBRoleBinding at a certain point.
+type MongoDBRoleBindingCondition struct {
+	// Type of MongoDBRoleBinding condition.
 	Type string `json:"type,omitempty"`
 
 	// Status of the condition, one of True, False, Unknown.
@@ -186,10 +186,10 @@ type MongodbRoleBindingCondition struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type MongodbRoleBindingList struct {
+type MongoDBRoleBindingList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 
-	// Items is a list of MongodbRoleBinding objects
-	Items []MongodbRoleBinding `json:"items,omitempty"`
+	// Items is a list of MongoDBRoleBinding objects
+	Items []MongoDBRoleBinding `json:"items,omitempty"`
 }

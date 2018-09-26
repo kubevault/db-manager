@@ -14,7 +14,7 @@ spec:
     - kubedb
     - appscode
     - all
-    kind: MongodbRole
+    kind: MongoDBRole
     plural: mongodbroles
     singular: mongodbrole
   scope: Namespaced
@@ -309,7 +309,7 @@ spec:
                 Populated by the system. Read-only. More info: http://kubernetes.io/docs/user-guide/identifiers#uids
               type: string
         spec:
-          description: MongodbRoleSpec contains connection information, Mongodb role
+          description: MongoDBRoleSpec contains connection information, Mongodb role
             info etc
           properties:
             creationStatements:
@@ -415,10 +415,10 @@ spec:
         status:
           properties:
             conditions:
-              description: Represents the latest available observations of a MongodbRole
+              description: Represents the latest available observations of a MongoDBRole
                 current state.
               items:
-                description: MongodbRoleCondition describes the state of a MongodbRole
+                description: MongoDBRoleCondition describes the state of a MongoDBRole
                   at a certain point.
                 properties:
                   message:
@@ -432,7 +432,7 @@ spec:
                     description: Status of the condition, one of True, False, Unknown.
                     type: string
                   type:
-                    description: Type of MongodbRole condition.
+                    description: Type of MongoDBRole condition.
                     type: string
               type: array
             observedGeneration:

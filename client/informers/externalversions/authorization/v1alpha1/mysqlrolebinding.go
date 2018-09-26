@@ -31,59 +31,59 @@ import (
 	cache "k8s.io/client-go/tools/cache"
 )
 
-// MysqlRoleBindingInformer provides access to a shared informer and lister for
-// MysqlRoleBindings.
-type MysqlRoleBindingInformer interface {
+// MySQLRoleBindingInformer provides access to a shared informer and lister for
+// MySQLRoleBindings.
+type MySQLRoleBindingInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.MysqlRoleBindingLister
+	Lister() v1alpha1.MySQLRoleBindingLister
 }
 
-type mysqlRoleBindingInformer struct {
+type mySQLRoleBindingInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
 	tweakListOptions internalinterfaces.TweakListOptionsFunc
 	namespace        string
 }
 
-// NewMysqlRoleBindingInformer constructs a new informer for MysqlRoleBinding type.
+// NewMySQLRoleBindingInformer constructs a new informer for MySQLRoleBinding type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewMysqlRoleBindingInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
-	return NewFilteredMysqlRoleBindingInformer(client, namespace, resyncPeriod, indexers, nil)
+func NewMySQLRoleBindingInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
+	return NewFilteredMySQLRoleBindingInformer(client, namespace, resyncPeriod, indexers, nil)
 }
 
-// NewFilteredMysqlRoleBindingInformer constructs a new informer for MysqlRoleBinding type.
+// NewFilteredMySQLRoleBindingInformer constructs a new informer for MySQLRoleBinding type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewFilteredMysqlRoleBindingInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
+func NewFilteredMySQLRoleBindingInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.AuthorizationV1alpha1().MysqlRoleBindings(namespace).List(options)
+				return client.AuthorizationV1alpha1().MySQLRoleBindings(namespace).List(options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.AuthorizationV1alpha1().MysqlRoleBindings(namespace).Watch(options)
+				return client.AuthorizationV1alpha1().MySQLRoleBindings(namespace).Watch(options)
 			},
 		},
-		&authorization_v1alpha1.MysqlRoleBinding{},
+		&authorization_v1alpha1.MySQLRoleBinding{},
 		resyncPeriod,
 		indexers,
 	)
 }
 
-func (f *mysqlRoleBindingInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredMysqlRoleBindingInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+func (f *mySQLRoleBindingInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
+	return NewFilteredMySQLRoleBindingInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
 }
 
-func (f *mysqlRoleBindingInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&authorization_v1alpha1.MysqlRoleBinding{}, f.defaultInformer)
+func (f *mySQLRoleBindingInformer) Informer() cache.SharedIndexInformer {
+	return f.factory.InformerFor(&authorization_v1alpha1.MySQLRoleBinding{}, f.defaultInformer)
 }
 
-func (f *mysqlRoleBindingInformer) Lister() v1alpha1.MysqlRoleBindingLister {
-	return v1alpha1.NewMysqlRoleBindingLister(f.Informer().GetIndexer())
+func (f *mySQLRoleBindingInformer) Lister() v1alpha1.MySQLRoleBindingLister {
+	return v1alpha1.NewMySQLRoleBindingLister(f.Informer().GetIndexer())
 }

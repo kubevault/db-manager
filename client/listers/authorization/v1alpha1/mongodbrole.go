@@ -25,64 +25,64 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-// MongodbRoleLister helps list MongodbRoles.
-type MongodbRoleLister interface {
-	// List lists all MongodbRoles in the indexer.
-	List(selector labels.Selector) (ret []*v1alpha1.MongodbRole, err error)
-	// MongodbRoles returns an object that can list and get MongodbRoles.
-	MongodbRoles(namespace string) MongodbRoleNamespaceLister
-	MongodbRoleListerExpansion
+// MongoDBRoleLister helps list MongoDBRoles.
+type MongoDBRoleLister interface {
+	// List lists all MongoDBRoles in the indexer.
+	List(selector labels.Selector) (ret []*v1alpha1.MongoDBRole, err error)
+	// MongoDBRoles returns an object that can list and get MongoDBRoles.
+	MongoDBRoles(namespace string) MongoDBRoleNamespaceLister
+	MongoDBRoleListerExpansion
 }
 
-// mongodbRoleLister implements the MongodbRoleLister interface.
-type mongodbRoleLister struct {
+// mongoDBRoleLister implements the MongoDBRoleLister interface.
+type mongoDBRoleLister struct {
 	indexer cache.Indexer
 }
 
-// NewMongodbRoleLister returns a new MongodbRoleLister.
-func NewMongodbRoleLister(indexer cache.Indexer) MongodbRoleLister {
-	return &mongodbRoleLister{indexer: indexer}
+// NewMongoDBRoleLister returns a new MongoDBRoleLister.
+func NewMongoDBRoleLister(indexer cache.Indexer) MongoDBRoleLister {
+	return &mongoDBRoleLister{indexer: indexer}
 }
 
-// List lists all MongodbRoles in the indexer.
-func (s *mongodbRoleLister) List(selector labels.Selector) (ret []*v1alpha1.MongodbRole, err error) {
+// List lists all MongoDBRoles in the indexer.
+func (s *mongoDBRoleLister) List(selector labels.Selector) (ret []*v1alpha1.MongoDBRole, err error) {
 	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.MongodbRole))
+		ret = append(ret, m.(*v1alpha1.MongoDBRole))
 	})
 	return ret, err
 }
 
-// MongodbRoles returns an object that can list and get MongodbRoles.
-func (s *mongodbRoleLister) MongodbRoles(namespace string) MongodbRoleNamespaceLister {
-	return mongodbRoleNamespaceLister{indexer: s.indexer, namespace: namespace}
+// MongoDBRoles returns an object that can list and get MongoDBRoles.
+func (s *mongoDBRoleLister) MongoDBRoles(namespace string) MongoDBRoleNamespaceLister {
+	return mongoDBRoleNamespaceLister{indexer: s.indexer, namespace: namespace}
 }
 
-// MongodbRoleNamespaceLister helps list and get MongodbRoles.
-type MongodbRoleNamespaceLister interface {
-	// List lists all MongodbRoles in the indexer for a given namespace.
-	List(selector labels.Selector) (ret []*v1alpha1.MongodbRole, err error)
-	// Get retrieves the MongodbRole from the indexer for a given namespace and name.
-	Get(name string) (*v1alpha1.MongodbRole, error)
-	MongodbRoleNamespaceListerExpansion
+// MongoDBRoleNamespaceLister helps list and get MongoDBRoles.
+type MongoDBRoleNamespaceLister interface {
+	// List lists all MongoDBRoles in the indexer for a given namespace.
+	List(selector labels.Selector) (ret []*v1alpha1.MongoDBRole, err error)
+	// Get retrieves the MongoDBRole from the indexer for a given namespace and name.
+	Get(name string) (*v1alpha1.MongoDBRole, error)
+	MongoDBRoleNamespaceListerExpansion
 }
 
-// mongodbRoleNamespaceLister implements the MongodbRoleNamespaceLister
+// mongoDBRoleNamespaceLister implements the MongoDBRoleNamespaceLister
 // interface.
-type mongodbRoleNamespaceLister struct {
+type mongoDBRoleNamespaceLister struct {
 	indexer   cache.Indexer
 	namespace string
 }
 
-// List lists all MongodbRoles in the indexer for a given namespace.
-func (s mongodbRoleNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.MongodbRole, err error) {
+// List lists all MongoDBRoles in the indexer for a given namespace.
+func (s mongoDBRoleNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.MongoDBRole, err error) {
 	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.MongodbRole))
+		ret = append(ret, m.(*v1alpha1.MongoDBRole))
 	})
 	return ret, err
 }
 
-// Get retrieves the MongodbRole from the indexer for a given namespace and name.
-func (s mongodbRoleNamespaceLister) Get(name string) (*v1alpha1.MongodbRole, error) {
+// Get retrieves the MongoDBRole from the indexer for a given namespace and name.
+func (s mongoDBRoleNamespaceLister) Get(name string) (*v1alpha1.MongoDBRole, error) {
 	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
 	if err != nil {
 		return nil, err
@@ -90,5 +90,5 @@ func (s mongodbRoleNamespaceLister) Get(name string) (*v1alpha1.MongodbRole, err
 	if !exists {
 		return nil, errors.NewNotFound(v1alpha1.Resource("mongodbrole"), name)
 	}
-	return obj.(*v1alpha1.MongodbRole), nil
+	return obj.(*v1alpha1.MongoDBRole), nil
 }

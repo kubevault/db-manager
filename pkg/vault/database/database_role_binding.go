@@ -53,8 +53,8 @@ func NewDatabaseRoleBindingForPostgres(k kubernetes.Interface, cr crd.Interface,
 	}, nil
 }
 
-func NewDatabaseRoleBindingForMysql(k kubernetes.Interface, cr crd.Interface, roleBinding *api.MysqlRoleBinding) (DatabaseRoleBindingInterface, error) {
-	mRole, err := cr.AuthorizationV1alpha1().MysqlRoles(roleBinding.Namespace).Get(roleBinding.Spec.RoleRef, metav1.GetOptions{})
+func NewDatabaseRoleBindingForMysql(k kubernetes.Interface, cr crd.Interface, roleBinding *api.MySQLRoleBinding) (DatabaseRoleBindingInterface, error) {
+	mRole, err := cr.AuthorizationV1alpha1().MySQLRoles(roleBinding.Namespace).Get(roleBinding.Spec.RoleRef, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get mysql role %s/%s", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
@@ -69,7 +69,7 @@ func NewDatabaseRoleBindingForMysql(k kubernetes.Interface, cr crd.Interface, ro
 		path = mRole.Spec.Provider.Vault.Path
 	}
 
-	m := mysql.NewMysqlRoleBinding(k, v, roleBinding, path)
+	m := mysql.NewMySQLRoleBinding(k, v, roleBinding, path)
 
 	return &DatabaseRoleBinding{
 		CredentialGetter: m,
@@ -79,8 +79,8 @@ func NewDatabaseRoleBindingForMysql(k kubernetes.Interface, cr crd.Interface, ro
 	}, nil
 }
 
-func NewDatabaseRoleBindingForMongodb(k kubernetes.Interface, cr crd.Interface, roleBinding *api.MongodbRoleBinding) (DatabaseRoleBindingInterface, error) {
-	mRole, err := cr.AuthorizationV1alpha1().MongodbRoles(roleBinding.Namespace).Get(roleBinding.Spec.RoleRef, metav1.GetOptions{})
+func NewDatabaseRoleBindingForMongodb(k kubernetes.Interface, cr crd.Interface, roleBinding *api.MongoDBRoleBinding) (DatabaseRoleBindingInterface, error) {
+	mRole, err := cr.AuthorizationV1alpha1().MongoDBRoles(roleBinding.Namespace).Get(roleBinding.Spec.RoleRef, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get mongodb role %s/%s", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
@@ -95,7 +95,7 @@ func NewDatabaseRoleBindingForMongodb(k kubernetes.Interface, cr crd.Interface, 
 		path = mRole.Spec.Provider.Vault.Path
 	}
 
-	m := mongodb.NewMongodbRoleBinding(k, v, roleBinding, path)
+	m := mongodb.NewMongoDBRoleBinding(k, v, roleBinding, path)
 
 	return &DatabaseRoleBinding{
 		CredentialGetter: m,

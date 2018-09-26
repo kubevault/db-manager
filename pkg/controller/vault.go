@@ -103,13 +103,13 @@ func (u *UserManagerController) runLeaseRenewerForMysql(duration time.Duration) 
 		for _, m := range mRBList {
 			err = u.RenewLeaseForMysql(m, duration)
 			if err != nil {
-				glog.Errorf("Mysql credential lease renewer: for MysqlRoleBinding %s/%s: %v", m.Namespace, m.Name, err)
+				glog.Errorf("Mysql credential lease renewer: for MySQLRoleBinding %s/%s: %v", m.Namespace, m.Name, err)
 			}
 		}
 	}
 }
 
-func (u *UserManagerController) RenewLeaseForMysql(m *api.MysqlRoleBinding, duration time.Duration) error {
+func (u *UserManagerController) RenewLeaseForMysql(m *api.MySQLRoleBinding, duration time.Duration) error {
 	if m.Status.Lease.ID == "" {
 		return nil
 	}
@@ -122,7 +122,7 @@ func (u *UserManagerController) RenewLeaseForMysql(m *api.MysqlRoleBinding, dura
 		return nil
 	}
 
-	mRole, err := u.dbClient.AuthorizationV1alpha1().MysqlRoles(m.Namespace).Get(m.Spec.RoleRef, metav1.GetOptions{})
+	mRole, err := u.dbClient.AuthorizationV1alpha1().MySQLRoles(m.Namespace).Get(m.Spec.RoleRef, metav1.GetOptions{})
 	if err != nil {
 		return errors.Wrapf(err, "failed to get mysql role %s/%s", m.Namespace, m.Spec.RoleRef)
 	}
@@ -140,7 +140,7 @@ func (u *UserManagerController) RenewLeaseForMysql(m *api.MysqlRoleBinding, dura
 	status := m.Status
 	status.Lease.RenewDeadline = time.Now().Unix()
 
-	err = u.updateMysqlRoleBindingStatus(&status, m)
+	err = u.updateMySQLRoleBindingStatus(&status, m)
 	if err != nil {
 		return errors.Wrap(err, "failed to update renew deadline")
 	}
@@ -155,13 +155,13 @@ func (u *UserManagerController) runLeaseRenewerForMongodb(duration time.Duration
 		for _, m := range mRBList {
 			err = u.RenewLeaseForMongodb(m, duration)
 			if err != nil {
-				glog.Errorf("Mongodb credential lease renewer: for MongodbRoleBinding %s/%s: %v", m.Namespace, m.Name, err)
+				glog.Errorf("Mongodb credential lease renewer: for MongoDBRoleBinding %s/%s: %v", m.Namespace, m.Name, err)
 			}
 		}
 	}
 }
 
-func (u *UserManagerController) RenewLeaseForMongodb(m *api.MongodbRoleBinding, duration time.Duration) error {
+func (u *UserManagerController) RenewLeaseForMongodb(m *api.MongoDBRoleBinding, duration time.Duration) error {
 	if m.Status.Lease.ID == "" {
 		return nil
 	}
@@ -174,7 +174,7 @@ func (u *UserManagerController) RenewLeaseForMongodb(m *api.MongodbRoleBinding, 
 		return nil
 	}
 
-	mRole, err := u.dbClient.AuthorizationV1alpha1().MongodbRoles(m.Namespace).Get(m.Spec.RoleRef, metav1.GetOptions{})
+	mRole, err := u.dbClient.AuthorizationV1alpha1().MongoDBRoles(m.Namespace).Get(m.Spec.RoleRef, metav1.GetOptions{})
 	if err != nil {
 		return errors.Wrapf(err, "failed to get mongodb role %s/%s", m.Namespace, m.Spec.RoleRef)
 	}
@@ -192,7 +192,7 @@ func (u *UserManagerController) RenewLeaseForMongodb(m *api.MongodbRoleBinding, 
 	status := m.Status
 	status.Lease.RenewDeadline = time.Now().Unix()
 
-	err = u.updateMongodbRoleBindingStatus(&status, m)
+	err = u.updateMongoDBRoleBindingStatus(&status, m)
 	if err != nil {
 		return errors.Wrap(err, "failed to update renew deadline")
 	}
