@@ -18,37 +18,37 @@ limitations under the License.
 
 package v1alpha1
 
-// MongodbRoleListerExpansion allows custom methods to be added to
-// MongodbRoleLister.
-type MongodbRoleListerExpansion interface{}
+// MongoDBRoleListerExpansion allows custom methods to be added to
+// MongoDBRoleLister.
+type MongoDBRoleListerExpansion interface{}
 
-// MongodbRoleNamespaceListerExpansion allows custom methods to be added to
-// MongodbRoleNamespaceLister.
-type MongodbRoleNamespaceListerExpansion interface{}
+// MongoDBRoleNamespaceListerExpansion allows custom methods to be added to
+// MongoDBRoleNamespaceLister.
+type MongoDBRoleNamespaceListerExpansion interface{}
 
-// MongodbRoleBindingListerExpansion allows custom methods to be added to
-// MongodbRoleBindingLister.
-type MongodbRoleBindingListerExpansion interface{}
+// MongoDBRoleBindingListerExpansion allows custom methods to be added to
+// MongoDBRoleBindingLister.
+type MongoDBRoleBindingListerExpansion interface{}
 
-// MongodbRoleBindingNamespaceListerExpansion allows custom methods to be added to
-// MongodbRoleBindingNamespaceLister.
-type MongodbRoleBindingNamespaceListerExpansion interface{}
+// MongoDBRoleBindingNamespaceListerExpansion allows custom methods to be added to
+// MongoDBRoleBindingNamespaceLister.
+type MongoDBRoleBindingNamespaceListerExpansion interface{}
 
-// MysqlRoleListerExpansion allows custom methods to be added to
-// MysqlRoleLister.
-type MysqlRoleListerExpansion interface{}
+// MySQLRoleListerExpansion allows custom methods to be added to
+// MySQLRoleLister.
+type MySQLRoleListerExpansion interface{}
 
-// MysqlRoleNamespaceListerExpansion allows custom methods to be added to
-// MysqlRoleNamespaceLister.
-type MysqlRoleNamespaceListerExpansion interface{}
+// MySQLRoleNamespaceListerExpansion allows custom methods to be added to
+// MySQLRoleNamespaceLister.
+type MySQLRoleNamespaceListerExpansion interface{}
 
-// MysqlRoleBindingListerExpansion allows custom methods to be added to
-// MysqlRoleBindingLister.
-type MysqlRoleBindingListerExpansion interface{}
+// MySQLRoleBindingListerExpansion allows custom methods to be added to
+// MySQLRoleBindingLister.
+type MySQLRoleBindingListerExpansion interface{}
 
-// MysqlRoleBindingNamespaceListerExpansion allows custom methods to be added to
-// MysqlRoleBindingNamespaceLister.
-type MysqlRoleBindingNamespaceListerExpansion interface{}
+// MySQLRoleBindingNamespaceListerExpansion allows custom methods to be added to
+// MySQLRoleBindingNamespaceLister.
+type MySQLRoleBindingNamespaceListerExpansion interface{}
 
 // PostgresRoleListerExpansion allows custom methods to be added to
 // PostgresRoleLister.

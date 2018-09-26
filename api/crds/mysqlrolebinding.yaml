@@ -14,7 +14,7 @@ spec:
     - kubedb
     - appscode
     - all
-    kind: MysqlRoleBinding
+    kind: MySQLRoleBinding
     plural: mysqlrolebindings
     singular: mysqlrolebinding
   scope: Namespaced
@@ -311,7 +311,7 @@ spec:
         spec:
           properties:
             roleRef:
-              description: Specifies the name of the MysqlRole
+              description: Specifies the name of the MySQLRole
               type: string
             store:
               description: Store specifies where to store credentials
@@ -357,10 +357,10 @@ spec:
         status:
           properties:
             conditions:
-              description: Represents the latest available observations of a MysqlRoleBinding
+              description: Represents the latest available observations of a MySQLRoleBinding
                 current state.
               items:
-                description: MysqlRoleBindingCondition describes the state of a MysqlRoleBinding
+                description: MySQLRoleBindingCondition describes the state of a MySQLRoleBinding
                   at a certain point.
                 properties:
                   message:
@@ -374,7 +374,7 @@ spec:
                     description: Status of the condition, one of True, False, Unknown.
                     type: string
                   type:
-                    description: Type of MysqlRoleBinding condition.
+                    description: Type of MySQLRoleBinding condition.
                     type: string
               type: array
             lease:
@@ -397,7 +397,7 @@ spec:
               - format: int64
                 type: integer
             phase:
-              description: Specifies the phase of the MysqlRoleBinding
+              description: Specifies the phase of the MySQLRoleBinding
               type: string
   version: v1alpha1
   versions:

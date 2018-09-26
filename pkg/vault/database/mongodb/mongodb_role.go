@@ -10,15 +10,15 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-type MongodbRole struct {
-	mdbRole      *api.MongodbRole
+type MongoDBRole struct {
+	mdbRole      *api.MongoDBRole
 	vaultClient  *vaultapi.Client
 	kubeClient   kubernetes.Interface
 	databasePath string
 }
 
-func NewMongodbRole(k kubernetes.Interface, v *vaultapi.Client, mdbRole *api.MongodbRole, databasePath string) *MongodbRole {
-	return &MongodbRole{
+func NewMongoDBRole(k kubernetes.Interface, v *vaultapi.Client, mdbRole *api.MongoDBRole, databasePath string) *MongoDBRole {
+	return &MongoDBRole{
 		mdbRole:      mdbRole,
 		vaultClient:  v,
 		kubeClient:   k,
@@ -30,7 +30,7 @@ func NewMongodbRole(k kubernetes.Interface, v *vaultapi.Client, mdbRole *api.Mon
 // https://www.vaultproject.io/api/secret/databases/mongodb.html#configure-connection
 //
 // CreateConfig creates database configuration
-func (m *MongodbRole) CreateConfig() error {
+func (m *MongoDBRole) CreateConfig() error {
 	if m.mdbRole.Spec.Database == nil {
 		return errors.New("spec.database is not provided")
 	}
@@ -78,7 +78,7 @@ func (m *MongodbRole) CreateConfig() error {
 // https://www.vaultproject.io/api/secret/databases/index.html#create-role
 //
 // CreateRole creates role
-func (m *MongodbRole) CreateRole() error {
+func (m *MongoDBRole) CreateRole() error {
 	name := m.mdbRole.Name
 	pg := m.mdbRole.Spec
 

@@ -27,43 +27,43 @@ import (
 	rest "k8s.io/client-go/rest"
 )
 
-// MysqlRoleBindingsGetter has a method to return a MysqlRoleBindingInterface.
+// MySQLRoleBindingsGetter has a method to return a MySQLRoleBindingInterface.
 // A group's client should implement this interface.
-type MysqlRoleBindingsGetter interface {
-	MysqlRoleBindings(namespace string) MysqlRoleBindingInterface
+type MySQLRoleBindingsGetter interface {
+	MySQLRoleBindings(namespace string) MySQLRoleBindingInterface
 }
 
-// MysqlRoleBindingInterface has methods to work with MysqlRoleBinding resources.
-type MysqlRoleBindingInterface interface {
-	Create(*v1alpha1.MysqlRoleBinding) (*v1alpha1.MysqlRoleBinding, error)
-	Update(*v1alpha1.MysqlRoleBinding) (*v1alpha1.MysqlRoleBinding, error)
-	UpdateStatus(*v1alpha1.MysqlRoleBinding) (*v1alpha1.MysqlRoleBinding, error)
+// MySQLRoleBindingInterface has methods to work with MySQLRoleBinding resources.
+type MySQLRoleBindingInterface interface {
+	Create(*v1alpha1.MySQLRoleBinding) (*v1alpha1.MySQLRoleBinding, error)
+	Update(*v1alpha1.MySQLRoleBinding) (*v1alpha1.MySQLRoleBinding, error)
+	UpdateStatus(*v1alpha1.MySQLRoleBinding) (*v1alpha1.MySQLRoleBinding, error)
 	Delete(name string, options *v1.DeleteOptions) error
 	DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error
-	Get(name string, options v1.GetOptions) (*v1alpha1.MysqlRoleBinding, error)
-	List(opts v1.ListOptions) (*v1alpha1.MysqlRoleBindingList, error)
+	Get(name string, options v1.GetOptions) (*v1alpha1.MySQLRoleBinding, error)
+	List(opts v1.ListOptions) (*v1alpha1.MySQLRoleBindingList, error)
 	Watch(opts v1.ListOptions) (watch.Interface, error)
-	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.MysqlRoleBinding, err error)
-	MysqlRoleBindingExpansion
+	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.MySQLRoleBinding, err error)
+	MySQLRoleBindingExpansion
 }
 
-// mysqlRoleBindings implements MysqlRoleBindingInterface
-type mysqlRoleBindings struct {
+// mySQLRoleBindings implements MySQLRoleBindingInterface
+type mySQLRoleBindings struct {
 	client rest.Interface
 	ns     string
 }
 
-// newMysqlRoleBindings returns a MysqlRoleBindings
-func newMysqlRoleBindings(c *AuthorizationV1alpha1Client, namespace string) *mysqlRoleBindings {
-	return &mysqlRoleBindings{
+// newMySQLRoleBindings returns a MySQLRoleBindings
+func newMySQLRoleBindings(c *AuthorizationV1alpha1Client, namespace string) *mySQLRoleBindings {
+	return &mySQLRoleBindings{
 		client: c.RESTClient(),
 		ns:     namespace,
 	}
 }
 
-// Get takes name of the mysqlRoleBinding, and returns the corresponding mysqlRoleBinding object, and an error if there is any.
-func (c *mysqlRoleBindings) Get(name string, options v1.GetOptions) (result *v1alpha1.MysqlRoleBinding, err error) {
-	result = &v1alpha1.MysqlRoleBinding{}
+// Get takes name of the mySQLRoleBinding, and returns the corresponding mySQLRoleBinding object, and an error if there is any.
+func (c *mySQLRoleBindings) Get(name string, options v1.GetOptions) (result *v1alpha1.MySQLRoleBinding, err error) {
+	result = &v1alpha1.MySQLRoleBinding{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("mysqlrolebindings").
@@ -74,9 +74,9 @@ func (c *mysqlRoleBindings) Get(name string, options v1.GetOptions) (result *v1a
 	return
 }
 
-// List takes label and field selectors, and returns the list of MysqlRoleBindings that match those selectors.
-func (c *mysqlRoleBindings) List(opts v1.ListOptions) (result *v1alpha1.MysqlRoleBindingList, err error) {
-	result = &v1alpha1.MysqlRoleBindingList{}
+// List takes label and field selectors, and returns the list of MySQLRoleBindings that match those selectors.
+func (c *mySQLRoleBindings) List(opts v1.ListOptions) (result *v1alpha1.MySQLRoleBindingList, err error) {
+	result = &v1alpha1.MySQLRoleBindingList{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("mysqlrolebindings").
@@ -86,8 +86,8 @@ func (c *mysqlRoleBindings) List(opts v1.ListOptions) (result *v1alpha1.MysqlRol
 	return
 }
 
-// Watch returns a watch.Interface that watches the requested mysqlRoleBindings.
-func (c *mysqlRoleBindings) Watch(opts v1.ListOptions) (watch.Interface, error) {
+// Watch returns a watch.Interface that watches the requested mySQLRoleBindings.
+func (c *mySQLRoleBindings) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	opts.Watch = true
 	return c.client.Get().
 		Namespace(c.ns).
@@ -96,26 +96,26 @@ func (c *mysqlRoleBindings) Watch(opts v1.ListOptions) (watch.Interface, error) 
 		Watch()
 }
 
-// Create takes the representation of a mysqlRoleBinding and creates it.  Returns the server's representation of the mysqlRoleBinding, and an error, if there is any.
-func (c *mysqlRoleBindings) Create(mysqlRoleBinding *v1alpha1.MysqlRoleBinding) (result *v1alpha1.MysqlRoleBinding, err error) {
-	result = &v1alpha1.MysqlRoleBinding{}
+// Create takes the representation of a mySQLRoleBinding and creates it.  Returns the server's representation of the mySQLRoleBinding, and an error, if there is any.
+func (c *mySQLRoleBindings) Create(mySQLRoleBinding *v1alpha1.MySQLRoleBinding) (result *v1alpha1.MySQLRoleBinding, err error) {
+	result = &v1alpha1.MySQLRoleBinding{}
 	err = c.client.Post().
 		Namespace(c.ns).
 		Resource("mysqlrolebindings").
-		Body(mysqlRoleBinding).
+		Body(mySQLRoleBinding).
 		Do().
 		Into(result)
 	return
 }
 
-// Update takes the representation of a mysqlRoleBinding and updates it. Returns the server's representation of the mysqlRoleBinding, and an error, if there is any.
-func (c *mysqlRoleBindings) Update(mysqlRoleBinding *v1alpha1.MysqlRoleBinding) (result *v1alpha1.MysqlRoleBinding, err error) {
-	result = &v1alpha1.MysqlRoleBinding{}
+// Update takes the representation of a mySQLRoleBinding and updates it. Returns the server's representation of the mySQLRoleBinding, and an error, if there is any.
+func (c *mySQLRoleBindings) Update(mySQLRoleBinding *v1alpha1.MySQLRoleBinding) (result *v1alpha1.MySQLRoleBinding, err error) {
+	result = &v1alpha1.MySQLRoleBinding{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("mysqlrolebindings").
-		Name(mysqlRoleBinding.Name).
-		Body(mysqlRoleBinding).
+		Name(mySQLRoleBinding.Name).
+		Body(mySQLRoleBinding).
 		Do().
 		Into(result)
 	return
@@ -124,21 +124,21 @@ func (c *mysqlRoleBindings) Update(mysqlRoleBinding *v1alpha1.MysqlRoleBinding) 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
 
-func (c *mysqlRoleBindings) UpdateStatus(mysqlRoleBinding *v1alpha1.MysqlRoleBinding) (result *v1alpha1.MysqlRoleBinding, err error) {
-	result = &v1alpha1.MysqlRoleBinding{}
+func (c *mySQLRoleBindings) UpdateStatus(mySQLRoleBinding *v1alpha1.MySQLRoleBinding) (result *v1alpha1.MySQLRoleBinding, err error) {
+	result = &v1alpha1.MySQLRoleBinding{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("mysqlrolebindings").
-		Name(mysqlRoleBinding.Name).
+		Name(mySQLRoleBinding.Name).
 		SubResource("status").
-		Body(mysqlRoleBinding).
+		Body(mySQLRoleBinding).
 		Do().
 		Into(result)
 	return
 }
 
-// Delete takes name of the mysqlRoleBinding and deletes it. Returns an error if one occurs.
-func (c *mysqlRoleBindings) Delete(name string, options *v1.DeleteOptions) error {
+// Delete takes name of the mySQLRoleBinding and deletes it. Returns an error if one occurs.
+func (c *mySQLRoleBindings) Delete(name string, options *v1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("mysqlrolebindings").
@@ -149,7 +149,7 @@ func (c *mysqlRoleBindings) Delete(name string, options *v1.DeleteOptions) error
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *mysqlRoleBindings) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+func (c *mySQLRoleBindings) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("mysqlrolebindings").
@@ -159,9 +159,9 @@ func (c *mysqlRoleBindings) DeleteCollection(options *v1.DeleteOptions, listOpti
 		Error()
 }
 
-// Patch applies the patch and returns the patched mysqlRoleBinding.
-func (c *mysqlRoleBindings) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.MysqlRoleBinding, err error) {
-	result = &v1alpha1.MysqlRoleBinding{}
+// Patch applies the patch and returns the patched mySQLRoleBinding.
+func (c *mySQLRoleBindings) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.MySQLRoleBinding, err error) {
+	result = &v1alpha1.MySQLRoleBinding{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
 		Resource("mysqlrolebindings").

@@ -31,59 +31,59 @@ import (
 	cache "k8s.io/client-go/tools/cache"
 )
 
-// MongodbRoleInformer provides access to a shared informer and lister for
-// MongodbRoles.
-type MongodbRoleInformer interface {
+// MongoDBRoleInformer provides access to a shared informer and lister for
+// MongoDBRoles.
+type MongoDBRoleInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.MongodbRoleLister
+	Lister() v1alpha1.MongoDBRoleLister
 }
 
-type mongodbRoleInformer struct {
+type mongoDBRoleInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
 	tweakListOptions internalinterfaces.TweakListOptionsFunc
 	namespace        string
 }
 
-// NewMongodbRoleInformer constructs a new informer for MongodbRole type.
+// NewMongoDBRoleInformer constructs a new informer for MongoDBRole type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewMongodbRoleInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
-	return NewFilteredMongodbRoleInformer(client, namespace, resyncPeriod, indexers, nil)
+func NewMongoDBRoleInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
+	return NewFilteredMongoDBRoleInformer(client, namespace, resyncPeriod, indexers, nil)
 }
 
-// NewFilteredMongodbRoleInformer constructs a new informer for MongodbRole type.
+// NewFilteredMongoDBRoleInformer constructs a new informer for MongoDBRole type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewFilteredMongodbRoleInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
+func NewFilteredMongoDBRoleInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.AuthorizationV1alpha1().MongodbRoles(namespace).List(options)
+				return client.AuthorizationV1alpha1().MongoDBRoles(namespace).List(options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.AuthorizationV1alpha1().MongodbRoles(namespace).Watch(options)
+				return client.AuthorizationV1alpha1().MongoDBRoles(namespace).Watch(options)
 			},
 		},
-		&authorization_v1alpha1.MongodbRole{},
+		&authorization_v1alpha1.MongoDBRole{},
 		resyncPeriod,
 		indexers,
 	)
 }
 
-func (f *mongodbRoleInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredMongodbRoleInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+func (f *mongoDBRoleInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
+	return NewFilteredMongoDBRoleInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
 }
 
-func (f *mongodbRoleInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&authorization_v1alpha1.MongodbRole{}, f.defaultInformer)
+func (f *mongoDBRoleInformer) Informer() cache.SharedIndexInformer {
+	return f.factory.InformerFor(&authorization_v1alpha1.MongoDBRole{}, f.defaultInformer)
 }
 
-func (f *mongodbRoleInformer) Lister() v1alpha1.MongodbRoleLister {
-	return v1alpha1.NewMongodbRoleLister(f.Informer().GetIndexer())
+func (f *mongoDBRoleInformer) Lister() v1alpha1.MongoDBRoleLister {
+	return v1alpha1.NewMongoDBRoleLister(f.Informer().GetIndexer())
 }

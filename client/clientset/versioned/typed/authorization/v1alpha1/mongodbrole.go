@@ -27,43 +27,43 @@ import (
 	rest "k8s.io/client-go/rest"
 )
 
-// MongodbRolesGetter has a method to return a MongodbRoleInterface.
+// MongoDBRolesGetter has a method to return a MongoDBRoleInterface.
 // A group's client should implement this interface.
-type MongodbRolesGetter interface {
-	MongodbRoles(namespace string) MongodbRoleInterface
+type MongoDBRolesGetter interface {
+	MongoDBRoles(namespace string) MongoDBRoleInterface
 }
 
-// MongodbRoleInterface has methods to work with MongodbRole resources.
-type MongodbRoleInterface interface {
-	Create(*v1alpha1.MongodbRole) (*v1alpha1.MongodbRole, error)
-	Update(*v1alpha1.MongodbRole) (*v1alpha1.MongodbRole, error)
-	UpdateStatus(*v1alpha1.MongodbRole) (*v1alpha1.MongodbRole, error)
+// MongoDBRoleInterface has methods to work with MongoDBRole resources.
+type MongoDBRoleInterface interface {
+	Create(*v1alpha1.MongoDBRole) (*v1alpha1.MongoDBRole, error)
+	Update(*v1alpha1.MongoDBRole) (*v1alpha1.MongoDBRole, error)
+	UpdateStatus(*v1alpha1.MongoDBRole) (*v1alpha1.MongoDBRole, error)
 	Delete(name string, options *v1.DeleteOptions) error
 	DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error
-	Get(name string, options v1.GetOptions) (*v1alpha1.MongodbRole, error)
-	List(opts v1.ListOptions) (*v1alpha1.MongodbRoleList, error)
+	Get(name string, options v1.GetOptions) (*v1alpha1.MongoDBRole, error)
+	List(opts v1.ListOptions) (*v1alpha1.MongoDBRoleList, error)
 	Watch(opts v1.ListOptions) (watch.Interface, error)
-	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.MongodbRole, err error)
-	MongodbRoleExpansion
+	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.MongoDBRole, err error)
+	MongoDBRoleExpansion
 }
 
-// mongodbRoles implements MongodbRoleInterface
-type mongodbRoles struct {
+// mongoDBRoles implements MongoDBRoleInterface
+type mongoDBRoles struct {
 	client rest.Interface
 	ns     string
 }
 
-// newMongodbRoles returns a MongodbRoles
-func newMongodbRoles(c *AuthorizationV1alpha1Client, namespace string) *mongodbRoles {
-	return &mongodbRoles{
+// newMongoDBRoles returns a MongoDBRoles
+func newMongoDBRoles(c *AuthorizationV1alpha1Client, namespace string) *mongoDBRoles {
+	return &mongoDBRoles{
 		client: c.RESTClient(),
 		ns:     namespace,
 	}
 }
 
-// Get takes name of the mongodbRole, and returns the corresponding mongodbRole object, and an error if there is any.
-func (c *mongodbRoles) Get(name string, options v1.GetOptions) (result *v1alpha1.MongodbRole, err error) {
-	result = &v1alpha1.MongodbRole{}
+// Get takes name of the mongoDBRole, and returns the corresponding mongoDBRole object, and an error if there is any.
+func (c *mongoDBRoles) Get(name string, options v1.GetOptions) (result *v1alpha1.MongoDBRole, err error) {
+	result = &v1alpha1.MongoDBRole{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("mongodbroles").
@@ -74,9 +74,9 @@ func (c *mongodbRoles) Get(name string, options v1.GetOptions) (result *v1alpha1
 	return
 }
 
-// List takes label and field selectors, and returns the list of MongodbRoles that match those selectors.
-func (c *mongodbRoles) List(opts v1.ListOptions) (result *v1alpha1.MongodbRoleList, err error) {
-	result = &v1alpha1.MongodbRoleList{}
+// List takes label and field selectors, and returns the list of MongoDBRoles that match those selectors.
+func (c *mongoDBRoles) List(opts v1.ListOptions) (result *v1alpha1.MongoDBRoleList, err error) {
+	result = &v1alpha1.MongoDBRoleList{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("mongodbroles").
@@ -86,8 +86,8 @@ func (c *mongodbRoles) List(opts v1.ListOptions) (result *v1alpha1.MongodbRoleLi
 	return
 }
 
-// Watch returns a watch.Interface that watches the requested mongodbRoles.
-func (c *mongodbRoles) Watch(opts v1.ListOptions) (watch.Interface, error) {
+// Watch returns a watch.Interface that watches the requested mongoDBRoles.
+func (c *mongoDBRoles) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	opts.Watch = true
 	return c.client.Get().
 		Namespace(c.ns).
@@ -96,26 +96,26 @@ func (c *mongodbRoles) Watch(opts v1.ListOptions) (watch.Interface, error) {
 		Watch()
 }
 
-// Create takes the representation of a mongodbRole and creates it.  Returns the server's representation of the mongodbRole, and an error, if there is any.
-func (c *mongodbRoles) Create(mongodbRole *v1alpha1.MongodbRole) (result *v1alpha1.MongodbRole, err error) {
-	result = &v1alpha1.MongodbRole{}
+// Create takes the representation of a mongoDBRole and creates it.  Returns the server's representation of the mongoDBRole, and an error, if there is any.
+func (c *mongoDBRoles) Create(mongoDBRole *v1alpha1.MongoDBRole) (result *v1alpha1.MongoDBRole, err error) {
+	result = &v1alpha1.MongoDBRole{}
 	err = c.client.Post().
 		Namespace(c.ns).
 		Resource("mongodbroles").
-		Body(mongodbRole).
+		Body(mongoDBRole).
 		Do().
 		Into(result)
 	return
 }
 
-// Update takes the representation of a mongodbRole and updates it. Returns the server's representation of the mongodbRole, and an error, if there is any.
-func (c *mongodbRoles) Update(mongodbRole *v1alpha1.MongodbRole) (result *v1alpha1.MongodbRole, err error) {
-	result = &v1alpha1.MongodbRole{}
+// Update takes the representation of a mongoDBRole and updates it. Returns the server's representation of the mongoDBRole, and an error, if there is any.
+func (c *mongoDBRoles) Update(mongoDBRole *v1alpha1.MongoDBRole) (result *v1alpha1.MongoDBRole, err error) {
+	result = &v1alpha1.MongoDBRole{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("mongodbroles").
-		Name(mongodbRole.Name).
-		Body(mongodbRole).
+		Name(mongoDBRole.Name).
+		Body(mongoDBRole).
 		Do().
 		Into(result)
 	return
@@ -124,21 +124,21 @@ func (c *mongodbRoles) Update(mongodbRole *v1alpha1.MongodbRole) (result *v1alph
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
 
-func (c *mongodbRoles) UpdateStatus(mongodbRole *v1alpha1.MongodbRole) (result *v1alpha1.MongodbRole, err error) {
-	result = &v1alpha1.MongodbRole{}
+func (c *mongoDBRoles) UpdateStatus(mongoDBRole *v1alpha1.MongoDBRole) (result *v1alpha1.MongoDBRole, err error) {
+	result = &v1alpha1.MongoDBRole{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("mongodbroles").
-		Name(mongodbRole.Name).
+		Name(mongoDBRole.Name).
 		SubResource("status").
-		Body(mongodbRole).
+		Body(mongoDBRole).
 		Do().
 		Into(result)
 	return
 }
 
-// Delete takes name of the mongodbRole and deletes it. Returns an error if one occurs.
-func (c *mongodbRoles) Delete(name string, options *v1.DeleteOptions) error {
+// Delete takes name of the mongoDBRole and deletes it. Returns an error if one occurs.
+func (c *mongoDBRoles) Delete(name string, options *v1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("mongodbroles").
@@ -149,7 +149,7 @@ func (c *mongodbRoles) Delete(name string, options *v1.DeleteOptions) error {
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *mongodbRoles) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+func (c *mongoDBRoles) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("mongodbroles").
@@ -159,9 +159,9 @@ func (c *mongodbRoles) DeleteCollection(options *v1.DeleteOptions, listOptions v
 		Error()
 }
 
-// Patch applies the patch and returns the patched mongodbRole.
-func (c *mongodbRoles) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.MongodbRole, err error) {
-	result = &v1alpha1.MongodbRole{}
+// Patch applies the patch and returns the patched mongoDBRole.
+func (c *mongoDBRoles) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.MongoDBRole, err error) {
+	result = &v1alpha1.MongoDBRole{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
 		Resource("mongodbroles").

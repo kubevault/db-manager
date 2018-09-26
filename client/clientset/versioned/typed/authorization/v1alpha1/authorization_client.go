@@ -27,10 +27,10 @@ import (
 
 type AuthorizationV1alpha1Interface interface {
 	RESTClient() rest.Interface
-	MongodbRolesGetter
-	MongodbRoleBindingsGetter
-	MysqlRolesGetter
-	MysqlRoleBindingsGetter
+	MongoDBRolesGetter
+	MongoDBRoleBindingsGetter
+	MySQLRolesGetter
+	MySQLRoleBindingsGetter
 	PostgresRolesGetter
 	PostgresRoleBindingsGetter
 }
@@ -40,20 +40,20 @@ type AuthorizationV1alpha1Client struct {
 	restClient rest.Interface
 }
 
-func (c *AuthorizationV1alpha1Client) MongodbRoles(namespace string) MongodbRoleInterface {
-	return newMongodbRoles(c, namespace)
+func (c *AuthorizationV1alpha1Client) MongoDBRoles(namespace string) MongoDBRoleInterface {
+	return newMongoDBRoles(c, namespace)
 }
 
-func (c *AuthorizationV1alpha1Client) MongodbRoleBindings(namespace string) MongodbRoleBindingInterface {
-	return newMongodbRoleBindings(c, namespace)
+func (c *AuthorizationV1alpha1Client) MongoDBRoleBindings(namespace string) MongoDBRoleBindingInterface {
+	return newMongoDBRoleBindings(c, namespace)
 }
 
-func (c *AuthorizationV1alpha1Client) MysqlRoles(namespace string) MysqlRoleInterface {
-	return newMysqlRoles(c, namespace)
+func (c *AuthorizationV1alpha1Client) MySQLRoles(namespace string) MySQLRoleInterface {
+	return newMySQLRoles(c, namespace)
 }
 
-func (c *AuthorizationV1alpha1Client) MysqlRoleBindings(namespace string) MysqlRoleBindingInterface {
-	return newMysqlRoleBindings(c, namespace)
+func (c *AuthorizationV1alpha1Client) MySQLRoleBindings(namespace string) MySQLRoleBindingInterface {
+	return newMySQLRoleBindings(c, namespace)
 }
 
 func (c *AuthorizationV1alpha1Client) PostgresRoles(namespace string) PostgresRoleInterface {

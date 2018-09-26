@@ -28,31 +28,31 @@ import (
 	testing "k8s.io/client-go/testing"
 )
 
-// FakeMysqlRoleBindings implements MysqlRoleBindingInterface
-type FakeMysqlRoleBindings struct {
+// FakeMySQLRoleBindings implements MySQLRoleBindingInterface
+type FakeMySQLRoleBindings struct {
 	Fake *FakeAuthorizationV1alpha1
 	ns   string
 }
 
 var mysqlrolebindingsResource = schema.GroupVersionResource{Group: "authorization.kubedb.com", Version: "v1alpha1", Resource: "mysqlrolebindings"}
 
-var mysqlrolebindingsKind = schema.GroupVersionKind{Group: "authorization.kubedb.com", Version: "v1alpha1", Kind: "MysqlRoleBinding"}
+var mysqlrolebindingsKind = schema.GroupVersionKind{Group: "authorization.kubedb.com", Version: "v1alpha1", Kind: "MySQLRoleBinding"}
 
-// Get takes name of the mysqlRoleBinding, and returns the corresponding mysqlRoleBinding object, and an error if there is any.
-func (c *FakeMysqlRoleBindings) Get(name string, options v1.GetOptions) (result *v1alpha1.MysqlRoleBinding, err error) {
+// Get takes name of the mySQLRoleBinding, and returns the corresponding mySQLRoleBinding object, and an error if there is any.
+func (c *FakeMySQLRoleBindings) Get(name string, options v1.GetOptions) (result *v1alpha1.MySQLRoleBinding, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(mysqlrolebindingsResource, c.ns, name), &v1alpha1.MysqlRoleBinding{})
+		Invokes(testing.NewGetAction(mysqlrolebindingsResource, c.ns, name), &v1alpha1.MySQLRoleBinding{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.MysqlRoleBinding), err
+	return obj.(*v1alpha1.MySQLRoleBinding), err
 }
 
-// List takes label and field selectors, and returns the list of MysqlRoleBindings that match those selectors.
-func (c *FakeMysqlRoleBindings) List(opts v1.ListOptions) (result *v1alpha1.MysqlRoleBindingList, err error) {
+// List takes label and field selectors, and returns the list of MySQLRoleBindings that match those selectors.
+func (c *FakeMySQLRoleBindings) List(opts v1.ListOptions) (result *v1alpha1.MySQLRoleBindingList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(mysqlrolebindingsResource, mysqlrolebindingsKind, c.ns, opts), &v1alpha1.MysqlRoleBindingList{})
+		Invokes(testing.NewListAction(mysqlrolebindingsResource, mysqlrolebindingsKind, c.ns, opts), &v1alpha1.MySQLRoleBindingList{})
 
 	if obj == nil {
 		return nil, err
@@ -62,8 +62,8 @@ func (c *FakeMysqlRoleBindings) List(opts v1.ListOptions) (result *v1alpha1.Mysq
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &v1alpha1.MysqlRoleBindingList{ListMeta: obj.(*v1alpha1.MysqlRoleBindingList).ListMeta}
-	for _, item := range obj.(*v1alpha1.MysqlRoleBindingList).Items {
+	list := &v1alpha1.MySQLRoleBindingList{ListMeta: obj.(*v1alpha1.MySQLRoleBindingList).ListMeta}
+	for _, item := range obj.(*v1alpha1.MySQLRoleBindingList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
 		}
@@ -71,70 +71,70 @@ func (c *FakeMysqlRoleBindings) List(opts v1.ListOptions) (result *v1alpha1.Mysq
 	return list, err
 }
 
-// Watch returns a watch.Interface that watches the requested mysqlRoleBindings.
-func (c *FakeMysqlRoleBindings) Watch(opts v1.ListOptions) (watch.Interface, error) {
+// Watch returns a watch.Interface that watches the requested mySQLRoleBindings.
+func (c *FakeMySQLRoleBindings) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(mysqlrolebindingsResource, c.ns, opts))
 
 }
 
-// Create takes the representation of a mysqlRoleBinding and creates it.  Returns the server's representation of the mysqlRoleBinding, and an error, if there is any.
-func (c *FakeMysqlRoleBindings) Create(mysqlRoleBinding *v1alpha1.MysqlRoleBinding) (result *v1alpha1.MysqlRoleBinding, err error) {
+// Create takes the representation of a mySQLRoleBinding and creates it.  Returns the server's representation of the mySQLRoleBinding, and an error, if there is any.
+func (c *FakeMySQLRoleBindings) Create(mySQLRoleBinding *v1alpha1.MySQLRoleBinding) (result *v1alpha1.MySQLRoleBinding, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(mysqlrolebindingsResource, c.ns, mysqlRoleBinding), &v1alpha1.MysqlRoleBinding{})
+		Invokes(testing.NewCreateAction(mysqlrolebindingsResource, c.ns, mySQLRoleBinding), &v1alpha1.MySQLRoleBinding{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.MysqlRoleBinding), err
+	return obj.(*v1alpha1.MySQLRoleBinding), err
 }
 
-// Update takes the representation of a mysqlRoleBinding and updates it. Returns the server's representation of the mysqlRoleBinding, and an error, if there is any.
-func (c *FakeMysqlRoleBindings) Update(mysqlRoleBinding *v1alpha1.MysqlRoleBinding) (result *v1alpha1.MysqlRoleBinding, err error) {
+// Update takes the representation of a mySQLRoleBinding and updates it. Returns the server's representation of the mySQLRoleBinding, and an error, if there is any.
+func (c *FakeMySQLRoleBindings) Update(mySQLRoleBinding *v1alpha1.MySQLRoleBinding) (result *v1alpha1.MySQLRoleBinding, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(mysqlrolebindingsResource, c.ns, mysqlRoleBinding), &v1alpha1.MysqlRoleBinding{})
+		Invokes(testing.NewUpdateAction(mysqlrolebindingsResource, c.ns, mySQLRoleBinding), &v1alpha1.MySQLRoleBinding{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.MysqlRoleBinding), err
+	return obj.(*v1alpha1.MySQLRoleBinding), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeMysqlRoleBindings) UpdateStatus(mysqlRoleBinding *v1alpha1.MysqlRoleBinding) (*v1alpha1.MysqlRoleBinding, error) {
+func (c *FakeMySQLRoleBindings) UpdateStatus(mySQLRoleBinding *v1alpha1.MySQLRoleBinding) (*v1alpha1.MySQLRoleBinding, error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(mysqlrolebindingsResource, "status", c.ns, mysqlRoleBinding), &v1alpha1.MysqlRoleBinding{})
+		Invokes(testing.NewUpdateSubresourceAction(mysqlrolebindingsResource, "status", c.ns, mySQLRoleBinding), &v1alpha1.MySQLRoleBinding{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.MysqlRoleBinding), err
+	return obj.(*v1alpha1.MySQLRoleBinding), err
 }
 
-// Delete takes name of the mysqlRoleBinding and deletes it. Returns an error if one occurs.
-func (c *FakeMysqlRoleBindings) Delete(name string, options *v1.DeleteOptions) error {
+// Delete takes name of the mySQLRoleBinding and deletes it. Returns an error if one occurs.
+func (c *FakeMySQLRoleBindings) Delete(name string, options *v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(mysqlrolebindingsResource, c.ns, name), &v1alpha1.MysqlRoleBinding{})
+		Invokes(testing.NewDeleteAction(mysqlrolebindingsResource, c.ns, name), &v1alpha1.MySQLRoleBinding{})
 
 	return err
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeMysqlRoleBindings) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+func (c *FakeMySQLRoleBindings) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	action := testing.NewDeleteCollectionAction(mysqlrolebindingsResource, c.ns, listOptions)
 
-	_, err := c.Fake.Invokes(action, &v1alpha1.MysqlRoleBindingList{})
+	_, err := c.Fake.Invokes(action, &v1alpha1.MySQLRoleBindingList{})
 	return err
 }
 
-// Patch applies the patch and returns the patched mysqlRoleBinding.
-func (c *FakeMysqlRoleBindings) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.MysqlRoleBinding, err error) {
+// Patch applies the patch and returns the patched mySQLRoleBinding.
+func (c *FakeMySQLRoleBindings) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.MySQLRoleBinding, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(mysqlrolebindingsResource, c.ns, name, data, subresources...), &v1alpha1.MysqlRoleBinding{})
+		Invokes(testing.NewPatchSubresourceAction(mysqlrolebindingsResource, c.ns, name, data, subresources...), &v1alpha1.MySQLRoleBinding{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.MysqlRoleBinding), err
+	return obj.(*v1alpha1.MySQLRoleBinding), err
 }

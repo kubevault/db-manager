@@ -25,64 +25,64 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-// MysqlRoleLister helps list MysqlRoles.
-type MysqlRoleLister interface {
-	// List lists all MysqlRoles in the indexer.
-	List(selector labels.Selector) (ret []*v1alpha1.MysqlRole, err error)
-	// MysqlRoles returns an object that can list and get MysqlRoles.
-	MysqlRoles(namespace string) MysqlRoleNamespaceLister
-	MysqlRoleListerExpansion
+// MySQLRoleLister helps list MySQLRoles.
+type MySQLRoleLister interface {
+	// List lists all MySQLRoles in the indexer.
+	List(selector labels.Selector) (ret []*v1alpha1.MySQLRole, err error)
+	// MySQLRoles returns an object that can list and get MySQLRoles.
+	MySQLRoles(namespace string) MySQLRoleNamespaceLister
+	MySQLRoleListerExpansion
 }
 
-// mysqlRoleLister implements the MysqlRoleLister interface.
-type mysqlRoleLister struct {
+// mySQLRoleLister implements the MySQLRoleLister interface.
+type mySQLRoleLister struct {
 	indexer cache.Indexer
 }
 
-// NewMysqlRoleLister returns a new MysqlRoleLister.
-func NewMysqlRoleLister(indexer cache.Indexer) MysqlRoleLister {
-	return &mysqlRoleLister{indexer: indexer}
+// NewMySQLRoleLister returns a new MySQLRoleLister.
+func NewMySQLRoleLister(indexer cache.Indexer) MySQLRoleLister {
+	return &mySQLRoleLister{indexer: indexer}
 }
 
-// List lists all MysqlRoles in the indexer.
-func (s *mysqlRoleLister) List(selector labels.Selector) (ret []*v1alpha1.MysqlRole, err error) {
+// List lists all MySQLRoles in the indexer.
+func (s *mySQLRoleLister) List(selector labels.Selector) (ret []*v1alpha1.MySQLRole, err error) {
 	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.MysqlRole))
+		ret = append(ret, m.(*v1alpha1.MySQLRole))
 	})
 	return ret, err
 }
 
-// MysqlRoles returns an object that can list and get MysqlRoles.
-func (s *mysqlRoleLister) MysqlRoles(namespace string) MysqlRoleNamespaceLister {
-	return mysqlRoleNamespaceLister{indexer: s.indexer, namespace: namespace}
+// MySQLRoles returns an object that can list and get MySQLRoles.
+func (s *mySQLRoleLister) MySQLRoles(namespace string) MySQLRoleNamespaceLister {
+	return mySQLRoleNamespaceLister{indexer: s.indexer, namespace: namespace}
 }
 
-// MysqlRoleNamespaceLister helps list and get MysqlRoles.
-type MysqlRoleNamespaceLister interface {
-	// List lists all MysqlRoles in the indexer for a given namespace.
-	List(selector labels.Selector) (ret []*v1alpha1.MysqlRole, err error)
-	// Get retrieves the MysqlRole from the indexer for a given namespace and name.
-	Get(name string) (*v1alpha1.MysqlRole, error)
-	MysqlRoleNamespaceListerExpansion
+// MySQLRoleNamespaceLister helps list and get MySQLRoles.
+type MySQLRoleNamespaceLister interface {
+	// List lists all MySQLRoles in the indexer for a given namespace.
+	List(selector labels.Selector) (ret []*v1alpha1.MySQLRole, err error)
+	// Get retrieves the MySQLRole from the indexer for a given namespace and name.
+	Get(name string) (*v1alpha1.MySQLRole, error)
+	MySQLRoleNamespaceListerExpansion
 }
 
-// mysqlRoleNamespaceLister implements the MysqlRoleNamespaceLister
+// mySQLRoleNamespaceLister implements the MySQLRoleNamespaceLister
 // interface.
-type mysqlRoleNamespaceLister struct {
+type mySQLRoleNamespaceLister struct {
 	indexer   cache.Indexer
 	namespace string
 }
 
-// List lists all MysqlRoles in the indexer for a given namespace.
-func (s mysqlRoleNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.MysqlRole, err error) {
+// List lists all MySQLRoles in the indexer for a given namespace.
+func (s mySQLRoleNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.MySQLRole, err error) {
 	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.MysqlRole))
+		ret = append(ret, m.(*v1alpha1.MySQLRole))
 	})
 	return ret, err
 }
 
-// Get retrieves the MysqlRole from the indexer for a given namespace and name.
-func (s mysqlRoleNamespaceLister) Get(name string) (*v1alpha1.MysqlRole, error) {
+// Get retrieves the MySQLRole from the indexer for a given namespace and name.
+func (s mySQLRoleNamespaceLister) Get(name string) (*v1alpha1.MySQLRole, error) {
 	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
 	if err != nil {
 		return nil, err
@@ -90,5 +90,5 @@ func (s mysqlRoleNamespaceLister) Get(name string) (*v1alpha1.MysqlRole, error) 
 	if !exists {
 		return nil, errors.NewNotFound(v1alpha1.Resource("mysqlrole"), name)
 	}
-	return obj.(*v1alpha1.MysqlRole), nil
+	return obj.(*v1alpha1.MySQLRole), nil
 }

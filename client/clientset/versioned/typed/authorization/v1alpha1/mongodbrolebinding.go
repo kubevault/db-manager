@@ -27,43 +27,43 @@ import (
 	rest "k8s.io/client-go/rest"
 )
 
-// MongodbRoleBindingsGetter has a method to return a MongodbRoleBindingInterface.
+// MongoDBRoleBindingsGetter has a method to return a MongoDBRoleBindingInterface.
 // A group's client should implement this interface.
-type MongodbRoleBindingsGetter interface {
-	MongodbRoleBindings(namespace string) MongodbRoleBindingInterface
+type MongoDBRoleBindingsGetter interface {
+	MongoDBRoleBindings(namespace string) MongoDBRoleBindingInterface
 }
 
-// MongodbRoleBindingInterface has methods to work with MongodbRoleBinding resources.
-type MongodbRoleBindingInterface interface {
-	Create(*v1alpha1.MongodbRoleBinding) (*v1alpha1.MongodbRoleBinding, error)
-	Update(*v1alpha1.MongodbRoleBinding) (*v1alpha1.MongodbRoleBinding, error)
-	UpdateStatus(*v1alpha1.MongodbRoleBinding) (*v1alpha1.MongodbRoleBinding, error)
+// MongoDBRoleBindingInterface has methods to work with MongoDBRoleBinding resources.
+type MongoDBRoleBindingInterface interface {
+	Create(*v1alpha1.MongoDBRoleBinding) (*v1alpha1.MongoDBRoleBinding, error)
+	Update(*v1alpha1.MongoDBRoleBinding) (*v1alpha1.MongoDBRoleBinding, error)
+	UpdateStatus(*v1alpha1.MongoDBRoleBinding) (*v1alpha1.MongoDBRoleBinding, error)
 	Delete(name string, options *v1.DeleteOptions) error
 	DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error
-	Get(name string, options v1.GetOptions) (*v1alpha1.MongodbRoleBinding, error)
-	List(opts v1.ListOptions) (*v1alpha1.MongodbRoleBindingList, error)
+	Get(name string, options v1.GetOptions) (*v1alpha1.MongoDBRoleBinding, error)
+	List(opts v1.ListOptions) (*v1alpha1.MongoDBRoleBindingList, error)
 	Watch(opts v1.ListOptions) (watch.Interface, error)
-	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.MongodbRoleBinding, err error)
-	MongodbRoleBindingExpansion
+	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.MongoDBRoleBinding, err error)
+	MongoDBRoleBindingExpansion
 }
 
-// mongodbRoleBindings implements MongodbRoleBindingInterface
-type mongodbRoleBindings struct {
+// mongoDBRoleBindings implements MongoDBRoleBindingInterface
+type mongoDBRoleBindings struct {
 	client rest.Interface
 	ns     string
 }
 
-// newMongodbRoleBindings returns a MongodbRoleBindings
-func newMongodbRoleBindings(c *AuthorizationV1alpha1Client, namespace string) *mongodbRoleBindings {
-	return &mongodbRoleBindings{
+// newMongoDBRoleBindings returns a MongoDBRoleBindings
+func newMongoDBRoleBindings(c *AuthorizationV1alpha1Client, namespace string) *mongoDBRoleBindings {
+	return &mongoDBRoleBindings{
 		client: c.RESTClient(),
 		ns:     namespace,
 	}
 }
 
-// Get takes name of the mongodbRoleBinding, and returns the corresponding mongodbRoleBinding object, and an error if there is any.
-func (c *mongodbRoleBindings) Get(name string, options v1.GetOptions) (result *v1alpha1.MongodbRoleBinding, err error) {
-	result = &v1alpha1.MongodbRoleBinding{}
+// Get takes name of the mongoDBRoleBinding, and returns the corresponding mongoDBRoleBinding object, and an error if there is any.
+func (c *mongoDBRoleBindings) Get(name string, options v1.GetOptions) (result *v1alpha1.MongoDBRoleBinding, err error) {
+	result = &v1alpha1.MongoDBRoleBinding{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("mongodbrolebindings").
@@ -74,9 +74,9 @@ func (c *mongodbRoleBindings) Get(name string, options v1.GetOptions) (result *v
 	return
 }
 
-// List takes label and field selectors, and returns the list of MongodbRoleBindings that match those selectors.
-func (c *mongodbRoleBindings) List(opts v1.ListOptions) (result *v1alpha1.MongodbRoleBindingList, err error) {
-	result = &v1alpha1.MongodbRoleBindingList{}
+// List takes label and field selectors, and returns the list of MongoDBRoleBindings that match those selectors.
+func (c *mongoDBRoleBindings) List(opts v1.ListOptions) (result *v1alpha1.MongoDBRoleBindingList, err error) {
+	result = &v1alpha1.MongoDBRoleBindingList{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("mongodbrolebindings").
@@ -86,8 +86,8 @@ func (c *mongodbRoleBindings) List(opts v1.ListOptions) (result *v1alpha1.Mongod
 	return
 }
 
-// Watch returns a watch.Interface that watches the requested mongodbRoleBindings.
-func (c *mongodbRoleBindings) Watch(opts v1.ListOptions) (watch.Interface, error) {
+// Watch returns a watch.Interface that watches the requested mongoDBRoleBindings.
+func (c *mongoDBRoleBindings) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	opts.Watch = true
 	return c.client.Get().
 		Namespace(c.ns).
@@ -96,26 +96,26 @@ func (c *mongodbRoleBindings) Watch(opts v1.ListOptions) (watch.Interface, error
 		Watch()
 }
 
-// Create takes the representation of a mongodbRoleBinding and creates it.  Returns the server's representation of the mongodbRoleBinding, and an error, if there is any.
-func (c *mongodbRoleBindings) Create(mongodbRoleBinding *v1alpha1.MongodbRoleBinding) (result *v1alpha1.MongodbRoleBinding, err error) {
-	result = &v1alpha1.MongodbRoleBinding{}
+// Create takes the representation of a mongoDBRoleBinding and creates it.  Returns the server's representation of the mongoDBRoleBinding, and an error, if there is any.
+func (c *mongoDBRoleBindings) Create(mongoDBRoleBinding *v1alpha1.MongoDBRoleBinding) (result *v1alpha1.MongoDBRoleBinding, err error) {
+	result = &v1alpha1.MongoDBRoleBinding{}
 	err = c.client.Post().
 		Namespace(c.ns).
 		Resource("mongodbrolebindings").
-		Body(mongodbRoleBinding).
+		Body(mongoDBRoleBinding).
 		Do().
 		Into(result)
 	return
 }
 
-// Update takes the representation of a mongodbRoleBinding and updates it. Returns the server's representation of the mongodbRoleBinding, and an error, if there is any.
-func (c *mongodbRoleBindings) Update(mongodbRoleBinding *v1alpha1.MongodbRoleBinding) (result *v1alpha1.MongodbRoleBinding, err error) {
-	result = &v1alpha1.MongodbRoleBinding{}
+// Update takes the representation of a mongoDBRoleBinding and updates it. Returns the server's representation of the mongoDBRoleBinding, and an error, if there is any.
+func (c *mongoDBRoleBindings) Update(mongoDBRoleBinding *v1alpha1.MongoDBRoleBinding) (result *v1alpha1.MongoDBRoleBinding, err error) {
+	result = &v1alpha1.MongoDBRoleBinding{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("mongodbrolebindings").
-		Name(mongodbRoleBinding.Name).
-		Body(mongodbRoleBinding).
+		Name(mongoDBRoleBinding.Name).
+		Body(mongoDBRoleBinding).
 		Do().
 		Into(result)
 	return
@@ -124,21 +124,21 @@ func (c *mongodbRoleBindings) Update(mongodbRoleBinding *v1alpha1.MongodbRoleBin
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
 
-func (c *mongodbRoleBindings) UpdateStatus(mongodbRoleBinding *v1alpha1.MongodbRoleBinding) (result *v1alpha1.MongodbRoleBinding, err error) {
-	result = &v1alpha1.MongodbRoleBinding{}
+func (c *mongoDBRoleBindings) UpdateStatus(mongoDBRoleBinding *v1alpha1.MongoDBRoleBinding) (result *v1alpha1.MongoDBRoleBinding, err error) {
+	result = &v1alpha1.MongoDBRoleBinding{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("mongodbrolebindings").
-		Name(mongodbRoleBinding.Name).
+		Name(mongoDBRoleBinding.Name).
 		SubResource("status").
-		Body(mongodbRoleBinding).
+		Body(mongoDBRoleBinding).
 		Do().
 		Into(result)
 	return
 }
 
-// Delete takes name of the mongodbRoleBinding and deletes it. Returns an error if one occurs.
-func (c *mongodbRoleBindings) Delete(name string, options *v1.DeleteOptions) error {
+// Delete takes name of the mongoDBRoleBinding and deletes it. Returns an error if one occurs.
+func (c *mongoDBRoleBindings) Delete(name string, options *v1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("mongodbrolebindings").
@@ -149,7 +149,7 @@ func (c *mongodbRoleBindings) Delete(name string, options *v1.DeleteOptions) err
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *mongodbRoleBindings) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+func (c *mongoDBRoleBindings) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("mongodbrolebindings").
@@ -159,9 +159,9 @@ func (c *mongodbRoleBindings) DeleteCollection(options *v1.DeleteOptions, listOp
 		Error()
 }
 
-// Patch applies the patch and returns the patched mongodbRoleBinding.
-func (c *mongodbRoleBindings) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.MongodbRoleBinding, err error) {
-	result = &v1alpha1.MongodbRoleBinding{}
+// Patch applies the patch and returns the patched mongoDBRoleBinding.
+func (c *mongoDBRoleBindings) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.MongoDBRoleBinding, err error) {
+	result = &v1alpha1.MongoDBRoleBinding{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
 		Resource("mongodbrolebindings").

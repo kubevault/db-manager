@@ -25,64 +25,64 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-// MysqlRoleBindingLister helps list MysqlRoleBindings.
-type MysqlRoleBindingLister interface {
-	// List lists all MysqlRoleBindings in the indexer.
-	List(selector labels.Selector) (ret []*v1alpha1.MysqlRoleBinding, err error)
-	// MysqlRoleBindings returns an object that can list and get MysqlRoleBindings.
-	MysqlRoleBindings(namespace string) MysqlRoleBindingNamespaceLister
-	MysqlRoleBindingListerExpansion
+// MySQLRoleBindingLister helps list MySQLRoleBindings.
+type MySQLRoleBindingLister interface {
+	// List lists all MySQLRoleBindings in the indexer.
+	List(selector labels.Selector) (ret []*v1alpha1.MySQLRoleBinding, err error)
+	// MySQLRoleBindings returns an object that can list and get MySQLRoleBindings.
+	MySQLRoleBindings(namespace string) MySQLRoleBindingNamespaceLister
+	MySQLRoleBindingListerExpansion
 }
 
-// mysqlRoleBindingLister implements the MysqlRoleBindingLister interface.
-type mysqlRoleBindingLister struct {
+// mySQLRoleBindingLister implements the MySQLRoleBindingLister interface.
+type mySQLRoleBindingLister struct {
 	indexer cache.Indexer
 }
 
-// NewMysqlRoleBindingLister returns a new MysqlRoleBindingLister.
-func NewMysqlRoleBindingLister(indexer cache.Indexer) MysqlRoleBindingLister {
-	return &mysqlRoleBindingLister{indexer: indexer}
+// NewMySQLRoleBindingLister returns a new MySQLRoleBindingLister.
+func NewMySQLRoleBindingLister(indexer cache.Indexer) MySQLRoleBindingLister {
+	return &mySQLRoleBindingLister{indexer: indexer}
 }
 
-// List lists all MysqlRoleBindings in the indexer.
-func (s *mysqlRoleBindingLister) List(selector labels.Selector) (ret []*v1alpha1.MysqlRoleBinding, err error) {
+// List lists all MySQLRoleBindings in the indexer.
+func (s *mySQLRoleBindingLister) List(selector labels.Selector) (ret []*v1alpha1.MySQLRoleBinding, err error) {
 	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.MysqlRoleBinding))
+		ret = append(ret, m.(*v1alpha1.MySQLRoleBinding))
 	})
 	return ret, err
 }
 
-// MysqlRoleBindings returns an object that can list and get MysqlRoleBindings.
-func (s *mysqlRoleBindingLister) MysqlRoleBindings(namespace string) MysqlRoleBindingNamespaceLister {
-	return mysqlRoleBindingNamespaceLister{indexer: s.indexer, namespace: namespace}
+// MySQLRoleBindings returns an object that can list and get MySQLRoleBindings.
+func (s *mySQLRoleBindingLister) MySQLRoleBindings(namespace string) MySQLRoleBindingNamespaceLister {
+	return mySQLRoleBindingNamespaceLister{indexer: s.indexer, namespace: namespace}
 }
 
-// MysqlRoleBindingNamespaceLister helps list and get MysqlRoleBindings.
-type MysqlRoleBindingNamespaceLister interface {
-	// List lists all MysqlRoleBindings in the indexer for a given namespace.
-	List(selector labels.Selector) (ret []*v1alpha1.MysqlRoleBinding, err error)
-	// Get retrieves the MysqlRoleBinding from the indexer for a given namespace and name.
-	Get(name string) (*v1alpha1.MysqlRoleBinding, error)
-	MysqlRoleBindingNamespaceListerExpansion
+// MySQLRoleBindingNamespaceLister helps list and get MySQLRoleBindings.
+type MySQLRoleBindingNamespaceLister interface {
+	// List lists all MySQLRoleBindings in the indexer for a given namespace.
+	List(selector labels.Selector) (ret []*v1alpha1.MySQLRoleBinding, err error)
+	// Get retrieves the MySQLRoleBinding from the indexer for a given namespace and name.
+	Get(name string) (*v1alpha1.MySQLRoleBinding, error)
+	MySQLRoleBindingNamespaceListerExpansion
 }
 
-// mysqlRoleBindingNamespaceLister implements the MysqlRoleBindingNamespaceLister
+// mySQLRoleBindingNamespaceLister implements the MySQLRoleBindingNamespaceLister
 // interface.
-type mysqlRoleBindingNamespaceLister struct {
+type mySQLRoleBindingNamespaceLister struct {
 	indexer   cache.Indexer
 	namespace string
 }
 
-// List lists all MysqlRoleBindings in the indexer for a given namespace.
-func (s mysqlRoleBindingNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.MysqlRoleBinding, err error) {
+// List lists all MySQLRoleBindings in the indexer for a given namespace.
+func (s mySQLRoleBindingNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.MySQLRoleBinding, err error) {
 	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.MysqlRoleBinding))
+		ret = append(ret, m.(*v1alpha1.MySQLRoleBinding))
 	})
 	return ret, err
 }
 
-// Get retrieves the MysqlRoleBinding from the indexer for a given namespace and name.
-func (s mysqlRoleBindingNamespaceLister) Get(name string) (*v1alpha1.MysqlRoleBinding, error) {
+// Get retrieves the MySQLRoleBinding from the indexer for a given namespace and name.
+func (s mySQLRoleBindingNamespaceLister) Get(name string) (*v1alpha1.MySQLRoleBinding, error) {
 	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
 	if err != nil {
 		return nil, err
@@ -90,5 +90,5 @@ func (s mysqlRoleBindingNamespaceLister) Get(name string) (*v1alpha1.MysqlRoleBi
 	if !exists {
 		return nil, errors.NewNotFound(v1alpha1.Resource("mysqlrolebinding"), name)
 	}
-	return obj.(*v1alpha1.MysqlRoleBinding), nil
+	return obj.(*v1alpha1.MySQLRoleBinding), nil
 }

@@ -25,64 +25,64 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-// MongodbRoleBindingLister helps list MongodbRoleBindings.
-type MongodbRoleBindingLister interface {
-	// List lists all MongodbRoleBindings in the indexer.
-	List(selector labels.Selector) (ret []*v1alpha1.MongodbRoleBinding, err error)
-	// MongodbRoleBindings returns an object that can list and get MongodbRoleBindings.
-	MongodbRoleBindings(namespace string) MongodbRoleBindingNamespaceLister
-	MongodbRoleBindingListerExpansion
+// MongoDBRoleBindingLister helps list MongoDBRoleBindings.
+type MongoDBRoleBindingLister interface {
+	// List lists all MongoDBRoleBindings in the indexer.
+	List(selector labels.Selector) (ret []*v1alpha1.MongoDBRoleBinding, err error)
+	// MongoDBRoleBindings returns an object that can list and get MongoDBRoleBindings.
+	MongoDBRoleBindings(namespace string) MongoDBRoleBindingNamespaceLister
+	MongoDBRoleBindingListerExpansion
 }
 
-// mongodbRoleBindingLister implements the MongodbRoleBindingLister interface.
-type mongodbRoleBindingLister struct {
+// mongoDBRoleBindingLister implements the MongoDBRoleBindingLister interface.
+type mongoDBRoleBindingLister struct {
 	indexer cache.Indexer
 }
 
-// NewMongodbRoleBindingLister returns a new MongodbRoleBindingLister.
-func NewMongodbRoleBindingLister(indexer cache.Indexer) MongodbRoleBindingLister {
-	return &mongodbRoleBindingLister{indexer: indexer}
+// NewMongoDBRoleBindingLister returns a new MongoDBRoleBindingLister.
+func NewMongoDBRoleBindingLister(indexer cache.Indexer) MongoDBRoleBindingLister {
+	return &mongoDBRoleBindingLister{indexer: indexer}
 }
 
-// List lists all MongodbRoleBindings in the indexer.
-func (s *mongodbRoleBindingLister) List(selector labels.Selector) (ret []*v1alpha1.MongodbRoleBinding, err error) {
+// List lists all MongoDBRoleBindings in the indexer.
+func (s *mongoDBRoleBindingLister) List(selector labels.Selector) (ret []*v1alpha1.MongoDBRoleBinding, err error) {
 	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.MongodbRoleBinding))
+		ret = append(ret, m.(*v1alpha1.MongoDBRoleBinding))
 	})
 	return ret, err
 }
 
-// MongodbRoleBindings returns an object that can list and get MongodbRoleBindings.
-func (s *mongodbRoleBindingLister) MongodbRoleBindings(namespace string) MongodbRoleBindingNamespaceLister {
-	return mongodbRoleBindingNamespaceLister{indexer: s.indexer, namespace: namespace}
+// MongoDBRoleBindings returns an object that can list and get MongoDBRoleBindings.
+func (s *mongoDBRoleBindingLister) MongoDBRoleBindings(namespace string) MongoDBRoleBindingNamespaceLister {
+	return mongoDBRoleBindingNamespaceLister{indexer: s.indexer, namespace: namespace}
 }
 
-// MongodbRoleBindingNamespaceLister helps list and get MongodbRoleBindings.
-type MongodbRoleBindingNamespaceLister interface {
-	// List lists all MongodbRoleBindings in the indexer for a given namespace.
-	List(selector labels.Selector) (ret []*v1alpha1.MongodbRoleBinding, err error)
-	// Get retrieves the MongodbRoleBinding from the indexer for a given namespace and name.
-	Get(name string) (*v1alpha1.MongodbRoleBinding, error)
-	MongodbRoleBindingNamespaceListerExpansion
+// MongoDBRoleBindingNamespaceLister helps list and get MongoDBRoleBindings.
+type MongoDBRoleBindingNamespaceLister interface {
+	// List lists all MongoDBRoleBindings in the indexer for a given namespace.
+	List(selector labels.Selector) (ret []*v1alpha1.MongoDBRoleBinding, err error)
+	// Get retrieves the MongoDBRoleBinding from the indexer for a given namespace and name.
+	Get(name string) (*v1alpha1.MongoDBRoleBinding, error)
+	MongoDBRoleBindingNamespaceListerExpansion
 }
 
-// mongodbRoleBindingNamespaceLister implements the MongodbRoleBindingNamespaceLister
+// mongoDBRoleBindingNamespaceLister implements the MongoDBRoleBindingNamespaceLister
 // interface.
-type mongodbRoleBindingNamespaceLister struct {
+type mongoDBRoleBindingNamespaceLister struct {
 	indexer   cache.Indexer
 	namespace string
 }
 
-// List lists all MongodbRoleBindings in the indexer for a given namespace.
-func (s mongodbRoleBindingNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.MongodbRoleBinding, err error) {
+// List lists all MongoDBRoleBindings in the indexer for a given namespace.
+func (s mongoDBRoleBindingNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.MongoDBRoleBinding, err error) {
 	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.MongodbRoleBinding))
+		ret = append(ret, m.(*v1alpha1.MongoDBRoleBinding))
 	})
 	return ret, err
 }
 
-// Get retrieves the MongodbRoleBinding from the indexer for a given namespace and name.
-func (s mongodbRoleBindingNamespaceLister) Get(name string) (*v1alpha1.MongodbRoleBinding, error) {
+// Get retrieves the MongoDBRoleBinding from the indexer for a given namespace and name.
+func (s mongoDBRoleBindingNamespaceLister) Get(name string) (*v1alpha1.MongoDBRoleBinding, error) {
 	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
 	if err != nil {
 		return nil, err
@@ -90,5 +90,5 @@ func (s mongodbRoleBindingNamespaceLister) Get(name string) (*v1alpha1.MongodbRo
 	if !exists {
 		return nil, errors.NewNotFound(v1alpha1.Resource("mongodbrolebinding"), name)
 	}
-	return obj.(*v1alpha1.MongodbRoleBinding), nil
+	return obj.(*v1alpha1.MongoDBRoleBinding), nil
 }

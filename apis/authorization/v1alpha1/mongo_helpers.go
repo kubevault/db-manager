@@ -5,12 +5,12 @@ import (
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 )
 
-func (r MongodbRole) CustomResourceDefinition() *apiextensions.CustomResourceDefinition {
+func (r MongoDBRole) CustomResourceDefinition() *apiextensions.CustomResourceDefinition {
 	return crdutils.NewCustomResourceDefinition(crdutils.Config{
 		Group:         SchemeGroupVersion.Group,
-		Plural:        ResourceMongodbRoles,
-		Singular:      ResourceMongodbRole,
-		Kind:          ResourceKindMongodbRole,
+		Plural:        ResourceMongoDBRoles,
+		Singular:      ResourceMongoDBRole,
+		Kind:          ResourceKindMongoDBRole,
 		Categories:    []string{"datastore", "kubedb", "appscode", "all"},
 		ResourceScope: string(apiextensions.NamespaceScoped),
 		Versions: []apiextensions.CustomResourceDefinitionVersion{
@@ -23,23 +23,23 @@ func (r MongodbRole) CustomResourceDefinition() *apiextensions.CustomResourceDef
 		Labels: crdutils.Labels{
 			LabelsMap: map[string]string{"app": "kubedb"},
 		},
-		SpecDefinitionName:      "github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRole",
+		SpecDefinitionName:      "github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongoDBRole",
 		EnableValidation:        true,
 		GetOpenAPIDefinitions:   GetOpenAPIDefinitions,
 		EnableStatusSubresource: EnableStatusSubresource,
 	})
 }
 
-func (r MongodbRole) IsValid() error {
+func (r MongoDBRole) IsValid() error {
 	return nil
 }
 
-func (b MongodbRoleBinding) CustomResourceDefinition() *apiextensions.CustomResourceDefinition {
+func (b MongoDBRoleBinding) CustomResourceDefinition() *apiextensions.CustomResourceDefinition {
 	return crdutils.NewCustomResourceDefinition(crdutils.Config{
 		Group:         SchemeGroupVersion.Group,
-		Plural:        ResourceMongodbRoleBindings,
-		Singular:      ResourceMongodbRoleBinding,
-		Kind:          ResourceKindMongodbRoleBinding,
+		Plural:        ResourceMongoDBRoleBindings,
+		Singular:      ResourceMongoDBRoleBinding,
+		Kind:          ResourceKindMongoDBRoleBinding,
 		Categories:    []string{"datastore", "kubedb", "appscode", "all"},
 		ResourceScope: string(apiextensions.NamespaceScoped),
 		Versions: []apiextensions.CustomResourceDefinitionVersion{
@@ -52,13 +52,13 @@ func (b MongodbRoleBinding) CustomResourceDefinition() *apiextensions.CustomReso
 		Labels: crdutils.Labels{
 			LabelsMap: map[string]string{"app": "kubedb"},
 		},
-		SpecDefinitionName:      "github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongodbRoleBinding",
+		SpecDefinitionName:      "github.com/kubedb/user-manager/apis/authorization/v1alpha1.MongoDBRoleBinding",
 		EnableValidation:        true,
 		GetOpenAPIDefinitions:   GetOpenAPIDefinitions,
 		EnableStatusSubresource: EnableStatusSubresource,
 	})
 }
 
-func (b MongodbRoleBinding) IsValid() error {
+func (b MongoDBRoleBinding) IsValid() error {
 	return nil
 }

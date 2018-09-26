@@ -19,17 +19,17 @@ import (
 )
 
 const (
-	MysqlRoleBindingFinalizer = "database.mysql.rolebinding"
+	MySQLRoleBindingFinalizer = "database.mysql.rolebinding"
 )
 
-func (c *UserManagerController) initMysqlRoleBindingWatcher() {
-	c.myRoleBindingInformer = c.dbInformerFactory.Authorization().V1alpha1().MysqlRoleBindings().Informer()
-	c.myRoleBindingQueue = queue.New(api.ResourceKindMysqlRoleBinding, c.MaxNumRequeues, c.NumThreads, c.runMysqlRoleBindingInjector)
+func (c *UserManagerController) initMySQLRoleBindingWatcher() {
+	c.myRoleBindingInformer = c.dbInformerFactory.Authorization().V1alpha1().MySQLRoleBindings().Informer()
+	c.myRoleBindingQueue = queue.New(api.ResourceKindMySQLRoleBinding, c.MaxNumRequeues, c.NumThreads, c.runMySQLRoleBindingInjector)
 	c.myRoleBindingInformer.AddEventHandler(queue.NewObservableHandler(c.myRoleBindingQueue.GetQueue(), api.EnableStatusSubresource))
-	c.myRoleBindingLister = c.dbInformerFactory.Authorization().V1alpha1().MysqlRoleBindings().Lister()
+	c.myRoleBindingLister = c.dbInformerFactory.Authorization().V1alpha1().MySQLRoleBindings().Lister()
 }
 
-func (c *UserManagerController) runMysqlRoleBindingInjector(key string) error {
+func (c *UserManagerController) runMySQLRoleBindingInjector(key string) error {
 	obj, exist, err := c.myRoleBindingInformer.GetIndexer().GetByKey(key)
 	if err != nil {
 		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
@@ -37,27 +37,27 @@ func (c *UserManagerController) runMysqlRoleBindingInjector(key string) error {
 	}
 
 	if !exist {
-		glog.Warningf("MysqlRoleBinding %s does not exist anymore", key)
+		glog.Warningf("MySQLRoleBinding %s does not exist anymore", key)
 
 	} else {
-		mRoleBinding := obj.(*api.MysqlRoleBinding).DeepCopy()
+		mRoleBinding := obj.(*api.MySQLRoleBinding).DeepCopy()
 
-		glog.Infof("Sync/Add/Update for MysqlRoleBinding %s/%s", mRoleBinding.Namespace, mRoleBinding.Name)
+		glog.Infof("Sync/Add/Update for MySQLRoleBinding %s/%s", mRoleBinding.Namespace, mRoleBinding.Name)
 
 		if mRoleBinding.DeletionTimestamp != nil {
-			if core_util.HasFinalizer(mRoleBinding.ObjectMeta, MysqlRoleBindingFinalizer) {
-				go c.runMysqlRoleBindingFinalizer(mRoleBinding, 1*time.Minute, 10*time.Second)
+			if core_util.HasFinalizer(mRoleBinding.ObjectMeta, MySQLRoleBindingFinalizer) {
+				go c.runMySQLRoleBindingFinalizer(mRoleBinding, 1*time.Minute, 10*time.Second)
 			}
 
 		} else {
-			if !core_util.HasFinalizer(mRoleBinding.ObjectMeta, MysqlRoleBindingFinalizer) {
+			if !core_util.HasFinalizer(mRoleBinding.ObjectMeta, MySQLRoleBindingFinalizer) {
 				// Add finalizer
-				_, _, err = patchutil.PatchMysqlRoleBinding(c.dbClient.AuthorizationV1alpha1(), mRoleBinding, func(binding *api.MysqlRoleBinding) *api.MysqlRoleBinding {
-					binding.ObjectMeta = core_util.AddFinalizer(binding.ObjectMeta, MysqlRoleBindingFinalizer)
+				_, _, err = patchutil.PatchMySQLRoleBinding(c.dbClient.AuthorizationV1alpha1(), mRoleBinding, func(binding *api.MySQLRoleBinding) *api.MySQLRoleBinding {
+					binding.ObjectMeta = core_util.AddFinalizer(binding.ObjectMeta, MySQLRoleBindingFinalizer)
 					return binding
 				})
 				if err != nil {
-					return errors.Wrapf(err, "failed to set MysqlRoleBinding finalizer for %s/%s", mRoleBinding.Namespace, mRoleBinding.Name)
+					return errors.Wrapf(err, "failed to set MySQLRoleBinding finalizer for %s/%s", mRoleBinding.Namespace, mRoleBinding.Name)
 				}
 
 			}
@@ -67,9 +67,9 @@ func (c *UserManagerController) runMysqlRoleBindingInjector(key string) error {
 				return err
 			}
 
-			err = c.reconcileMysqlRoleBinding(dbRBClient, mRoleBinding)
+			err = c.reconcileMySQLRoleBinding(dbRBClient, mRoleBinding)
 			if err != nil {
-				return errors.Wrapf(err, "For MysqlRoleBinding %s/%s", mRoleBinding.Namespace, mRoleBinding.Name)
+				return errors.Wrapf(err, "For MySQLRoleBinding %s/%s", mRoleBinding.Namespace, mRoleBinding.Name)
 			}
 		}
 	}
@@ -82,7 +82,7 @@ func (c *UserManagerController) runMysqlRoleBindingInjector(key string) error {
 //	  - create secret containing credential
 //	  - create rbac role and role binding
 //    - sync role binding
-func (c *UserManagerController) reconcileMysqlRoleBinding(dbRBClient database.DatabaseRoleBindingInterface, myRoleBinding *api.MysqlRoleBinding) error {
+func (c *UserManagerController) reconcileMySQLRoleBinding(dbRBClient database.DatabaseRoleBindingInterface, myRoleBinding *api.MySQLRoleBinding) error {
 	var (
 		err   error
 		credS *corev1.Secret
@@ -118,7 +118,7 @@ func (c *UserManagerController) reconcileMysqlRoleBinding(dbRBClient database.Da
 		// get database credential
 		cred, err := dbRBClient.GetCredential()
 		if err != nil {
-			status.Conditions = []api.MysqlRoleBindingCondition{
+			status.Conditions = []api.MySQLRoleBindingCondition{
 				{
 					Type:    "Available",
 					Status:  corev1.ConditionFalse,
@@ -127,7 +127,7 @@ func (c *UserManagerController) reconcileMysqlRoleBinding(dbRBClient database.Da
 				},
 			}
 
-			err2 := c.updateMysqlRoleBindingStatus(&status, myRoleBinding)
+			err2 := c.updateMySQLRoleBindingStatus(&status, myRoleBinding)
 			if err2 != nil {
 				return errors.Wrapf(err2, "failed to update status")
 			}
@@ -141,7 +141,7 @@ func (c *UserManagerController) reconcileMysqlRoleBinding(dbRBClient database.Da
 				return errors.Wrapf(err2, "failed to revoke lease")
 			}
 
-			status.Conditions = []api.MysqlRoleBindingCondition{
+			status.Conditions = []api.MySQLRoleBindingCondition{
 				{
 					Type:    "Available",
 					Status:  corev1.ConditionFalse,
@@ -150,7 +150,7 @@ func (c *UserManagerController) reconcileMysqlRoleBinding(dbRBClient database.Da
 				},
 			}
 
-			err2 = c.updateMysqlRoleBindingStatus(&status, myRoleBinding)
+			err2 = c.updateMySQLRoleBindingStatus(&status, myRoleBinding)
 			if err2 != nil {
 				return errors.Wrapf(err2, "failed to update status")
 			}
@@ -165,9 +165,9 @@ func (c *UserManagerController) reconcileMysqlRoleBinding(dbRBClient database.Da
 		}
 	}
 
-	err = dbRBClient.CreateRole(getMysqlRoleName(myRBName), ns, secretName)
+	err = dbRBClient.CreateRole(getMySQLRoleName(myRBName), ns, secretName)
 	if err != nil {
-		status.Conditions = []api.MysqlRoleBindingCondition{
+		status.Conditions = []api.MySQLRoleBindingCondition{
 			{
 				Type:    "Available",
 				Status:  corev1.ConditionFalse,
@@ -176,16 +176,16 @@ func (c *UserManagerController) reconcileMysqlRoleBinding(dbRBClient database.Da
 			},
 		}
 
-		err2 := c.updateMysqlRoleBindingStatus(&status, myRoleBinding)
+		err2 := c.updateMySQLRoleBindingStatus(&status, myRoleBinding)
 		if err2 != nil {
 			return errors.Wrapf(err2, "failed to update status")
 		}
 		return errors.WithStack(err)
 	}
 
-	err = dbRBClient.CreateRoleBinding(getMysqlRoleBindingName(myRBName), ns, getMysqlRoleName(myRBName), myRoleBinding.Spec.Subjects)
+	err = dbRBClient.CreateRoleBinding(getMySQLRoleBindingName(myRBName), ns, getMySQLRoleName(myRBName), myRoleBinding.Spec.Subjects)
 	if err != nil {
-		status.Conditions = []api.MysqlRoleBindingCondition{
+		status.Conditions = []api.MySQLRoleBindingCondition{
 			{
 				Type:    "Available",
 				Status:  corev1.ConditionFalse,
@@ -194,25 +194,25 @@ func (c *UserManagerController) reconcileMysqlRoleBinding(dbRBClient database.Da
 			},
 		}
 
-		err2 := c.updateMysqlRoleBindingStatus(&status, myRoleBinding)
+		err2 := c.updateMySQLRoleBindingStatus(&status, myRoleBinding)
 		if err2 != nil {
 			return errors.Wrapf(err2, "failed to update status")
 		}
 		return errors.WithStack(err)
 	}
 
-	status.Conditions = []api.MysqlRoleBindingCondition{}
+	status.Conditions = []api.MySQLRoleBindingCondition{}
 	status.ObservedGeneration = types.NewIntHash(myRoleBinding.Generation, meta_util.GenerationHash(myRoleBinding))
 
-	err = c.updateMysqlRoleBindingStatus(&status, myRoleBinding)
+	err = c.updateMySQLRoleBindingStatus(&status, myRoleBinding)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
 }
 
-func (c *UserManagerController) updateMysqlRoleBindingStatus(status *api.MysqlRoleBindingStatus, myRoleBinding *api.MysqlRoleBinding) error {
-	_, err := patchutil.UpdateMysqlRoleBindingStatus(c.dbClient.AuthorizationV1alpha1(), myRoleBinding, func(s *api.MysqlRoleBindingStatus) *api.MysqlRoleBindingStatus {
+func (c *UserManagerController) updateMySQLRoleBindingStatus(status *api.MySQLRoleBindingStatus, myRoleBinding *api.MySQLRoleBinding) error {
+	_, err := patchutil.UpdateMySQLRoleBindingStatus(c.dbClient.AuthorizationV1alpha1(), myRoleBinding, func(s *api.MySQLRoleBindingStatus) *api.MySQLRoleBindingStatus {
 		s = status
 		return s
 	})
@@ -222,8 +222,8 @@ func (c *UserManagerController) updateMysqlRoleBindingStatus(status *api.MysqlRo
 	return nil
 }
 
-func (c *UserManagerController) runMysqlRoleBindingFinalizer(mRoleBinding *api.MysqlRoleBinding, timeout time.Duration, interval time.Duration) {
-	id := getMysqlRoleBindingId(mRoleBinding)
+func (c *UserManagerController) runMySQLRoleBindingFinalizer(mRoleBinding *api.MySQLRoleBinding, timeout time.Duration, interval time.Duration) {
+	id := getMySQLRoleBindingId(mRoleBinding)
 
 	if _, ok := c.processingFinalizer[id]; ok {
 		// already processing
@@ -236,12 +236,12 @@ func (c *UserManagerController) runMysqlRoleBindingFinalizer(mRoleBinding *api.M
 	finalizationDone := false
 
 	for {
-		m, err := c.dbClient.AuthorizationV1alpha1().MysqlRoleBindings(mRoleBinding.Namespace).Get(mRoleBinding.Name, metav1.GetOptions{})
+		m, err := c.dbClient.AuthorizationV1alpha1().MySQLRoleBindings(mRoleBinding.Namespace).Get(mRoleBinding.Name, metav1.GetOptions{})
 		if kerr.IsNotFound(err) {
 			delete(c.processingFinalizer, id)
 			return
 		} else if err != nil {
-			glog.Errorf("MysqlRoleBinding %s/%s finalizer: %v", mRoleBinding.Namespace, mRoleBinding.Name, err)
+			glog.Errorf("MySQLRoleBinding %s/%s finalizer: %v", mRoleBinding.Namespace, mRoleBinding.Name, err)
 		}
 
 		// to make sure m is not nil
@@ -251,9 +251,9 @@ func (c *UserManagerController) runMysqlRoleBindingFinalizer(mRoleBinding *api.M
 
 		select {
 		case <-stopCh:
-			err := c.removeMysqlRoleBindingFinalizer(m)
+			err := c.removeMySQLRoleBindingFinalizer(m)
 			if err != nil {
-				glog.Errorf("MysqlRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
+				glog.Errorf("MySQLRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return
@@ -263,11 +263,11 @@ func (c *UserManagerController) runMysqlRoleBindingFinalizer(mRoleBinding *api.M
 		if !finalizationDone {
 			d, err := database.NewDatabaseRoleBindingForMysql(c.kubeClient, c.dbClient, m)
 			if err != nil {
-				glog.Errorf("MysqlRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
+				glog.Errorf("MySQLRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			} else {
-				err = c.finalizeMysqlRoleBinding(d, m.Status.Lease.ID)
+				err = c.finalizeMySQLRoleBinding(d, m.Status.Lease.ID)
 				if err != nil {
-					glog.Errorf("MysqlRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
+					glog.Errorf("MySQLRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
 				} else {
 					finalizationDone = true
 				}
@@ -275,9 +275,9 @@ func (c *UserManagerController) runMysqlRoleBindingFinalizer(mRoleBinding *api.M
 		}
 
 		if finalizationDone {
-			err := c.removeMysqlRoleBindingFinalizer(m)
+			err := c.removeMySQLRoleBindingFinalizer(m)
 			if err != nil {
-				glog.Errorf("MysqlRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
+				glog.Errorf("MySQLRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return
@@ -285,9 +285,9 @@ func (c *UserManagerController) runMysqlRoleBindingFinalizer(mRoleBinding *api.M
 
 		select {
 		case <-stopCh:
-			err := c.removeMysqlRoleBindingFinalizer(m)
+			err := c.removeMySQLRoleBindingFinalizer(m)
 			if err != nil {
-				glog.Errorf("MysqlRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
+				glog.Errorf("MySQLRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			}
 			delete(c.processingFinalizer, id)
 			return
@@ -296,7 +296,7 @@ func (c *UserManagerController) runMysqlRoleBindingFinalizer(mRoleBinding *api.M
 	}
 }
 
-func (c *UserManagerController) finalizeMysqlRoleBinding(dbRBClient database.DatabaseRoleBindingInterface, leaseID string) error {
+func (c *UserManagerController) finalizeMySQLRoleBinding(dbRBClient database.DatabaseRoleBindingInterface, leaseID string) error {
 	if leaseID == "" {
 		return nil
 	}
@@ -308,9 +308,9 @@ func (c *UserManagerController) finalizeMysqlRoleBinding(dbRBClient database.Dat
 	return nil
 }
 
-func (c *UserManagerController) removeMysqlRoleBindingFinalizer(mRoleBinding *api.MysqlRoleBinding) error {
-	_, _, err := patchutil.PatchMysqlRoleBinding(c.dbClient.AuthorizationV1alpha1(), mRoleBinding, func(r *api.MysqlRoleBinding) *api.MysqlRoleBinding {
-		r.ObjectMeta = core_util.RemoveFinalizer(r.ObjectMeta, MysqlRoleBindingFinalizer)
+func (c *UserManagerController) removeMySQLRoleBindingFinalizer(mRoleBinding *api.MySQLRoleBinding) error {
+	_, _, err := patchutil.PatchMySQLRoleBinding(c.dbClient.AuthorizationV1alpha1(), mRoleBinding, func(r *api.MySQLRoleBinding) *api.MySQLRoleBinding {
+		r.ObjectMeta = core_util.RemoveFinalizer(r.ObjectMeta, MySQLRoleBindingFinalizer)
 		return r
 	})
 	if err != nil {
@@ -319,14 +319,14 @@ func (c *UserManagerController) removeMysqlRoleBindingFinalizer(mRoleBinding *ap
 	return nil
 }
 
-func getMysqlRoleBindingId(mRoleBinding *api.MysqlRoleBinding) string {
-	return fmt.Sprintf("%s/%s/%s", api.ResourceMysqlRoleBinding, mRoleBinding.Namespace, mRoleBinding.Name)
+func getMySQLRoleBindingId(mRoleBinding *api.MySQLRoleBinding) string {
+	return fmt.Sprintf("%s/%s/%s", api.ResourceMySQLRoleBinding, mRoleBinding.Namespace, mRoleBinding.Name)
 }
 
-func getMysqlRoleName(name string) string {
+func getMySQLRoleName(name string) string {
 	return fmt.Sprintf("mysqlrolebinding-%s-credential-reader", name)
 }
 
-func getMysqlRoleBindingName(name string) string {
+func getMySQLRoleBindingName(name string) string {
 	return fmt.Sprintf("mysqlrolebinding-%s-credential-reader", name)
 }

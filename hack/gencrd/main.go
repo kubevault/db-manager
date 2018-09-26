@@ -31,10 +31,10 @@ func generateCRDDefinitions() {
 	crds := []*crd_api.CustomResourceDefinition{
 		v1alpha1.PostgresRole{}.CustomResourceDefinition(),
 		v1alpha1.PostgresRoleBinding{}.CustomResourceDefinition(),
-		v1alpha1.MongodbRole{}.CustomResourceDefinition(),
-		v1alpha1.MongodbRoleBinding{}.CustomResourceDefinition(),
-		v1alpha1.MysqlRole{}.CustomResourceDefinition(),
-		v1alpha1.MysqlRoleBinding{}.CustomResourceDefinition(),
+		v1alpha1.MongoDBRole{}.CustomResourceDefinition(),
+		v1alpha1.MongoDBRoleBinding{}.CustomResourceDefinition(),
+		v1alpha1.MySQLRole{}.CustomResourceDefinition(),
+		v1alpha1.MySQLRoleBinding{}.CustomResourceDefinition(),
 	}
 	for _, crd := range crds {
 		filename := filepath.Join(gort.GOPath(), "/src/github.com/kubedb/user-manager/api/crds", crd.Spec.Names.Singular+".yaml")
@@ -77,10 +77,10 @@ func generateSwaggerJson() {
 		Resources: []openapi.TypeInfo{
 			{v1alpha1.SchemeGroupVersion, v1alpha1.ResourcePostgresRoles, v1alpha1.ResourceKindPostgresRole, true},
 			{v1alpha1.SchemeGroupVersion, v1alpha1.ResourcePostgresRoleBindings, v1alpha1.ResourceKindPostgresRoleBinding, true},
-			{v1alpha1.SchemeGroupVersion, v1alpha1.ResourceMongodbRoles, v1alpha1.ResourceKindMongodbRole, true},
-			{v1alpha1.SchemeGroupVersion, v1alpha1.ResourceMongodbRoleBindings, v1alpha1.ResourceKindMongodbRoleBinding, true},
-			{v1alpha1.SchemeGroupVersion, v1alpha1.ResourceMysqlRoles, v1alpha1.ResourceKindMysqlRole, true},
-			{v1alpha1.SchemeGroupVersion, v1alpha1.ResourceMysqlRoleBindings, v1alpha1.ResourceKindMysqlRoleBinding, true},
+			{v1alpha1.SchemeGroupVersion, v1alpha1.ResourceMongoDBRoles, v1alpha1.ResourceKindMongoDBRole, true},
+			{v1alpha1.SchemeGroupVersion, v1alpha1.ResourceMongoDBRoleBindings, v1alpha1.ResourceKindMongoDBRoleBinding, true},
+			{v1alpha1.SchemeGroupVersion, v1alpha1.ResourceMySQLRoles, v1alpha1.ResourceKindMySQLRole, true},
+			{v1alpha1.SchemeGroupVersion, v1alpha1.ResourceMySQLRoleBindings, v1alpha1.ResourceKindMySQLRoleBinding, true},
 		},
 	})
 	if err != nil {

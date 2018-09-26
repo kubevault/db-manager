@@ -14,7 +14,7 @@ spec:
     - kubedb
     - appscode
     - all
-    kind: MongodbRoleBinding
+    kind: MongoDBRoleBinding
     plural: mongodbrolebindings
     singular: mongodbrolebinding
   scope: Namespaced
@@ -311,7 +311,7 @@ spec:
         spec:
           properties:
             roleRef:
-              description: Specifies the name of the MongodbRole
+              description: Specifies the name of the MongoDBRole
               type: string
             store:
               description: Store specifies where to store credentials
@@ -357,11 +357,11 @@ spec:
         status:
           properties:
             conditions:
-              description: Represents the latest available observations of a MongodbRoleBinding
+              description: Represents the latest available observations of a MongoDBRoleBinding
                 current state.
               items:
-                description: MongodbRoleBindingCondition describes the state of a
-                  MongodbRoleBinding at a certain point.
+                description: MongoDBRoleBindingCondition describes the state of a
+                  MongoDBRoleBinding at a certain point.
                 properties:
                   message:
                     description: A human readable message indicating details about
@@ -374,7 +374,7 @@ spec:
                     description: Status of the condition, one of True, False, Unknown.
                     type: string
                   type:
-                    description: Type of MongodbRoleBinding condition.
+                    description: Type of MongoDBRoleBinding condition.
                     type: string
               type: array
             lease:
@@ -397,7 +397,7 @@ spec:
               - format: int64
                 type: integer
             phase:
-              description: Specifies the phase of the MongodbRoleBinding
+              description: Specifies the phase of the MongoDBRoleBinding
               type: string
   version: v1alpha1
   versions:

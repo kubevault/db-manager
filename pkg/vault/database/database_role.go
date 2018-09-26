@@ -44,7 +44,7 @@ func NewDatabaseRoleForPostgres(kClient kubernetes.Interface, role *api.Postgres
 	return d, nil
 }
 
-func NewDatabaseRoleForMysql(kClient kubernetes.Interface, role *api.MysqlRole) (DatabaseRoleInterface, error) {
+func NewDatabaseRoleForMysql(kClient kubernetes.Interface, role *api.MySQLRole) (DatabaseRoleInterface, error) {
 	vClient, err := getVaultClient(kClient, role.Namespace, role.Spec.Provider)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -57,14 +57,14 @@ func NewDatabaseRoleForMysql(kClient kubernetes.Interface, role *api.MysqlRole) 
 	}
 
 	d := &DatabaseRole{
-		RoleInterface: mysql.NewMysqlRole(kClient, vClient, role, path),
+		RoleInterface: mysql.NewMySQLRole(kClient, vClient, role, path),
 		path:          path,
 		vaultClient:   vClient,
 	}
 	return d, nil
 }
 
-func NewDatabaseRoleForMongodb(kClient kubernetes.Interface, role *api.MongodbRole) (DatabaseRoleInterface, error) {
+func NewDatabaseRoleForMongodb(kClient kubernetes.Interface, role *api.MongoDBRole) (DatabaseRoleInterface, error) {
 	vClient, err := getVaultClient(kClient, role.Namespace, role.Spec.Provider)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -77,7 +77,7 @@ func NewDatabaseRoleForMongodb(kClient kubernetes.Interface, role *api.MongodbRo
 	}
 
 	d := &DatabaseRole{
-		RoleInterface: mongodb.NewMongodbRole(kClient, vClient, role, path),
+		RoleInterface: mongodb.NewMongoDBRole(kClient, vClient, role, path),
 		path:          path,
 		vaultClient:   vClient,
 	}

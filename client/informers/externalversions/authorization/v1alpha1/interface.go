@@ -24,14 +24,14 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
-	// MongodbRoles returns a MongodbRoleInformer.
-	MongodbRoles() MongodbRoleInformer
-	// MongodbRoleBindings returns a MongodbRoleBindingInformer.
-	MongodbRoleBindings() MongodbRoleBindingInformer
-	// MysqlRoles returns a MysqlRoleInformer.
-	MysqlRoles() MysqlRoleInformer
-	// MysqlRoleBindings returns a MysqlRoleBindingInformer.
-	MysqlRoleBindings() MysqlRoleBindingInformer
+	// MongoDBRoles returns a MongoDBRoleInformer.
+	MongoDBRoles() MongoDBRoleInformer
+	// MongoDBRoleBindings returns a MongoDBRoleBindingInformer.
+	MongoDBRoleBindings() MongoDBRoleBindingInformer
+	// MySQLRoles returns a MySQLRoleInformer.
+	MySQLRoles() MySQLRoleInformer
+	// MySQLRoleBindings returns a MySQLRoleBindingInformer.
+	MySQLRoleBindings() MySQLRoleBindingInformer
 	// PostgresRoles returns a PostgresRoleInformer.
 	PostgresRoles() PostgresRoleInformer
 	// PostgresRoleBindings returns a PostgresRoleBindingInformer.
@@ -49,24 +49,24 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
-// MongodbRoles returns a MongodbRoleInformer.
-func (v *version) MongodbRoles() MongodbRoleInformer {
-	return &mongodbRoleInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+// MongoDBRoles returns a MongoDBRoleInformer.
+func (v *version) MongoDBRoles() MongoDBRoleInformer {
+	return &mongoDBRoleInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// MongodbRoleBindings returns a MongodbRoleBindingInformer.
-func (v *version) MongodbRoleBindings() MongodbRoleBindingInformer {
-	return &mongodbRoleBindingInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+// MongoDBRoleBindings returns a MongoDBRoleBindingInformer.
+func (v *version) MongoDBRoleBindings() MongoDBRoleBindingInformer {
+	return &mongoDBRoleBindingInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// MysqlRoles returns a MysqlRoleInformer.
-func (v *version) MysqlRoles() MysqlRoleInformer {
-	return &mysqlRoleInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+// MySQLRoles returns a MySQLRoleInformer.
+func (v *version) MySQLRoles() MySQLRoleInformer {
+	return &mySQLRoleInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// MysqlRoleBindings returns a MysqlRoleBindingInformer.
-func (v *version) MysqlRoleBindings() MysqlRoleBindingInformer {
-	return &mysqlRoleBindingInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+// MySQLRoleBindings returns a MySQLRoleBindingInformer.
+func (v *version) MySQLRoleBindings() MySQLRoleBindingInformer {
+	return &mySQLRoleBindingInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // PostgresRoles returns a PostgresRoleInformer.

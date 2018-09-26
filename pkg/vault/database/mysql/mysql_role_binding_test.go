@@ -43,7 +43,7 @@ func vaultServer() *httptest.Server {
 	return httptest.NewServer(m)
 }
 
-func TestMysqlRoleBinding_GetCredentials(t *testing.T) {
+func TestMySQLRoleBinding_GetCredentials(t *testing.T) {
 	srv := vaultServer()
 	defer srv.Close()
 
@@ -57,16 +57,16 @@ func TestMysqlRoleBinding_GetCredentials(t *testing.T) {
 
 	testData := []struct {
 		testName    string
-		mClient     *MysqlRoleBinding
+		mClient     *MySQLRoleBinding
 		expectedErr bool
 	}{
 		{
 			testName: "Failed to get credential",
-			mClient: &MysqlRoleBinding{
+			mClient: &MySQLRoleBinding{
 				vaultClient:  cl,
 				databasePath: "database",
-				mRoleBinding: &api.MysqlRoleBinding{
-					Spec: api.MysqlRoleBindingSpec{
+				mRoleBinding: &api.MySQLRoleBinding{
+					Spec: api.MySQLRoleBindingSpec{
 						RoleRef: "geterror",
 					},
 				},
@@ -75,11 +75,11 @@ func TestMysqlRoleBinding_GetCredentials(t *testing.T) {
 		},
 		{
 			testName: "Failed to decode json",
-			mClient: &MysqlRoleBinding{
+			mClient: &MySQLRoleBinding{
 				vaultClient:  cl,
 				databasePath: "database",
-				mRoleBinding: &api.MysqlRoleBinding{
-					Spec: api.MysqlRoleBindingSpec{
+				mRoleBinding: &api.MySQLRoleBinding{
+					Spec: api.MySQLRoleBindingSpec{
 						RoleRef: "jsonerror",
 					},
 				},
@@ -88,11 +88,11 @@ func TestMysqlRoleBinding_GetCredentials(t *testing.T) {
 		},
 		{
 			testName: "Successfully get the credential",
-			mClient: &MysqlRoleBinding{
+			mClient: &MySQLRoleBinding{
 				vaultClient:  cl,
 				databasePath: "database",
-				mRoleBinding: &api.MysqlRoleBinding{
-					Spec: api.MysqlRoleBindingSpec{
+				mRoleBinding: &api.MySQLRoleBinding{
+					Spec: api.MySQLRoleBindingSpec{
 						RoleRef: "success",
 					},
 				},

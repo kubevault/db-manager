@@ -40,25 +40,25 @@ type UserManagerController struct {
 	pgRoleBindingInformer cache.SharedIndexInformer
 	pgRoleBindingLister   dblisters.PostgresRoleBindingLister
 
-	// MysqlRole
+	// MySQLRole
 	myRoleQueue    *queue.Worker
 	myRoleInformer cache.SharedIndexInformer
-	myRoleLister   dblisters.MysqlRoleLister
+	myRoleLister   dblisters.MySQLRoleLister
 
-	// MysqlRoleBinding
+	// MySQLRoleBinding
 	myRoleBindingQueue    *queue.Worker
 	myRoleBindingInformer cache.SharedIndexInformer
-	myRoleBindingLister   dblisters.MysqlRoleBindingLister
+	myRoleBindingLister   dblisters.MySQLRoleBindingLister
 
-	// MongodbRole
+	// MongoDBRole
 	mgRoleQueue    *queue.Worker
 	mgRoleInformer cache.SharedIndexInformer
-	mgRoleLister   dblisters.MongodbRoleLister
+	mgRoleLister   dblisters.MongoDBRoleLister
 
-	// MongodbRoleBinding
+	// MongoDBRoleBinding
 	mgRoleBindingQueue    *queue.Worker
 	mgRoleBindingInformer cache.SharedIndexInformer
-	mgRoleBindingLister   dblisters.MongodbRoleBindingLister
+	mgRoleBindingLister   dblisters.MongoDBRoleBindingLister
 
 	// Contain the currently processing finalizer
 	processingFinalizer map[string]bool
@@ -68,10 +68,10 @@ func (c *UserManagerController) ensureCustomResourceDefinitions() error {
 	crds := []*apiextensions.CustomResourceDefinition{
 		api.PostgresRole{}.CustomResourceDefinition(),
 		api.PostgresRoleBinding{}.CustomResourceDefinition(),
-		api.MysqlRole{}.CustomResourceDefinition(),
-		api.MysqlRoleBinding{}.CustomResourceDefinition(),
-		api.MongodbRole{}.CustomResourceDefinition(),
-		api.MongodbRoleBinding{}.CustomResourceDefinition(),
+		api.MySQLRole{}.CustomResourceDefinition(),
+		api.MySQLRoleBinding{}.CustomResourceDefinition(),
+		api.MongoDBRole{}.CustomResourceDefinition(),
+		api.MongoDBRoleBinding{}.CustomResourceDefinition(),
 	}
 	return crdutils.RegisterCRDs(c.crdClient, crds)
 }

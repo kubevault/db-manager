@@ -51,7 +51,7 @@ func TestUserManagerController_runMongodbFinalizer(t *testing.T) {
 		kubeClient:          kfake.NewSimpleClientset(),
 	}
 	userManager.dbInformerFactory = dbinformers.NewSharedInformerFactory(userManager.dbClient, time.Minute*10)
-	userManager.mgRoleBindingLister = userManager.dbInformerFactory.Authorization().V1alpha1().MongodbRoleBindings().Lister()
+	userManager.mgRoleBindingLister = userManager.dbInformerFactory.Authorization().V1alpha1().MongoDBRoleBindings().Lister()
 
 	provider := &api.ProviderSpec{
 		Vault: &api.VaultSpec{
@@ -64,7 +64,7 @@ func TestUserManagerController_runMongodbFinalizer(t *testing.T) {
 	testData := []struct {
 		testName            string
 		userManger          *UserManagerController
-		mRole               *api.MongodbRole
+		mRole               *api.MongoDBRole
 		createVaultCred     bool
 		timeout             time.Duration
 		interval            time.Duration
@@ -73,14 +73,14 @@ func TestUserManagerController_runMongodbFinalizer(t *testing.T) {
 		{
 			testName:   "remove finalizer",
 			userManger: userManager,
-			mRole: &api.MongodbRole{
+			mRole: &api.MongoDBRole{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "m-read",
 					Finalizers: []string{
-						MysqlRoleFinalizer,
+						MySQLRoleFinalizer,
 					},
 				},
-				Spec: api.MongodbRoleSpec{
+				Spec: api.MongoDBRoleSpec{
 					Provider: provider,
 				},
 			},
@@ -92,14 +92,14 @@ func TestUserManagerController_runMongodbFinalizer(t *testing.T) {
 		{
 			testName:   "run until timeout, remove finalizer",
 			userManger: userManager,
-			mRole: &api.MongodbRole{
+			mRole: &api.MongoDBRole{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "m-read",
 					Finalizers: []string{
-						MysqlRoleFinalizer,
+						MySQLRoleFinalizer,
 					},
 				},
-				Spec: api.MongodbRoleSpec{
+				Spec: api.MongoDBRoleSpec{
 					Provider: provider,
 				},
 			},
@@ -122,10 +122,10 @@ func TestUserManagerController_runMongodbFinalizer(t *testing.T) {
 				assert.Nil(t, err)
 			}
 
-			_, err := test.userManger.dbClient.AuthorizationV1alpha1().MongodbRoles(namespace).Create(test.mRole)
+			_, err := test.userManger.dbClient.AuthorizationV1alpha1().MongoDBRoles(namespace).Create(test.mRole)
 			if assert.Nil(t, err) {
 				start := time.Now().Unix()
-				test.userManger.runMongodbRoleFinalizer(test.mRole, test.timeout, test.interval)
+				test.userManger.runMongoDBRoleFinalizer(test.mRole, test.timeout, test.interval)
 
 				if test.finishBeforeTimeout {
 					assert.Condition(t, func() (success bool) {
@@ -136,7 +136,7 @@ func TestUserManagerController_runMongodbFinalizer(t *testing.T) {
 					})
 
 					assert.Condition(t, func() (success bool) {
-						if _, ok := test.userManger.processingFinalizer[getMongodbRoleId(test.mRole)]; !ok {
+						if _, ok := test.userManger.processingFinalizer[getMongoDBRoleId(test.mRole)]; !ok {
 							return true
 						}
 						return false
@@ -151,7 +151,7 @@ func TestUserManagerController_runMongodbFinalizer(t *testing.T) {
 					})
 
 					assert.Condition(t, func() (success bool) {
-						if _, ok := test.userManger.processingFinalizer[getMongodbRoleId(test.mRole)]; !ok {
+						if _, ok := test.userManger.processingFinalizer[getMongoDBRoleId(test.mRole)]; !ok {
 							return true
 						}
 						return false
@@ -163,14 +163,14 @@ func TestUserManagerController_runMongodbFinalizer(t *testing.T) {
 	}
 }
 
-func TestUserManagerController_reconcileMongodbRole(t *testing.T) {
-	mRole := api.MongodbRole{
+func TestUserManagerController_reconcileMongoDBRole(t *testing.T) {
+	mRole := api.MongoDBRole{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:       "m-role",
 			Namespace:  "m",
 			Generation: 0,
 		},
-		Spec: api.MongodbRoleSpec{
+		Spec: api.MongoDBRoleSpec{
 			Database: &api.DatabaseConfigForMongodb{
 				Name: "test",
 			},
@@ -183,7 +183,7 @@ func TestUserManagerController_reconcileMongodbRole(t *testing.T) {
 
 	testData := []struct {
 		testName           string
-		mRole              api.MongodbRole
+		mRole              api.MongoDBRole
 		dbRClient          database.DatabaseRoleInterface
 		hasStatusCondition bool
 		expectedErr        bool
@@ -224,14 +224,14 @@ func TestUserManagerController_reconcileMongodbRole(t *testing.T) {
 		},
 		{
 			testName:           "update role, successfully updated database role",
-			mRole:              func(p api.MongodbRole) api.MongodbRole { p.Generation = 2; p.Status.ObservedGeneration = 1; return p }(mRole),
+			mRole:              func(p api.MongoDBRole) api.MongoDBRole { p.Generation = 2; p.Status.ObservedGeneration = 1; return p }(mRole),
 			dbRClient:          &fakeDRole{},
 			expectedErr:        false,
 			hasStatusCondition: false,
 		},
 		{
 			testName: "update role, failed to update database role",
-			mRole:    func(p api.MongodbRole) api.MongodbRole { p.Generation = 2; p.Status.ObservedGeneration = 1; return p }(mRole),
+			mRole:    func(p api.MongoDBRole) api.MongoDBRole { p.Generation = 2; p.Status.ObservedGeneration = 1; return p }(mRole),
 			dbRClient: &fakeDRole{
 				errorOccurredInCreateRole: true,
 			},
@@ -247,18 +247,18 @@ func TestUserManagerController_reconcileMongodbRole(t *testing.T) {
 				dbClient:   dbfake.NewSimpleClientset(),
 			}
 			c.dbInformerFactory = dbinformers.NewSharedInformerFactory(c.dbClient, time.Minute*10)
-			c.mgRoleBindingLister = c.dbInformerFactory.Authorization().V1alpha1().MongodbRoleBindings().Lister()
+			c.mgRoleBindingLister = c.dbInformerFactory.Authorization().V1alpha1().MongoDBRoleBindings().Lister()
 
-			_, err := c.dbClient.AuthorizationV1alpha1().MongodbRoles(test.mRole.Namespace).Create(&test.mRole)
+			_, err := c.dbClient.AuthorizationV1alpha1().MongoDBRoles(test.mRole.Namespace).Create(&test.mRole)
 			if !assert.Nil(t, err) {
 				return
 			}
 
-			err = c.reconcileMongodbRole(test.dbRClient, &test.mRole)
+			err = c.reconcileMongoDBRole(test.dbRClient, &test.mRole)
 			if test.expectedErr {
 				if assert.NotNil(t, err) {
 					if test.hasStatusCondition {
-						p, err2 := c.dbClient.AuthorizationV1alpha1().MongodbRoles(test.mRole.Namespace).Get(test.mRole.Name, metav1.GetOptions{})
+						p, err2 := c.dbClient.AuthorizationV1alpha1().MongoDBRoles(test.mRole.Namespace).Get(test.mRole.Name, metav1.GetOptions{})
 						if assert.Nil(t, err2) {
 							assert.Condition(t, func() (success bool) {
 								if len(p.Status.Conditions) == 0 {
@@ -271,7 +271,7 @@ func TestUserManagerController_reconcileMongodbRole(t *testing.T) {
 				}
 			} else {
 				if assert.Nil(t, err) {
-					p, err2 := c.dbClient.AuthorizationV1alpha1().MongodbRoles(test.mRole.Namespace).Get(test.mRole.Name, metav1.GetOptions{})
+					p, err2 := c.dbClient.AuthorizationV1alpha1().MongoDBRoles(test.mRole.Namespace).Get(test.mRole.Name, metav1.GetOptions{})
 					if assert.Nil(t, err2) {
 						assert.Condition(t, func() (success bool) {
 							if len(p.Status.Conditions) != 0 {

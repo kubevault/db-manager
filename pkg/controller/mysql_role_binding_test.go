@@ -45,8 +45,8 @@ func TestUserManagerController_runMysqlBindingFinalizer(t *testing.T) {
 	testData := []struct {
 		testName            string
 		userManger          *UserManagerController
-		mRole               *api.MysqlRole
-		mRoleBinding        *api.MysqlRoleBinding
+		mRole               *api.MySQLRole
+		mRoleBinding        *api.MySQLRoleBinding
 		createVaultCred     bool
 		timeout             time.Duration
 		interval            time.Duration
@@ -55,22 +55,22 @@ func TestUserManagerController_runMysqlBindingFinalizer(t *testing.T) {
 		{
 			testName:   "remove finalizer",
 			userManger: userManager,
-			mRole: &api.MysqlRole{
+			mRole: &api.MySQLRole{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "m-read",
 				},
-				Spec: api.MysqlRoleSpec{
+				Spec: api.MySQLRoleSpec{
 					Provider: provider,
 				},
 			},
-			mRoleBinding: &api.MysqlRoleBinding{
+			mRoleBinding: &api.MySQLRoleBinding{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "m-bind",
 				},
-				Spec: api.MysqlRoleBindingSpec{
+				Spec: api.MySQLRoleBindingSpec{
 					RoleRef: "m-read",
 				},
-				Status: api.MysqlRoleBindingStatus{
+				Status: api.MySQLRoleBindingStatus{
 					Lease: api.LeaseData{
 						ID: "read",
 					},
@@ -84,22 +84,22 @@ func TestUserManagerController_runMysqlBindingFinalizer(t *testing.T) {
 		{
 			testName:   "run until timeout, remove finalizer",
 			userManger: userManager,
-			mRole: &api.MysqlRole{
+			mRole: &api.MySQLRole{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "m-read",
 				},
-				Spec: api.MysqlRoleSpec{
+				Spec: api.MySQLRoleSpec{
 					Provider: provider,
 				},
 			},
-			mRoleBinding: &api.MysqlRoleBinding{
+			mRoleBinding: &api.MySQLRoleBinding{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "m-bind",
 				},
-				Spec: api.MysqlRoleBindingSpec{
+				Spec: api.MySQLRoleBindingSpec{
 					RoleRef: "m-read",
 				},
-				Status: api.MysqlRoleBindingStatus{
+				Status: api.MySQLRoleBindingStatus{
 					Lease: api.LeaseData{
 						ID: "read",
 					},
@@ -124,12 +124,12 @@ func TestUserManagerController_runMysqlBindingFinalizer(t *testing.T) {
 				assert.Nil(t, err)
 			}
 
-			_, err := test.userManger.dbClient.AuthorizationV1alpha1().MysqlRoles(namespace).Create(test.mRole)
+			_, err := test.userManger.dbClient.AuthorizationV1alpha1().MySQLRoles(namespace).Create(test.mRole)
 			if assert.Nil(t, err) {
-				_, err := test.userManger.dbClient.AuthorizationV1alpha1().MysqlRoleBindings(namespace).Create(test.mRoleBinding)
+				_, err := test.userManger.dbClient.AuthorizationV1alpha1().MySQLRoleBindings(namespace).Create(test.mRoleBinding)
 				if assert.Nil(t, err) {
 					start := time.Now().Unix()
-					test.userManger.runMysqlRoleBindingFinalizer(test.mRoleBinding, test.timeout, test.interval)
+					test.userManger.runMySQLRoleBindingFinalizer(test.mRoleBinding, test.timeout, test.interval)
 
 					if test.finishBeforeTimeout {
 						assert.Condition(t, func() (success bool) {
@@ -140,7 +140,7 @@ func TestUserManagerController_runMysqlBindingFinalizer(t *testing.T) {
 						})
 
 						assert.Condition(t, func() (success bool) {
-							if _, ok := test.userManger.processingFinalizer[getMysqlRoleBindingId(test.mRoleBinding)]; !ok {
+							if _, ok := test.userManger.processingFinalizer[getMySQLRoleBindingId(test.mRoleBinding)]; !ok {
 								return true
 							}
 							return false
@@ -155,7 +155,7 @@ func TestUserManagerController_runMysqlBindingFinalizer(t *testing.T) {
 						})
 
 						assert.Condition(t, func() (success bool) {
-							if _, ok := test.userManger.processingFinalizer[getMysqlRoleBindingId(test.mRoleBinding)]; !ok {
+							if _, ok := test.userManger.processingFinalizer[getMySQLRoleBindingId(test.mRoleBinding)]; !ok {
 								return true
 							}
 							return false
@@ -167,14 +167,14 @@ func TestUserManagerController_runMysqlBindingFinalizer(t *testing.T) {
 	}
 }
 
-func TestUserManagerController_reconcileMysqlRoleBinding(t *testing.T) {
-	mRBinding := api.MysqlRoleBinding{
+func TestUserManagerController_reconcileMySQLRoleBinding(t *testing.T) {
+	mRBinding := api.MySQLRoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "m-role_binding",
 			Namespace: "m",
 			UID:       "1234",
 		},
-		Spec: api.MysqlRoleBindingSpec{
+		Spec: api.MySQLRoleBindingSpec{
 			RoleRef: "test",
 			Store: api.Store{
 				Secret: "m-cred",
@@ -192,7 +192,7 @@ func TestUserManagerController_reconcileMysqlRoleBinding(t *testing.T) {
 	testData := []struct {
 		testName           string
 		dbRBClient         database.DatabaseRoleBindingInterface
-		mRBinding          api.MysqlRoleBinding
+		mRBinding          api.MySQLRoleBinding
 		expectedErr        bool
 		hasStatusCondition bool
 		createCredSecret   bool
@@ -271,16 +271,16 @@ func TestUserManagerController_reconcileMysqlRoleBinding(t *testing.T) {
 				assert.Nil(t, err)
 			}
 
-			_, err := c.dbClient.AuthorizationV1alpha1().MysqlRoleBindings(test.mRBinding.Namespace).Create(&test.mRBinding)
+			_, err := c.dbClient.AuthorizationV1alpha1().MySQLRoleBindings(test.mRBinding.Namespace).Create(&test.mRBinding)
 			if !assert.Nil(t, err) {
 				return
 			}
 
-			err = c.reconcileMysqlRoleBinding(test.dbRBClient, &test.mRBinding)
+			err = c.reconcileMySQLRoleBinding(test.dbRBClient, &test.mRBinding)
 			if test.expectedErr {
 				if assert.NotNil(t, err) {
 					if test.hasStatusCondition {
-						p, err2 := c.dbClient.AuthorizationV1alpha1().MysqlRoleBindings(test.mRBinding.Namespace).Get(test.mRBinding.Name, metav1.GetOptions{})
+						p, err2 := c.dbClient.AuthorizationV1alpha1().MySQLRoleBindings(test.mRBinding.Namespace).Get(test.mRBinding.Name, metav1.GetOptions{})
 						if assert.Nil(t, err2) {
 							assert.Condition(t, func() (success bool) {
 								if len(p.Status.Conditions) == 0 {
@@ -293,7 +293,7 @@ func TestUserManagerController_reconcileMysqlRoleBinding(t *testing.T) {
 				}
 			} else {
 				if assert.Nil(t, err) {
-					p, err2 := c.dbClient.AuthorizationV1alpha1().MysqlRoleBindings(test.mRBinding.Namespace).Get(test.mRBinding.Name, metav1.GetOptions{})
+					p, err2 := c.dbClient.AuthorizationV1alpha1().MySQLRoleBindings(test.mRBinding.Namespace).Get(test.mRBinding.Name, metav1.GetOptions{})
 					if assert.Nil(t, err2) {
 						assert.Condition(t, func() (success bool) {
 							if len(p.Status.Conditions) != 0 {

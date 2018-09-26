@@ -28,20 +28,20 @@ type FakeAuthorizationV1alpha1 struct {
 	*testing.Fake
 }
 
-func (c *FakeAuthorizationV1alpha1) MongodbRoles(namespace string) v1alpha1.MongodbRoleInterface {
-	return &FakeMongodbRoles{c, namespace}
+func (c *FakeAuthorizationV1alpha1) MongoDBRoles(namespace string) v1alpha1.MongoDBRoleInterface {
+	return &FakeMongoDBRoles{c, namespace}
 }
 
-func (c *FakeAuthorizationV1alpha1) MongodbRoleBindings(namespace string) v1alpha1.MongodbRoleBindingInterface {
-	return &FakeMongodbRoleBindings{c, namespace}
+func (c *FakeAuthorizationV1alpha1) MongoDBRoleBindings(namespace string) v1alpha1.MongoDBRoleBindingInterface {
+	return &FakeMongoDBRoleBindings{c, namespace}
 }
 
-func (c *FakeAuthorizationV1alpha1) MysqlRoles(namespace string) v1alpha1.MysqlRoleInterface {
-	return &FakeMysqlRoles{c, namespace}
+func (c *FakeAuthorizationV1alpha1) MySQLRoles(namespace string) v1alpha1.MySQLRoleInterface {
+	return &FakeMySQLRoles{c, namespace}
 }
 
-func (c *FakeAuthorizationV1alpha1) MysqlRoleBindings(namespace string) v1alpha1.MysqlRoleBindingInterface {
-	return &FakeMysqlRoleBindings{c, namespace}
+func (c *FakeAuthorizationV1alpha1) MySQLRoleBindings(namespace string) v1alpha1.MySQLRoleBindingInterface {
+	return &FakeMySQLRoleBindings{c, namespace}
 }
 
 func (c *FakeAuthorizationV1alpha1) PostgresRoles(namespace string) v1alpha1.PostgresRoleInterface {

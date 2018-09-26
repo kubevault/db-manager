@@ -12,15 +12,15 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-type MysqlRoleBinding struct {
-	mRoleBinding *api.MysqlRoleBinding
+type MySQLRoleBinding struct {
+	mRoleBinding *api.MySQLRoleBinding
 	vaultClient  *vaultapi.Client
 	kubeClient   kubernetes.Interface
 	databasePath string
 }
 
-func NewMysqlRoleBinding(k kubernetes.Interface, v *vaultapi.Client, mRoleBinding *api.MysqlRoleBinding, databasePath string) *MysqlRoleBinding {
-	return &MysqlRoleBinding{
+func NewMySQLRoleBinding(k kubernetes.Interface, v *vaultapi.Client, mRoleBinding *api.MySQLRoleBinding, databasePath string) *MySQLRoleBinding {
+	return &MySQLRoleBinding{
 		mRoleBinding: mRoleBinding,
 		vaultClient:  v,
 		kubeClient:   k,
@@ -29,7 +29,7 @@ func NewMysqlRoleBinding(k kubernetes.Interface, v *vaultapi.Client, mRoleBindin
 }
 
 // Gets credential from vault
-func (p *MysqlRoleBinding) GetCredential() (*vault.DatabaseCredential, error) {
+func (p *MySQLRoleBinding) GetCredential() (*vault.DatabaseCredential, error) {
 	path := fmt.Sprintf("/v1/%s/creds/%s", p.databasePath, p.mRoleBinding.Spec.RoleRef)
 	req := p.vaultClient.NewRequest("GET", path)
 
@@ -48,11 +48,11 @@ func (p *MysqlRoleBinding) GetCredential() (*vault.DatabaseCredential, error) {
 }
 
 // asOwner returns an owner reference
-func (p *MysqlRoleBinding) AsOwner() metav1.OwnerReference {
+func (p *MySQLRoleBinding) AsOwner() metav1.OwnerReference {
 	trueVar := true
 	return metav1.OwnerReference{
 		APIVersion: api.SchemeGroupVersion.String(),
-		Kind:       api.ResourceKindMysqlRoleBinding,
+		Kind:       api.ResourceKindMySQLRoleBinding,
 		Name:       p.mRoleBinding.Name,
 		UID:        p.mRoleBinding.UID,
 		Controller: &trueVar,

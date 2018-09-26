@@ -43,7 +43,7 @@ func vaultServer() *httptest.Server {
 	return httptest.NewServer(m)
 }
 
-func TestMongodbRoleBinding_GetCredentials(t *testing.T) {
+func TestMongoDBRoleBinding_GetCredentials(t *testing.T) {
 	srv := vaultServer()
 	defer srv.Close()
 
@@ -57,16 +57,16 @@ func TestMongodbRoleBinding_GetCredentials(t *testing.T) {
 
 	testData := []struct {
 		testName    string
-		mClient     *MongodbRoleBinding
+		mClient     *MongoDBRoleBinding
 		expectedErr bool
 	}{
 		{
 			testName: "Failed to get credential",
-			mClient: &MongodbRoleBinding{
+			mClient: &MongoDBRoleBinding{
 				vaultClient:  cl,
 				databasePath: "database",
-				mRoleBinding: &api.MongodbRoleBinding{
-					Spec: api.MongodbRoleBindingSpec{
+				mRoleBinding: &api.MongoDBRoleBinding{
+					Spec: api.MongoDBRoleBindingSpec{
 						RoleRef: "geterror",
 					},
 				},
@@ -75,11 +75,11 @@ func TestMongodbRoleBinding_GetCredentials(t *testing.T) {
 		},
 		{
 			testName: "Failed to decode json",
-			mClient: &MongodbRoleBinding{
+			mClient: &MongoDBRoleBinding{
 				vaultClient:  cl,
 				databasePath: "database",
-				mRoleBinding: &api.MongodbRoleBinding{
-					Spec: api.MongodbRoleBindingSpec{
+				mRoleBinding: &api.MongoDBRoleBinding{
+					Spec: api.MongoDBRoleBindingSpec{
 						RoleRef: "jsonerror",
 					},
 				},
@@ -88,11 +88,11 @@ func TestMongodbRoleBinding_GetCredentials(t *testing.T) {
 		},
 		{
 			testName: "Successfully get the credential",
-			mClient: &MongodbRoleBinding{
+			mClient: &MongoDBRoleBinding{
 				vaultClient:  cl,
 				databasePath: "database",
-				mRoleBinding: &api.MongodbRoleBinding{
-					Spec: api.MongodbRoleBindingSpec{
+				mRoleBinding: &api.MongoDBRoleBinding{
+					Spec: api.MongoDBRoleBindingSpec{
 						RoleRef: "success",
 					},
 				},
