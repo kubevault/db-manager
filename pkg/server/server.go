@@ -6,7 +6,7 @@ import (
 
 	hooks "github.com/appscode/kubernetes-webhook-util/admission/v1beta1"
 	admissionreview "github.com/appscode/kubernetes-webhook-util/registry/admissionreview/v1beta1"
-	"github.com/kubedb/user-manager/apis/authorization/install"
+	"github.com/kubedb/apimachinery/apis/authorization/install"
 	"github.com/kubedb/user-manager/pkg/controller"
 	admission "k8s.io/api/admission/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -50,7 +50,7 @@ type UserManagerConfig struct {
 // UserManagerServer contains state for a Kubernetes cluster master/api server.
 type UserManagerServer struct {
 	GenericAPIServer *genericapiserver.GenericAPIServer
-	Controller       *controller.UserManagerController
+	Controller       *controller.Controller
 }
 
 func (op *UserManagerServer) Run(stopCh <-chan struct{}) error {

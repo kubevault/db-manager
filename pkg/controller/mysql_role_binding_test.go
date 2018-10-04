@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
-	dbfake "github.com/kubedb/user-manager/client/clientset/versioned/fake"
+	api "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
+	dbfake "github.com/kubedb/apimachinery/client/clientset/versioned/fake"
 	"github.com/kubedb/user-manager/pkg/vault/database"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -28,7 +28,7 @@ func TestUserManagerController_runMysqlBindingFinalizer(t *testing.T) {
 		},
 	}
 
-	userManager := &UserManagerController{
+	userManager := &Controller{
 		processingFinalizer: map[string]bool{},
 		dbClient:            dbfake.NewSimpleClientset(),
 		kubeClient:          kfake.NewSimpleClientset(),
@@ -44,7 +44,7 @@ func TestUserManagerController_runMysqlBindingFinalizer(t *testing.T) {
 
 	testData := []struct {
 		testName            string
-		userManger          *UserManagerController
+		userManger          *Controller
 		mRole               *api.MySQLRole
 		mRoleBinding        *api.MySQLRoleBinding
 		createVaultCred     bool
@@ -253,7 +253,7 @@ func TestUserManagerController_reconcileMySQLRoleBinding(t *testing.T) {
 
 	for _, test := range testData {
 		t.Run(test.testName, func(t *testing.T) {
-			c := &UserManagerController{
+			c := &Controller{
 				kubeClient: kfake.NewSimpleClientset(),
 				dbClient:   dbfake.NewSimpleClientset(),
 			}

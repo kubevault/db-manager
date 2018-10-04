@@ -7,7 +7,7 @@ import (
 
 	"github.com/appscode/pat"
 	vaultapi "github.com/hashicorp/vault/api"
-	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
+	api "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
 	"github.com/stretchr/testify/assert"
 )
 

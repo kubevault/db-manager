@@ -9,8 +9,8 @@ import (
 	meta_util "github.com/appscode/kutil/meta"
 	"github.com/appscode/kutil/tools/queue"
 	"github.com/golang/glog"
-	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
-	patchutil "github.com/kubedb/user-manager/client/clientset/versioned/typed/authorization/v1alpha1/util"
+	api "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
+	patchutil "github.com/kubedb/apimachinery/client/clientset/versioned/typed/authorization/v1alpha1/util"
 	"github.com/kubedb/user-manager/pkg/vault/database"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -25,14 +25,14 @@ const (
 	MySQLRolePhaseSuccess api.MySQLRolePhase = "Success"
 )
 
-func (c *UserManagerController) initMySQLRoleWatcher() {
+func (c *Controller) initMySQLRoleWatcher() {
 	c.myRoleInformer = c.dbInformerFactory.Authorization().V1alpha1().MySQLRoles().Informer()
 	c.myRoleQueue = queue.New(api.ResourceKindMySQLRole, c.MaxNumRequeues, c.NumThreads, c.runMySQLRoleInjector)
 	c.myRoleInformer.AddEventHandler(queue.NewObservableHandler(c.myRoleQueue.GetQueue(), api.EnableStatusSubresource))
 	c.myRoleLister = c.dbInformerFactory.Authorization().V1alpha1().MySQLRoles().Lister()
 }
 
-func (c *UserManagerController) runMySQLRoleInjector(key string) error {
+func (c *Controller) runMySQLRoleInjector(key string) error {
 	obj, exist, err := c.myRoleInformer.GetIndexer().GetByKey(key)
 	if err != nil {
 		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
@@ -85,7 +85,7 @@ func (c *UserManagerController) runMySQLRoleInjector(key string) error {
 // 	  - configure a role that maps a name in Vault to an SQL statement to execute to create the database credential.
 //    - sync role
 //	  - revoke previous lease of all the respective mysqlRoleBinding and reissue a new lease
-func (c *UserManagerController) reconcileMySQLRole(dbRClient database.DatabaseRoleInterface, myRole *api.MySQLRole) error {
+func (c *Controller) reconcileMySQLRole(dbRClient database.DatabaseRoleInterface, myRole *api.MySQLRole) error {
 	status := myRole.Status
 	// enable the database secrets engine if it is not already enabled
 	err := dbRClient.EnableDatabase()
@@ -178,7 +178,7 @@ func (c *UserManagerController) reconcileMySQLRole(dbRClient database.DatabaseRo
 	return nil
 }
 
-func (c *UserManagerController) updatedMySQLRoleStatus(status *api.MySQLRoleStatus, mRole *api.MySQLRole) error {
+func (c *Controller) updatedMySQLRoleStatus(status *api.MySQLRoleStatus, mRole *api.MySQLRole) error {
 	_, err := patchutil.UpdateMySQLRoleStatus(c.dbClient.AuthorizationV1alpha1(), mRole, func(s *api.MySQLRoleStatus) *api.MySQLRoleStatus {
 		s = status
 		return s
@@ -189,7 +189,7 @@ func (c *UserManagerController) updatedMySQLRoleStatus(status *api.MySQLRoleStat
 	return nil
 }
 
-func (c *UserManagerController) runMySQLRoleFinalizer(mRole *api.MySQLRole, timeout time.Duration, interval time.Duration) {
+func (c *Controller) runMySQLRoleFinalizer(mRole *api.MySQLRole, timeout time.Duration, interval time.Duration) {
 	id := getMySQLRoleId(mRole)
 
 	if _, ok := c.processingFinalizer[id]; ok {
@@ -267,7 +267,7 @@ func (c *UserManagerController) runMySQLRoleFinalizer(mRole *api.MySQLRole, time
 // Do:
 //	- delete role in vault
 //	- revoke lease of all the corresponding mysqlRoleBinding
-func (c *UserManagerController) finalizeMySQLRole(dbRClient database.DatabaseRoleInterface, mRole *api.MySQLRole) error {
+func (c *Controller) finalizeMySQLRole(dbRClient database.DatabaseRoleInterface, mRole *api.MySQLRole) error {
 	mRList, err := c.myRoleBindingLister.MySQLRoleBindings(mRole.Namespace).List(labels.SelectorFromSet(map[string]string{}))
 	if err != nil {
 		return errors.Wrap(err, "failed to list mysqlRoleBinding")
@@ -298,7 +298,7 @@ func (c *UserManagerController) finalizeMySQLRole(dbRClient database.DatabaseRol
 	return nil
 }
 
-func (c *UserManagerController) removeMySQLRoleFinalizer(mRole *api.MySQLRole) error {
+func (c *Controller) removeMySQLRoleFinalizer(mRole *api.MySQLRole) error {
 	// remove finalizer
 	_, _, err := patchutil.PatchMySQLRole(c.dbClient.AuthorizationV1alpha1(), mRole, func(role *api.MySQLRole) *api.MySQLRole {
 		role.ObjectMeta = core_util.RemoveFinalizer(role.ObjectMeta, MySQLRoleFinalizer)

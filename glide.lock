@@ -1,5 +1,5 @@
-hash: 932f3f0a811b7c2ba426e5b8414f9298e5293319749475f05ce785570eef6428
-updated: 2018-09-12T11:20:03.403242875-07:00
+hash: 4a56f97a62c0a65609c8edbb71ba12b71f32ad91eba66f5bb5cd36a33ce1b2f1
+updated: 2018-10-03T18:08:50.617334714-07:00
 imports:
 - name: bitbucket.org/ww/goautoneg
   version: 75cd24fc2f2c2a2088577d12123ddee5f54e0675
@@ -36,7 +36,7 @@ imports:
   - admission/v1beta1
   - registry/admissionreview/v1beta1
 - name: github.com/appscode/kutil
-  version: 58a89a000f0c44560e97537d989ec6d2fba95f64
+  version: ab4a23e683a5b1c2d7f23f49b30c0316de8c7f94
   subpackages:
   - apiextensions/v1beta1
   - core/v1
@@ -171,7 +171,7 @@ imports:
 - name: github.com/evanphx/json-patch
   version: afac545df32f2287a079e2dfb7ba2745a643747e
 - name: github.com/fatih/structs
-  version: ebf56d35bba727c68ac77f56f2fcf90b181851aa
+  version: 4966fc68f5b7593aafa6cbbba2d65ec6e1416047
 - name: github.com/ghodss/yaml
   version: 73d445a93680fa1a78ae23a5839bad48f32ba1ee
 - name: github.com/go-openapi/jsonpointer
@@ -282,6 +282,41 @@ imports:
   version: 14b04e0594ef6a9fd943363b135656f0ec8c9d0e
 - name: github.com/json-iterator/go
   version: 1624edc4454b8682399def8740d46db5e4362ba4
+- name: github.com/kubedb/apimachinery
+  version: adaa5721fd71b32887159f74b34f60629b74e31b
+  subpackages:
+  - apis
+  - apis/authorization
+  - apis/authorization/install
+  - apis/authorization/v1alpha1
+  - apis/catalog
+  - apis/catalog/v1alpha1
+  - apis/config/v1alpha1
+  - apis/kubedb
+  - apis/kubedb/v1alpha1
+  - client/clientset/versioned
+  - client/clientset/versioned/fake
+  - client/clientset/versioned/scheme
+  - client/clientset/versioned/typed/authorization/v1alpha1
+  - client/clientset/versioned/typed/authorization/v1alpha1/fake
+  - client/clientset/versioned/typed/authorization/v1alpha1/util
+  - client/clientset/versioned/typed/catalog/v1alpha1
+  - client/clientset/versioned/typed/catalog/v1alpha1/fake
+  - client/clientset/versioned/typed/config/v1alpha1
+  - client/clientset/versioned/typed/config/v1alpha1/fake
+  - client/clientset/versioned/typed/kubedb/v1alpha1
+  - client/clientset/versioned/typed/kubedb/v1alpha1/fake
+  - client/informers/externalversions
+  - client/informers/externalversions/authorization
+  - client/informers/externalversions/authorization/v1alpha1
+  - client/informers/externalversions/catalog
+  - client/informers/externalversions/catalog/v1alpha1
+  - client/informers/externalversions/internalinterfaces
+  - client/informers/externalversions/kubedb
+  - client/informers/externalversions/kubedb/v1alpha1
+  - client/listers/authorization/v1alpha1
+  - client/listers/catalog/v1alpha1
+  - client/listers/kubedb/v1alpha1
 - name: github.com/lib/pq
   version: 4ded0e9383f75c197b3a2aaa6d590ac52df6fd79
   subpackages:
@@ -552,12 +587,8 @@ imports:
   - pkg/api/errors
   - pkg/api/meta
   - pkg/api/resource
-  - pkg/api/testing
-  - pkg/api/testing/fuzzer
-  - pkg/api/testing/roundtrip
   - pkg/api/validation
   - pkg/api/validation/path
-  - pkg/apis/meta/fuzzer
   - pkg/apis/meta/internalversion
   - pkg/apis/meta/v1
   - pkg/apis/meta/v1/unstructured
@@ -584,6 +615,7 @@ imports:
   - pkg/util/framer
   - pkg/util/intstr
   - pkg/util/json
+  - pkg/util/jsonmergepatch
   - pkg/util/mergepatch
   - pkg/util/net
   - pkg/util/rand
@@ -872,7 +904,7 @@ imports:
   - pkg/client/clientset_generated/clientset/typed/apiregistration/v1
   - pkg/client/clientset_generated/clientset/typed/apiregistration/v1beta1
 - name: k8s.io/kube-openapi
-  version: e3762e86a74c878ffed47484592986685639c2cd
+  version: 91cfa479c814065e420cee7ed227db0f63a5854e
   subpackages:
   - pkg/builder
   - pkg/common
@@ -883,6 +915,34 @@ imports:
   version: a4529464e4629c21224b3d52edfe0ea91b072862
   subpackages:
   - pkg/api/legacyscheme
+- name: kmodules.xyz/custom-resources
+  version: 096f21cfaff6aca79255cda79fb4e23cd6386096
+  repo: https://github.com/kmodules/custom-resources.git
+  vcs: git
+  subpackages:
+  - apis/appcatalog
+  - apis/appcatalog/v1alpha1
+  - client/clientset/versioned/scheme
+  - client/clientset/versioned/typed/appcatalog/v1alpha1
+  - client/clientset/versioned/typed/appcatalog/v1alpha1/util
+- name: kmodules.xyz/monitoring-agent-api
+  version: 00cac08cb50defd6df8d08483fad35df790d7675
+  repo: https://github.com/kmodules/monitoring-agent-api.git
+  vcs: git
+  subpackages:
+  - api/v1
+- name: kmodules.xyz/objectstore-api
+  version: 09a6b0939a50d5bd965c2fae56228b8adbf1b0c3
+  repo: https://github.com/kmodules/objectstore-api.git
+  vcs: git
+  subpackages:
+  - api/v1
+- name: kmodules.xyz/offshoot-api
+  version: 19332f50ff9b7d684402d5a9e604815391f5900b
+  repo: https://github.com/kmodules/offshoot-api.git
+  vcs: git
+  subpackages:
+  - api/v1
 testImports:
 - name: github.com/appscode/pat
   version: 48ff78925b7955367d8a048fc2b5cec8efadf8d3
@@ -891,6 +951,6 @@ testImports:
   subpackages:
   - difflib
 - name: github.com/stretchr/testify
-  version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
+  version: f35b8ab0b5a2cef36673838d662e249dd9c94686
   subpackages:
   - assert

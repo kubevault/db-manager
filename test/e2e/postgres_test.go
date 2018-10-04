@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
-	patchutil "github.com/kubedb/user-manager/client/clientset/versioned/typed/authorization/v1alpha1/util"
+	api "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
+	patchutil "github.com/kubedb/apimachinery/client/clientset/versioned/typed/authorization/v1alpha1/util"
 	"github.com/kubedb/user-manager/pkg/vault/database"
 	"github.com/kubedb/user-manager/test/e2e/framework"
 	. "github.com/onsi/ginkgo"
@@ -536,7 +536,7 @@ var _ = Describe("Postgres role and role binding", func() {
 					Provider: &api.ProviderSpec{
 						Vault: &api.VaultSpec{
 							Address:             f.VaultUrl,
-							Path: "pg",
+							Path:                "pg",
 							TokenSecret:         framework.VaultTokenSecret,
 							SkipTLSVerification: true,
 						},

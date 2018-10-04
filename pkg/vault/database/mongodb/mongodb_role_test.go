@@ -8,7 +8,7 @@ import (
 
 	"github.com/appscode/pat"
 	vaultapi "github.com/hashicorp/vault/api"
-	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
+	api "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

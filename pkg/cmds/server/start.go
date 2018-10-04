@@ -5,7 +5,7 @@ import (
 	"io"
 	"net"
 
-	"github.com/kubedb/user-manager/apis/authorization/v1alpha1"
+	"github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
 	"github.com/kubedb/user-manager/pkg/controller"
 	"github.com/kubedb/user-manager/pkg/server"
 	"github.com/spf13/pflag"

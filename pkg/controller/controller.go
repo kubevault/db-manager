@@ -6,10 +6,10 @@ import (
 	crdutils "github.com/appscode/kutil/apiextensions/v1beta1"
 	"github.com/appscode/kutil/tools/queue"
 	"github.com/golang/glog"
-	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
-	cs "github.com/kubedb/user-manager/client/clientset/versioned"
-	dbinformers "github.com/kubedb/user-manager/client/informers/externalversions"
-	dblisters "github.com/kubedb/user-manager/client/listers/authorization/v1alpha1"
+	api "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
+	cs "github.com/kubedb/apimachinery/client/clientset/versioned"
+	dbinformers "github.com/kubedb/apimachinery/client/informers/externalversions"
+	dblisters "github.com/kubedb/apimachinery/client/listers/authorization/v1alpha1"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	crd_cs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/util/runtime"
@@ -17,15 +17,17 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
+	appcat_cs "kmodules.xyz/custom-resources/client/clientset/versioned/typed/appcatalog/v1alpha1"
 )
 
-type UserManagerController struct {
+type Controller struct {
 	config
 
-	kubeClient kubernetes.Interface
-	dbClient   cs.Interface
-	crdClient  crd_cs.ApiextensionsV1beta1Interface
-	recorder   record.EventRecorder
+	kubeClient       kubernetes.Interface
+	dbClient         cs.Interface
+	crdClient        crd_cs.ApiextensionsV1beta1Interface
+	appCatalogClient appcat_cs.AppcatalogV1alpha1Interface
+	recorder         record.EventRecorder
 
 	kubeInformerFactory informers.SharedInformerFactory
 	dbInformerFactory   dbinformers.SharedInformerFactory
@@ -64,7 +66,7 @@ type UserManagerController struct {
 	processingFinalizer map[string]bool
 }
 
-func (c *UserManagerController) ensureCustomResourceDefinitions() error {
+func (c *Controller) ensureCustomResourceDefinitions() error {
 	crds := []*apiextensions.CustomResourceDefinition{
 		api.PostgresRole{}.CustomResourceDefinition(),
 		api.PostgresRoleBinding{}.CustomResourceDefinition(),
@@ -76,7 +78,7 @@ func (c *UserManagerController) ensureCustomResourceDefinitions() error {
 	return crdutils.RegisterCRDs(c.crdClient, crds)
 }
 
-func (c *UserManagerController) RunInformers(stopCh <-chan struct{}) {
+func (c *Controller) RunInformers(stopCh <-chan struct{}) {
 	defer runtime.HandleCrash()
 
 	glog.Info("Starting KubeDB user manager controller")

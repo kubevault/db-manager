@@ -11,8 +11,8 @@ import (
 	"github.com/appscode/kutil/openapi"
 	"github.com/go-openapi/spec"
 	"github.com/golang/glog"
-	"github.com/kubedb/user-manager/apis/authorization/install"
-	"github.com/kubedb/user-manager/apis/authorization/v1alpha1"
+	"github.com/kubedb/apimachinery/apis/authorization/install"
+	"github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
 	crd_api "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
@@ -20,7 +20,7 @@ import (
 )
 
 func generateCRDDefinitions() {
-	filename := gort.GOPath() + "/src/github.com/kubedb/user-manager/apis/authorization/v1alpha1/crds.yaml"
+	filename := gort.GOPath() + "/src/github.com/kubedb/apimachinery/apis/authorization/v1alpha1/crds.yaml"
 	os.Remove(filename)
 
 	err := os.MkdirAll(filepath.Join(gort.GOPath(), "/src/github.com/kubedb/user-manager/api/crds"), 0755)

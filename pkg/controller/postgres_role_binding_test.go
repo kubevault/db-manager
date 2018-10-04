@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/appscode/pat"
-	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
-	dbfake "github.com/kubedb/user-manager/client/clientset/versioned/fake"
+	api "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
+	dbfake "github.com/kubedb/apimachinery/client/clientset/versioned/fake"
 	"github.com/kubedb/user-manager/pkg/vault"
 	"github.com/kubedb/user-manager/pkg/vault/database"
 	"github.com/stretchr/testify/assert"
@@ -111,7 +111,7 @@ func TestUserManagerController_runPostgresBindingFinalizer(t *testing.T) {
 		},
 	}
 
-	userManager := &UserManagerController{
+	userManager := &Controller{
 		processingFinalizer: map[string]bool{},
 		dbClient:            dbfake.NewSimpleClientset(),
 		kubeClient:          kfake.NewSimpleClientset(),
@@ -127,7 +127,7 @@ func TestUserManagerController_runPostgresBindingFinalizer(t *testing.T) {
 
 	testData := []struct {
 		testName            string
-		userManger          *UserManagerController
+		userManger          *Controller
 		pgRole              *api.PostgresRole
 		pgRoleBinding       *api.PostgresRoleBinding
 		createVaultCred     bool
@@ -336,7 +336,7 @@ func TestUserManagerController_reconcilePostgresRoleBinding(t *testing.T) {
 
 	for _, test := range testData {
 		t.Run(test.testName, func(t *testing.T) {
-			c := &UserManagerController{
+			c := &Controller{
 				kubeClient: kfake.NewSimpleClientset(),
 				dbClient:   dbfake.NewSimpleClientset(),
 			}

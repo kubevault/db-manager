@@ -1,7 +1,7 @@
 package framework
 
 import (
-	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
+	api "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	vaultapi "github.com/hashicorp/vault/api"
-	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
+	api "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
 	"github.com/kubedb/user-manager/pkg/vault"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

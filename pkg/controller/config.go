@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/appscode/go/log/golog"
-	cs "github.com/kubedb/user-manager/client/clientset/versioned"
-	dbinformers "github.com/kubedb/user-manager/client/informers/externalversions"
+	cs "github.com/kubedb/apimachinery/client/clientset/versioned"
+	dbinformers "github.com/kubedb/apimachinery/client/informers/externalversions"
 	"github.com/kubedb/user-manager/pkg/eventer"
 	core "k8s.io/api/core/v1"
 	crd_cs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
@@ -13,6 +13,7 @@ import (
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	appcat_cs "kmodules.xyz/custom-resources/client/clientset/versioned/typed/appcatalog/v1alpha1"
 )
 
 var (
@@ -31,10 +32,11 @@ type config struct {
 type Config struct {
 	config
 
-	ClientConfig *rest.Config
-	KubeClient   kubernetes.Interface
-	DbClient     cs.Interface
-	CRDClient    crd_cs.ApiextensionsV1beta1Interface
+	ClientConfig     *rest.Config
+	KubeClient       kubernetes.Interface
+	DbClient         cs.Interface
+	CRDClient        crd_cs.ApiextensionsV1beta1Interface
+	AppCatalogClient appcat_cs.AppcatalogV1alpha1Interface
 }
 
 func NewConfig(clientConfig *rest.Config) *Config {
@@ -43,15 +45,16 @@ func NewConfig(clientConfig *rest.Config) *Config {
 	}
 }
 
-func (c *Config) New() (*UserManagerController, error) {
+func (c *Config) New() (*Controller, error) {
 	tweakListOptions := func(opt *metav1.ListOptions) {
 		opt.IncludeUninitialized = true
 	}
-	ctrl := &UserManagerController{
+	ctrl := &Controller{
 		config:              c.config,
 		kubeClient:          c.KubeClient,
 		dbClient:            c.DbClient,
 		crdClient:           c.CRDClient,
+		appCatalogClient:    c.AppCatalogClient,
 		kubeInformerFactory: informers.NewFilteredSharedInformerFactory(c.KubeClient, c.ResyncPeriod, core.NamespaceAll, tweakListOptions),
 		dbInformerFactory:   dbinformers.NewSharedInformerFactory(c.DbClient, c.ResyncPeriod),
 		recorder:            eventer.NewEventRecorder(c.KubeClient, "user-manager-controller"),

@@ -9,8 +9,8 @@ import (
 	meta_util "github.com/appscode/kutil/meta"
 	"github.com/appscode/kutil/tools/queue"
 	"github.com/golang/glog"
-	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
-	patchutil "github.com/kubedb/user-manager/client/clientset/versioned/typed/authorization/v1alpha1/util"
+	api "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
+	patchutil "github.com/kubedb/apimachinery/client/clientset/versioned/typed/authorization/v1alpha1/util"
 	"github.com/kubedb/user-manager/pkg/vault/database"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -25,14 +25,14 @@ const (
 	MongoDBRolePhaseSuccess api.MongoDBRolePhase = "Success"
 )
 
-func (c *UserManagerController) initMongoDBRoleWatcher() {
+func (c *Controller) initMongoDBRoleWatcher() {
 	c.mgRoleInformer = c.dbInformerFactory.Authorization().V1alpha1().MongoDBRoles().Informer()
 	c.mgRoleQueue = queue.New(api.ResourceKindMongoDBRole, c.MaxNumRequeues, c.NumThreads, c.runMongoDBRoleInjector)
 	c.mgRoleInformer.AddEventHandler(queue.NewObservableHandler(c.mgRoleQueue.GetQueue(), api.EnableStatusSubresource))
 	c.mgRoleLister = c.dbInformerFactory.Authorization().V1alpha1().MongoDBRoles().Lister()
 }
 
-func (c *UserManagerController) runMongoDBRoleInjector(key string) error {
+func (c *Controller) runMongoDBRoleInjector(key string) error {
 	obj, exist, err := c.mgRoleInformer.GetIndexer().GetByKey(key)
 	if err != nil {
 		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
@@ -84,7 +84,7 @@ func (c *UserManagerController) runMongoDBRoleInjector(key string) error {
 // 	  - configure a role that maps a name in Vault to an SQL statement to execute to create the database credential.
 //    - sync role
 //	  - revoke previous lease of all the respective mongodbRoleBinding and reissue a new lease
-func (c *UserManagerController) reconcileMongoDBRole(dbRClient database.DatabaseRoleInterface, mgRole *api.MongoDBRole) error {
+func (c *Controller) reconcileMongoDBRole(dbRClient database.DatabaseRoleInterface, mgRole *api.MongoDBRole) error {
 	status := mgRole.Status
 	// enable the database secrets engine if it is not already enabled
 	err := dbRClient.EnableDatabase()
@@ -181,7 +181,7 @@ func (c *UserManagerController) reconcileMongoDBRole(dbRClient database.Database
 	return nil
 }
 
-func (c *UserManagerController) updatedMongoDBRoleStatus(status *api.MongoDBRoleStatus, mRole *api.MongoDBRole) error {
+func (c *Controller) updatedMongoDBRoleStatus(status *api.MongoDBRoleStatus, mRole *api.MongoDBRole) error {
 	_, err := patchutil.UpdateMongoDBRoleStatus(c.dbClient.AuthorizationV1alpha1(), mRole, func(s *api.MongoDBRoleStatus) *api.MongoDBRoleStatus {
 		s = status
 		return s
@@ -192,7 +192,7 @@ func (c *UserManagerController) updatedMongoDBRoleStatus(status *api.MongoDBRole
 	return nil
 }
 
-func (c *UserManagerController) runMongoDBRoleFinalizer(mRole *api.MongoDBRole, timeout time.Duration, interval time.Duration) {
+func (c *Controller) runMongoDBRoleFinalizer(mRole *api.MongoDBRole, timeout time.Duration, interval time.Duration) {
 	id := getMongoDBRoleId(mRole)
 
 	if _, ok := c.processingFinalizer[id]; ok {
@@ -270,7 +270,7 @@ func (c *UserManagerController) runMongoDBRoleFinalizer(mRole *api.MongoDBRole, 
 // Do:
 //	- delete role in vault
 //	- revoke lease of all the corresponding mongodbRoleBinding
-func (c *UserManagerController) finalizeMongoDBRole(dbRClient database.DatabaseRoleInterface, mRole *api.MongoDBRole) error {
+func (c *Controller) finalizeMongoDBRole(dbRClient database.DatabaseRoleInterface, mRole *api.MongoDBRole) error {
 	mRList, err := c.mgRoleBindingLister.MongoDBRoleBindings(mRole.Namespace).List(labels.SelectorFromSet(map[string]string{}))
 	if err != nil {
 		return errors.Wrap(err, "failed to list mongodbRoleBinding")
@@ -301,7 +301,7 @@ func (c *UserManagerController) finalizeMongoDBRole(dbRClient database.DatabaseR
 	return nil
 }
 
-func (c *UserManagerController) removeMongoDBRoleFinalizer(mRole *api.MongoDBRole) error {
+func (c *Controller) removeMongoDBRoleFinalizer(mRole *api.MongoDBRole) error {
 	// remove finalizer
 	_, _, err := patchutil.PatchMongoDBRole(c.dbClient.AuthorizationV1alpha1(), mRole, func(role *api.MongoDBRole) *api.MongoDBRole {
 		role.ObjectMeta = core_util.RemoveFinalizer(role.ObjectMeta, MongoDBRoleFinalizer)
