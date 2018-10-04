@@ -7,7 +7,6 @@ import (
 	api "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
 	"github.com/kubedb/user-manager/pkg/vault"
 	"github.com/pkg/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 )
 
@@ -15,12 +14,23 @@ const (
 	renewThreshold = time.Second * 50
 )
 
-func (u *Controller) RevokeLease(v *api.VaultSpec, namespace string, leaseID string) error {
-	if v == nil {
-		return errors.New("vault spec is nil")
+func (c *Controller) RevokeLease(authMgrRef api.AuthManagerRef, leaseID string) error {
+	if authMgrRef.Type != api.AuthManagerTypeVault {
+		return nil
+	}
+	if authMgrRef.Namespace == nil {
+		return errors.New("missing Vault server namespace")
+	}
+	if authMgrRef.Name == nil {
+		return errors.New("missing Vault server name")
 	}
 
-	cl, err := vault.NewClient(u.kubeClient, namespace, v)
+	appBinding, err := c.appBindingLister.AppBindings(*authMgrRef.Namespace).Get(*authMgrRef.Name)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get Vault %s/%s", *authMgrRef.Namespace, *authMgrRef.Name)
+	}
+
+	cl, err := vault.NewClient(c.kubeClient, appBinding)
 	if err != nil {
 		return errors.Wrap(err, "failed to create vault client")
 	}
@@ -32,24 +42,24 @@ func (u *Controller) RevokeLease(v *api.VaultSpec, namespace string, leaseID str
 	return nil
 }
 
-func (u *Controller) LeaseRenewer(duration time.Duration) {
+func (c *Controller) LeaseRenewer(duration time.Duration) {
 	for {
 		select {
 		case <-time.After(duration):
-			go u.runLeaseRenewerForPostgres(duration)
-			go u.runLeaseRenewerForMysql(duration)
-			go u.runLeaseRenewerForMongodb(duration)
+			go c.runLeaseRenewerForPostgres(duration)
+			go c.runLeaseRenewerForMysql(duration)
+			go c.runLeaseRenewerForMongodb(duration)
 		}
 	}
 }
 
-func (u *Controller) runLeaseRenewerForPostgres(duration time.Duration) {
-	pgRBList, err := u.pgRoleBindingLister.List(labels.SelectorFromSet(map[string]string{}))
+func (c *Controller) runLeaseRenewerForPostgres(duration time.Duration) {
+	pgRBList, err := c.pgRoleBindingLister.List(labels.Everything())
 	if err != nil {
 		glog.Errorln("Postgres credential lease renewer: ", err)
 	} else {
 		for _, p := range pgRBList {
-			err = u.RenewLeaseForPostgres(p, duration)
+			err = c.RenewLeaseForPostgres(p, duration)
 			if err != nil {
 				glog.Errorf("Postgres credential lease renewer: for PostgresRoleBinding %s/%s: %v", p.Namespace, p.Name, err)
 			}
@@ -57,12 +67,12 @@ func (u *Controller) runLeaseRenewerForPostgres(duration time.Duration) {
 	}
 }
 
-func (u *Controller) RenewLeaseForPostgres(p *api.PostgresRoleBinding, duration time.Duration) error {
-	if p.Status.Lease.ID == "" {
+func (c *Controller) RenewLeaseForPostgres(rb *api.PostgresRoleBinding, duration time.Duration) error {
+	if rb.Status.Lease.ID == "" {
 		return nil
 	}
 
-	remaining := p.Status.Lease.RenewDeadline - time.Now().Unix()
+	remaining := rb.Status.Lease.RenewDeadline - time.Now().Unix()
 	threshold := duration + renewThreshold
 
 	if remaining > int64(threshold.Seconds()) {
@@ -70,38 +80,54 @@ func (u *Controller) RenewLeaseForPostgres(p *api.PostgresRoleBinding, duration 
 		return nil
 	}
 
-	pgRole, err := u.dbClient.AuthorizationV1alpha1().PostgresRoles(p.Namespace).Get(p.Spec.RoleRef, metav1.GetOptions{})
+	role, err := c.pgRoleLister.PostgresRoles(rb.Namespace).Get(rb.Spec.RoleRef)
 	if err != nil {
-		return errors.Wrapf(err, "failed to get postgres role %s/%s", p.Namespace, p.Spec.RoleRef)
+		return errors.Wrapf(err, "failed to get PostgresRole %s/%s", rb.Namespace, rb.Spec.RoleRef)
 	}
 
-	v, err := vault.NewClient(u.kubeClient, p.Namespace, pgRole.Spec.Provider.Vault)
-	if err != nil {
-		return errors.Wrapf(err, "failed to create vault client from postgres role %s/%s spec.provider.vault", p.Namespace, p.Spec.RoleRef)
+	authMgrRef := role.Spec.AuthManagerRef
+	if authMgrRef.Type != api.AuthManagerTypeVault {
+		return nil
+	}
+	if authMgrRef.Namespace == nil {
+		return errors.Wrapf(err, "missing Vault server namespace for PostgresRole %s/%s", rb.Namespace, rb.Spec.RoleRef)
+	}
+	if authMgrRef.Name == nil {
+		return errors.Wrapf(err, "missing Vault server name for PostgresRole %s/%s", rb.Namespace, rb.Spec.RoleRef)
 	}
 
-	_, err = v.Sys().Renew(p.Status.Lease.ID, 0)
+	appBinding, err := c.appBindingLister.AppBindings(*authMgrRef.Namespace).Get(*authMgrRef.Name)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get Vault %s/%s", *authMgrRef.Namespace, *authMgrRef.Name)
+	}
+
+	v, err := vault.NewClient(c.kubeClient, appBinding)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create vault client from PostgresRole %s/%s spec.provider.vault", rb.Namespace, rb.Spec.RoleRef)
+	}
+
+	_, err = v.Sys().Renew(rb.Status.Lease.ID, 0)
 	if err != nil {
 		return errors.Wrap(err, "failed to renew the lease")
 	}
 
-	status := p.Status
+	status := rb.Status
 	status.Lease.RenewDeadline = time.Now().Unix()
 
-	err = u.updatePostgresRoleBindingStatus(&status, p)
+	err = c.updatePostgresRoleBindingStatus(&status, rb)
 	if err != nil {
 		return errors.Wrap(err, "failed to update renew deadline")
 	}
 	return nil
 }
 
-func (u *Controller) runLeaseRenewerForMysql(duration time.Duration) {
-	mRBList, err := u.myRoleBindingLister.List(labels.SelectorFromSet(map[string]string{}))
+func (c *Controller) runLeaseRenewerForMysql(duration time.Duration) {
+	mRBList, err := c.myRoleBindingLister.List(labels.Everything())
 	if err != nil {
 		glog.Errorln("Mysql credential lease renewer: ", err)
 	} else {
 		for _, m := range mRBList {
-			err = u.RenewLeaseForMysql(m, duration)
+			err = c.RenewLeaseForMysql(m, duration)
 			if err != nil {
 				glog.Errorf("Mysql credential lease renewer: for MySQLRoleBinding %s/%s: %v", m.Namespace, m.Name, err)
 			}
@@ -109,12 +135,12 @@ func (u *Controller) runLeaseRenewerForMysql(duration time.Duration) {
 	}
 }
 
-func (u *Controller) RenewLeaseForMysql(m *api.MySQLRoleBinding, duration time.Duration) error {
-	if m.Status.Lease.ID == "" {
+func (c *Controller) RenewLeaseForMysql(rb *api.MySQLRoleBinding, duration time.Duration) error {
+	if rb.Status.Lease.ID == "" {
 		return nil
 	}
 
-	remaining := m.Status.Lease.RenewDeadline - time.Now().Unix()
+	remaining := rb.Status.Lease.RenewDeadline - time.Now().Unix()
 	threshold := duration + renewThreshold
 
 	if remaining > int64(threshold.Seconds()) {
@@ -122,38 +148,54 @@ func (u *Controller) RenewLeaseForMysql(m *api.MySQLRoleBinding, duration time.D
 		return nil
 	}
 
-	mRole, err := u.dbClient.AuthorizationV1alpha1().MySQLRoles(m.Namespace).Get(m.Spec.RoleRef, metav1.GetOptions{})
+	role, err := c.myRoleLister.MySQLRoles(rb.Namespace).Get(rb.Spec.RoleRef)
 	if err != nil {
-		return errors.Wrapf(err, "failed to get mysql role %s/%s", m.Namespace, m.Spec.RoleRef)
+		return errors.Wrapf(err, "failed to get MySQLRole %s/%s", rb.Namespace, rb.Spec.RoleRef)
 	}
 
-	v, err := vault.NewClient(u.kubeClient, m.Namespace, mRole.Spec.Provider.Vault)
-	if err != nil {
-		return errors.Wrapf(err, "failed to create vault client from mysql role %s/%s spec.provider.vault", m.Namespace, m.Spec.RoleRef)
+	authMgrRef := role.Spec.AuthManagerRef
+	if authMgrRef.Type != api.AuthManagerTypeVault {
+		return nil
+	}
+	if authMgrRef.Namespace == nil {
+		return errors.Wrapf(err, "missing Vault server namespace for MySQLRole %s/%s", rb.Namespace, rb.Spec.RoleRef)
+	}
+	if authMgrRef.Name == nil {
+		return errors.Wrapf(err, "missing Vault server name for MySQLRole %s/%s", rb.Namespace, rb.Spec.RoleRef)
 	}
 
-	_, err = v.Sys().Renew(m.Status.Lease.ID, 0)
+	appBinding, err := c.appBindingLister.AppBindings(*authMgrRef.Namespace).Get(*authMgrRef.Name)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get Vault %s/%s", *authMgrRef.Namespace, *authMgrRef.Name)
+	}
+
+	v, err := vault.NewClient(c.kubeClient, appBinding)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create vault client from MySQLRole %s/%s spec.provider.vault", rb.Namespace, rb.Spec.RoleRef)
+	}
+
+	_, err = v.Sys().Renew(rb.Status.Lease.ID, 0)
 	if err != nil {
 		return errors.Wrap(err, "failed to renew the lease")
 	}
 
-	status := m.Status
+	status := rb.Status
 	status.Lease.RenewDeadline = time.Now().Unix()
 
-	err = u.updateMySQLRoleBindingStatus(&status, m)
+	err = c.updateMySQLRoleBindingStatus(&status, rb)
 	if err != nil {
 		return errors.Wrap(err, "failed to update renew deadline")
 	}
 	return nil
 }
 
-func (u *Controller) runLeaseRenewerForMongodb(duration time.Duration) {
-	mRBList, err := u.mgRoleBindingLister.List(labels.SelectorFromSet(map[string]string{}))
+func (c *Controller) runLeaseRenewerForMongodb(duration time.Duration) {
+	mRBList, err := c.mgRoleBindingLister.List(labels.Everything())
 	if err != nil {
 		glog.Errorln("Mongodb credential lease renewer: ", err)
 	} else {
 		for _, m := range mRBList {
-			err = u.RenewLeaseForMongodb(m, duration)
+			err = c.RenewLeaseForMongodb(m, duration)
 			if err != nil {
 				glog.Errorf("Mongodb credential lease renewer: for MongoDBRoleBinding %s/%s: %v", m.Namespace, m.Name, err)
 			}
@@ -161,12 +203,12 @@ func (u *Controller) runLeaseRenewerForMongodb(duration time.Duration) {
 	}
 }
 
-func (u *Controller) RenewLeaseForMongodb(m *api.MongoDBRoleBinding, duration time.Duration) error {
-	if m.Status.Lease.ID == "" {
+func (c *Controller) RenewLeaseForMongodb(rb *api.MongoDBRoleBinding, duration time.Duration) error {
+	if rb.Status.Lease.ID == "" {
 		return nil
 	}
 
-	remaining := m.Status.Lease.RenewDeadline - time.Now().Unix()
+	remaining := rb.Status.Lease.RenewDeadline - time.Now().Unix()
 	threshold := duration + renewThreshold
 
 	if remaining > int64(threshold.Seconds()) {
@@ -174,25 +216,41 @@ func (u *Controller) RenewLeaseForMongodb(m *api.MongoDBRoleBinding, duration ti
 		return nil
 	}
 
-	mRole, err := u.dbClient.AuthorizationV1alpha1().MongoDBRoles(m.Namespace).Get(m.Spec.RoleRef, metav1.GetOptions{})
+	role, err := c.mgRoleLister.MongoDBRoles(rb.Namespace).Get(rb.Spec.RoleRef)
 	if err != nil {
-		return errors.Wrapf(err, "failed to get mongodb role %s/%s", m.Namespace, m.Spec.RoleRef)
+		return errors.Wrapf(err, "failed to get mongodb role %s/%s", rb.Namespace, rb.Spec.RoleRef)
 	}
 
-	v, err := vault.NewClient(u.kubeClient, m.Namespace, mRole.Spec.Provider.Vault)
-	if err != nil {
-		return errors.Wrapf(err, "failed to create vault client from mongodb role %s/%s spec.provider.vault", m.Namespace, m.Spec.RoleRef)
+	authMgrRef := role.Spec.AuthManagerRef
+	if authMgrRef.Type != api.AuthManagerTypeVault {
+		return nil
+	}
+	if authMgrRef.Namespace == nil {
+		return errors.Wrapf(err, "missing Vault server namespace for MongoDBRole %s/%s", rb.Namespace, rb.Spec.RoleRef)
+	}
+	if authMgrRef.Name == nil {
+		return errors.Wrapf(err, "missing Vault server name for MongoDBRole %s/%s", rb.Namespace, rb.Spec.RoleRef)
 	}
 
-	_, err = v.Sys().Renew(m.Status.Lease.ID, 0)
+	appBinding, err := c.appBindingLister.AppBindings(*authMgrRef.Namespace).Get(*authMgrRef.Name)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get Vault %s/%s", *authMgrRef.Namespace, *authMgrRef.Name)
+	}
+
+	v, err := vault.NewClient(c.kubeClient, appBinding)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create vault client from mongodb role %s/%s spec.provider.vault", rb.Namespace, rb.Spec.RoleRef)
+	}
+
+	_, err = v.Sys().Renew(rb.Status.Lease.ID, 0)
 	if err != nil {
 		return errors.Wrap(err, "failed to renew the lease")
 	}
 
-	status := m.Status
+	status := rb.Status
 	status.Lease.RenewDeadline = time.Now().Unix()
 
-	err = u.updateMongoDBRoleBindingStatus(&status, m)
+	err = c.updateMongoDBRoleBindingStatus(&status, rb)
 	if err != nil {
 		return errors.Wrap(err, "failed to update renew deadline")
 	}

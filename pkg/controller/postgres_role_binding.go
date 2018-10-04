@@ -9,6 +9,7 @@ import (
 	meta_util "github.com/appscode/kutil/meta"
 	"github.com/appscode/kutil/tools/queue"
 	"github.com/golang/glog"
+	"github.com/kubedb/apimachinery/apis"
 	api "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
 	patchutil "github.com/kubedb/apimachinery/client/clientset/versioned/typed/authorization/v1alpha1/util"
 	"github.com/kubedb/user-manager/pkg/vault/database"
@@ -18,14 +19,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const (
-	PostgresRoleBindingFinalizer = "database.postgres.rolebinding"
-)
-
 func (c *Controller) initPostgresRoleBindingWatcher() {
 	c.pgRoleBindingInformer = c.dbInformerFactory.Authorization().V1alpha1().PostgresRoleBindings().Informer()
 	c.pgRoleBindingQueue = queue.New(api.ResourceKindPostgresRoleBinding, c.MaxNumRequeues, c.NumThreads, c.runPostgresRoleBindingInjector)
-	c.pgRoleBindingInformer.AddEventHandler(queue.NewObservableHandler(c.pgRoleBindingQueue.GetQueue(), api.EnableStatusSubresource))
+	c.pgRoleBindingInformer.AddEventHandler(queue.NewObservableHandler(c.pgRoleBindingQueue.GetQueue(), apis.EnableStatusSubresource))
 	c.pgRoleBindingLister = c.dbInformerFactory.Authorization().V1alpha1().PostgresRoleBindings().Lister()
 }
 
@@ -45,15 +42,15 @@ func (c *Controller) runPostgresRoleBindingInjector(key string) error {
 		glog.Infof("Sync/Add/Update for PostgresRoleBinding %s/%s", pgRoleBinding.Namespace, pgRoleBinding.Name)
 
 		if pgRoleBinding.DeletionTimestamp != nil {
-			if core_util.HasFinalizer(pgRoleBinding.ObjectMeta, PostgresRoleBindingFinalizer) {
+			if core_util.HasFinalizer(pgRoleBinding.ObjectMeta, apis.Finalizer) {
 				go c.runPostgresRoleBindingFinalizer(pgRoleBinding, 1*time.Minute, 10*time.Second)
 			}
 
 		} else {
-			if !core_util.HasFinalizer(pgRoleBinding.ObjectMeta, PostgresRoleBindingFinalizer) {
+			if !core_util.HasFinalizer(pgRoleBinding.ObjectMeta, apis.Finalizer) {
 				// Add finalizer
 				_, _, err = patchutil.PatchPostgresRoleBinding(c.dbClient.AuthorizationV1alpha1(), pgRoleBinding, func(binding *api.PostgresRoleBinding) *api.PostgresRoleBinding {
-					binding.ObjectMeta = core_util.AddFinalizer(binding.ObjectMeta, PostgresRoleBindingFinalizer)
+					binding.ObjectMeta = core_util.AddFinalizer(binding.ObjectMeta, apis.Finalizer)
 					return binding
 				})
 				if err != nil {
@@ -307,7 +304,7 @@ func (c *Controller) finalizePostgresRoleBinding(dbRBClient database.DatabaseRol
 
 func (c *Controller) removePostgresRoleBindingFinalizer(pgRoleBinding *api.PostgresRoleBinding) error {
 	_, _, err := patchutil.PatchPostgresRoleBinding(c.dbClient.AuthorizationV1alpha1(), pgRoleBinding, func(r *api.PostgresRoleBinding) *api.PostgresRoleBinding {
-		r.ObjectMeta = core_util.RemoveFinalizer(r.ObjectMeta, PostgresRoleBindingFinalizer)
+		r.ObjectMeta = core_util.RemoveFinalizer(r.ObjectMeta, apis.Finalizer)
 		return r
 	})
 	if err != nil {

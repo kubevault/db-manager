@@ -9,6 +9,7 @@ import (
 	meta_util "github.com/appscode/kutil/meta"
 	"github.com/appscode/kutil/tools/queue"
 	"github.com/golang/glog"
+	"github.com/kubedb/apimachinery/apis"
 	api "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
 	patchutil "github.com/kubedb/apimachinery/client/clientset/versioned/typed/authorization/v1alpha1/util"
 	"github.com/kubedb/user-manager/pkg/vault/database"
@@ -18,14 +19,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const (
-	MySQLRoleBindingFinalizer = "database.mysql.rolebinding"
-)
-
 func (c *Controller) initMySQLRoleBindingWatcher() {
 	c.myRoleBindingInformer = c.dbInformerFactory.Authorization().V1alpha1().MySQLRoleBindings().Informer()
 	c.myRoleBindingQueue = queue.New(api.ResourceKindMySQLRoleBinding, c.MaxNumRequeues, c.NumThreads, c.runMySQLRoleBindingInjector)
-	c.myRoleBindingInformer.AddEventHandler(queue.NewObservableHandler(c.myRoleBindingQueue.GetQueue(), api.EnableStatusSubresource))
+	c.myRoleBindingInformer.AddEventHandler(queue.NewObservableHandler(c.myRoleBindingQueue.GetQueue(), apis.EnableStatusSubresource))
 	c.myRoleBindingLister = c.dbInformerFactory.Authorization().V1alpha1().MySQLRoleBindings().Lister()
 }
 
@@ -45,15 +42,15 @@ func (c *Controller) runMySQLRoleBindingInjector(key string) error {
 		glog.Infof("Sync/Add/Update for MySQLRoleBinding %s/%s", mRoleBinding.Namespace, mRoleBinding.Name)
 
 		if mRoleBinding.DeletionTimestamp != nil {
-			if core_util.HasFinalizer(mRoleBinding.ObjectMeta, MySQLRoleBindingFinalizer) {
+			if core_util.HasFinalizer(mRoleBinding.ObjectMeta, apis.Finalizer) {
 				go c.runMySQLRoleBindingFinalizer(mRoleBinding, 1*time.Minute, 10*time.Second)
 			}
 
 		} else {
-			if !core_util.HasFinalizer(mRoleBinding.ObjectMeta, MySQLRoleBindingFinalizer) {
+			if !core_util.HasFinalizer(mRoleBinding.ObjectMeta, apis.Finalizer) {
 				// Add finalizer
 				_, _, err = patchutil.PatchMySQLRoleBinding(c.dbClient.AuthorizationV1alpha1(), mRoleBinding, func(binding *api.MySQLRoleBinding) *api.MySQLRoleBinding {
-					binding.ObjectMeta = core_util.AddFinalizer(binding.ObjectMeta, MySQLRoleBindingFinalizer)
+					binding.ObjectMeta = core_util.AddFinalizer(binding.ObjectMeta, apis.Finalizer)
 					return binding
 				})
 				if err != nil {
@@ -310,7 +307,7 @@ func (c *Controller) finalizeMySQLRoleBinding(dbRBClient database.DatabaseRoleBi
 
 func (c *Controller) removeMySQLRoleBindingFinalizer(mRoleBinding *api.MySQLRoleBinding) error {
 	_, _, err := patchutil.PatchMySQLRoleBinding(c.dbClient.AuthorizationV1alpha1(), mRoleBinding, func(r *api.MySQLRoleBinding) *api.MySQLRoleBinding {
-		r.ObjectMeta = core_util.RemoveFinalizer(r.ObjectMeta, MySQLRoleBindingFinalizer)
+		r.ObjectMeta = core_util.RemoveFinalizer(r.ObjectMeta, apis.Finalizer)
 		return r
 	})
 	if err != nil {

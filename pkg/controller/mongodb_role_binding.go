@@ -9,6 +9,7 @@ import (
 	meta_util "github.com/appscode/kutil/meta"
 	"github.com/appscode/kutil/tools/queue"
 	"github.com/golang/glog"
+	"github.com/kubedb/apimachinery/apis"
 	api "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
 	patchutil "github.com/kubedb/apimachinery/client/clientset/versioned/typed/authorization/v1alpha1/util"
 	"github.com/kubedb/user-manager/pkg/vault/database"
@@ -18,14 +19,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const (
-	MongoDBRoleBindingFinalizer = "database.mongodb.rolebinding"
-)
-
 func (c *Controller) initMongoDBRoleBindingWatcher() {
 	c.mgRoleBindingInformer = c.dbInformerFactory.Authorization().V1alpha1().MongoDBRoleBindings().Informer()
 	c.mgRoleBindingQueue = queue.New(api.ResourceKindMongoDBRoleBinding, c.MaxNumRequeues, c.NumThreads, c.runMongoDBRoleBindingInjector)
-	c.mgRoleBindingInformer.AddEventHandler(queue.NewObservableHandler(c.mgRoleBindingQueue.GetQueue(), api.EnableStatusSubresource))
+	c.mgRoleBindingInformer.AddEventHandler(queue.NewObservableHandler(c.mgRoleBindingQueue.GetQueue(), apis.EnableStatusSubresource))
 	c.mgRoleBindingLister = c.dbInformerFactory.Authorization().V1alpha1().MongoDBRoleBindings().Lister()
 }
 
@@ -45,14 +42,14 @@ func (c *Controller) runMongoDBRoleBindingInjector(key string) error {
 		glog.Infof("Sync/Add/Update for MongoDBRoleBinding %s/%s", mRoleBinding.Namespace, mRoleBinding.Name)
 
 		if mRoleBinding.DeletionTimestamp != nil {
-			if core_util.HasFinalizer(mRoleBinding.ObjectMeta, MongoDBRoleBindingFinalizer) {
+			if core_util.HasFinalizer(mRoleBinding.ObjectMeta, apis.Finalizer) {
 				go c.runMongoDBRoleBindingFinalizer(mRoleBinding, 1*time.Minute, 10*time.Second)
 			}
 		} else {
-			if !core_util.HasFinalizer(mRoleBinding.ObjectMeta, MongoDBRoleBindingFinalizer) {
+			if !core_util.HasFinalizer(mRoleBinding.ObjectMeta, apis.Finalizer) {
 				// Add finalizer
 				_, _, err = patchutil.PatchMongoDBRoleBinding(c.dbClient.AuthorizationV1alpha1(), mRoleBinding, func(binding *api.MongoDBRoleBinding) *api.MongoDBRoleBinding {
-					binding.ObjectMeta = core_util.AddFinalizer(binding.ObjectMeta, MongoDBRoleBindingFinalizer)
+					binding.ObjectMeta = core_util.AddFinalizer(binding.ObjectMeta, apis.Finalizer)
 					return binding
 				})
 				if err != nil {
@@ -309,7 +306,7 @@ func (c *Controller) finalizeMongoDBRoleBinding(dbRBClient database.DatabaseRole
 
 func (c *Controller) removeMongoDBRoleBindingFinalizer(mRoleBinding *api.MongoDBRoleBinding) error {
 	_, _, err := patchutil.PatchMongoDBRoleBinding(c.dbClient.AuthorizationV1alpha1(), mRoleBinding, func(r *api.MongoDBRoleBinding) *api.MongoDBRoleBinding {
-		r.ObjectMeta = core_util.RemoveFinalizer(r.ObjectMeta, MongoDBRoleBindingFinalizer)
+		r.ObjectMeta = core_util.RemoveFinalizer(r.ObjectMeta, apis.Finalizer)
 		return r
 	})
 	if err != nil {

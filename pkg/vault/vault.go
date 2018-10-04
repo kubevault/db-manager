@@ -7,14 +7,15 @@ import (
 	"net/url"
 
 	vaultapi "github.com/hashicorp/vault/api"
-	api "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
+	_ "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	appcat "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1"
 )
 
-func NewClient(kclient kubernetes.Interface, namespace string, v *api.VaultSpec) (*vaultapi.Client, error) {
-	cfg, err := newVaultConfig(kclient, namespace, v)
+func NewClient(kclient kubernetes.Interface, binding *appcat.AppBinding) (*vaultapi.Client, error) {
+	cfg, err := newVaultConfig(kclient, namespace, binding)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create vault client config")
 	}
@@ -24,9 +25,9 @@ func NewClient(kclient kubernetes.Interface, namespace string, v *api.VaultSpec)
 		return nil, errors.WithStack(err)
 	}
 
-	sr, err := kclient.CoreV1().Secrets(namespace).Get(v.TokenSecret, metav1.GetOptions{})
+	sr, err := kclient.CoreV1().Secrets(namespace).Get(binding.Spec.Secret.Name, metav1.GetOptions{})
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get vault token secret %s/%s", namespace, v.TokenSecret)
+		return nil, errors.Wrapf(err, "failed to get vault token secret %s/%s", namespace, binding.TokenSecret)
 	}
 
 	if sr.Data == nil {
@@ -40,17 +41,16 @@ func NewClient(kclient kubernetes.Interface, namespace string, v *api.VaultSpec)
 	return cl, nil
 }
 
-func newVaultConfig(kclient kubernetes.Interface, namespace string, v *api.VaultSpec) (*vaultapi.Config, error) {
-
+func newVaultConfig(kclient kubernetes.Interface, binding *appcat.AppBinding) (*vaultapi.Config, error) {
 	cfg := vaultapi.DefaultConfig()
-	cfg.Address = v.Address
+	cfg.Address = binding.Address
 
 	clientTLSConfig := cfg.HttpClient.Transport.(*http.Transport).TLSClientConfig
 
-	if v.ClientTLSSecret != "" {
-		sr, err := kclient.CoreV1().Secrets(namespace).Get(v.ClientTLSSecret, metav1.GetOptions{})
+	if binding.Spec.Secret.Name != "" {
+		sr, err := kclient.CoreV1().Secrets(namespace).Get(binding.Spec.Secret.Name, metav1.GetOptions{})
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to get vault client tls secret %s/%s", namespace, v.ClientTLSSecret)
+			return nil, errors.Wrapf(err, "failed to get vault client tls secret %s/%s", namespace, binding.Spec.Secret.Name)
 		}
 
 		clientTLSConfig.GetClientCertificate = func(*tls.CertificateRequestInfo) (*tls.Certificate, error) {
@@ -62,30 +62,21 @@ func newVaultConfig(kclient kubernetes.Interface, namespace string, v *api.Vault
 		}
 	}
 
-	if v.SkipTLSVerification {
+	if binding.Spec.ClientConfig.InsecureSkipTLSVerify {
 		clientTLSConfig.InsecureSkipVerify = true
 	} else {
-		if v.ServerCASecret != "" {
-			sr, err := kclient.CoreV1().Secrets(namespace).Get(v.ClientTLSSecret, metav1.GetOptions{})
-			if err != nil {
-				return nil, errors.Wrapf(err, "failed to get vault server ca secret %s/%s", namespace, v.ServerCASecret)
-			}
-
-			pool := x509.NewCertPool()
-			ok := pool.AppendCertsFromPEM(sr.Data["ca.crt"])
-			if !ok {
-				return nil, errors.Errorf("error loading CA File: couldn't parse PEM data in secret %s/%s", namespace, v.ServerCASecret)
-			}
-
-			clientTLSConfig.RootCAs = pool
+		pool := x509.NewCertPool()
+		ok := pool.AppendCertsFromPEM(binding.Spec.ClientConfig.CABundle)
+		if !ok {
+			return nil, errors.New("error loading CA bundle")
 		}
+		clientTLSConfig.RootCAs = pool
 	}
 
 	var err error
-
-	clientTLSConfig.ServerName, err = getHostName(v.Address)
+	clientTLSConfig.ServerName, err = getHostName(binding.Address)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get hostname from url %s", v.Address)
+		return nil, errors.Wrapf(err, "failed to get hostname from url %s", binding.Address)
 	}
 
 	return cfg, nil

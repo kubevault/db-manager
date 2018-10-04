@@ -9,6 +9,7 @@ import (
 	meta_util "github.com/appscode/kutil/meta"
 	"github.com/appscode/kutil/tools/queue"
 	"github.com/golang/glog"
+	"github.com/kubedb/apimachinery/apis"
 	api "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
 	patchutil "github.com/kubedb/apimachinery/client/clientset/versioned/typed/authorization/v1alpha1/util"
 	"github.com/kubedb/user-manager/pkg/vault/database"
@@ -20,15 +21,13 @@ import (
 )
 
 const (
-	PostgresRoleFinalizer = "database.postgres.role"
-
 	PostgresRolePhaseSuccess api.PostgresRolePhase = "Success"
 )
 
 func (c *Controller) initPostgresRoleWatcher() {
 	c.pgRoleInformer = c.dbInformerFactory.Authorization().V1alpha1().PostgresRoles().Informer()
 	c.pgRoleQueue = queue.New(api.ResourceKindPostgresRole, c.MaxNumRequeues, c.NumThreads, c.runPostgresRoleInjector)
-	c.pgRoleInformer.AddEventHandler(queue.NewObservableHandler(c.pgRoleQueue.GetQueue(), api.EnableStatusSubresource))
+	c.pgRoleInformer.AddEventHandler(queue.NewObservableHandler(c.pgRoleQueue.GetQueue(), apis.EnableStatusSubresource))
 	c.pgRoleLister = c.dbInformerFactory.Authorization().V1alpha1().PostgresRoles().Lister()
 }
 
@@ -48,15 +47,15 @@ func (c *Controller) runPostgresRoleInjector(key string) error {
 		glog.Infof("Sync/Add/Update for PostgresRole %s/%s", pgRole.Namespace, pgRole.Name)
 
 		if pgRole.DeletionTimestamp != nil {
-			if core_util.HasFinalizer(pgRole.ObjectMeta, PostgresRoleFinalizer) {
+			if core_util.HasFinalizer(pgRole.ObjectMeta, apis.Finalizer) {
 				go c.runPostgresRoleFinalizer(pgRole, 1*time.Minute, 10*time.Second)
 			}
 
 		} else {
-			if !core_util.HasFinalizer(pgRole.ObjectMeta, PostgresRoleFinalizer) {
+			if !core_util.HasFinalizer(pgRole.ObjectMeta, apis.Finalizer) {
 				// Add finalizer
 				_, _, err := patchutil.PatchPostgresRole(c.dbClient.AuthorizationV1alpha1(), pgRole, func(role *api.PostgresRole) *api.PostgresRole {
-					role.ObjectMeta = core_util.AddFinalizer(role.ObjectMeta, PostgresRoleFinalizer)
+					role.ObjectMeta = core_util.AddFinalizer(role.ObjectMeta, apis.Finalizer)
 					return role
 				})
 				if err != nil {
@@ -153,12 +152,12 @@ func (c *Controller) reconcilePostgresRole(dbRClient database.DatabaseRoleInterf
 		return errors.Wrap(err, "failed to update postgresRole status")
 	}
 
-	pList, err := c.pgRoleBindingLister.PostgresRoleBindings(pgRole.Namespace).List(labels.SelectorFromSet(map[string]string{}))
+	pList, err := c.pgRoleBindingLister.PostgresRoleBindings(pgRole.Namespace).List(labels.Everything())
 	for _, p := range pList {
 		if p.Spec.RoleRef == pgRole.Name {
 			// revoke lease if have any lease
 			if p.Status.Lease.ID != "" {
-				err = c.RevokeLease(pgRole.Spec.Provider.Vault, pgRole.Namespace, p.Status.Lease.ID)
+				err = c.RevokeLease(pgRole.Spec.AuthManagerRef, p.Status.Lease.ID)
 				if err != nil {
 					return errors.Wrap(err, "failed to revoke lease")
 				}
@@ -268,7 +267,7 @@ func (c *Controller) runPostgresRoleFinalizer(pgRole *api.PostgresRole, timeout 
 //	- delete role in vault
 //	- revoke lease of all the corresponding postgresRoleBinding
 func (c *Controller) finalizePostgresRole(dbRClient database.DatabaseRoleInterface, pgRole *api.PostgresRole) error {
-	pRList, err := c.pgRoleBindingLister.PostgresRoleBindings(pgRole.Namespace).List(labels.SelectorFromSet(map[string]string{}))
+	pRList, err := c.pgRoleBindingLister.PostgresRoleBindings(pgRole.Namespace).List(labels.Everything())
 	if err != nil {
 		return errors.Wrap(err, "failed to list postgresRoleBinding")
 	}
@@ -276,7 +275,7 @@ func (c *Controller) finalizePostgresRole(dbRClient database.DatabaseRoleInterfa
 	for _, p := range pRList {
 		if p.Spec.RoleRef == pgRole.Name {
 			if p.Status.Lease.ID != "" {
-				err = c.RevokeLease(pgRole.Spec.Provider.Vault, pgRole.Namespace, p.Status.Lease.ID)
+				err = c.RevokeLease(pgRole.Spec.AuthManagerRef, p.Status.Lease.ID)
 				if err != nil {
 					return errors.Wrap(err, "failed to revoke lease")
 				}
@@ -301,7 +300,7 @@ func (c *Controller) finalizePostgresRole(dbRClient database.DatabaseRoleInterfa
 func (c *Controller) removePostgresRoleFinalizer(pgRole *api.PostgresRole) error {
 	// remove finalizer
 	_, _, err := patchutil.PatchPostgresRole(c.dbClient.AuthorizationV1alpha1(), pgRole, func(role *api.PostgresRole) *api.PostgresRole {
-		role.ObjectMeta = core_util.RemoveFinalizer(role.ObjectMeta, PostgresRoleFinalizer)
+		role.ObjectMeta = core_util.RemoveFinalizer(role.ObjectMeta, apis.Finalizer)
 		return role
 	})
 	if err != nil {

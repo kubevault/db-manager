@@ -17,20 +17,23 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
-	appcat_cs "kmodules.xyz/custom-resources/client/clientset/versioned/typed/appcatalog/v1alpha1"
+	appcat_cs "kmodules.xyz/custom-resources/client/clientset/versioned"
+	appcatinformers "kmodules.xyz/custom-resources/client/informers/externalversions"
+	appcatlisters "kmodules.xyz/custom-resources/client/listers/appcatalog/v1alpha1"
 )
 
 type Controller struct {
 	config
 
-	kubeClient       kubernetes.Interface
-	dbClient         cs.Interface
-	crdClient        crd_cs.ApiextensionsV1beta1Interface
-	appCatalogClient appcat_cs.AppcatalogV1alpha1Interface
-	recorder         record.EventRecorder
+	kubeClient    kubernetes.Interface
+	dbClient      cs.Interface
+	crdClient     crd_cs.ApiextensionsV1beta1Interface
+	catalogClient appcat_cs.Interface
+	recorder      record.EventRecorder
 
-	kubeInformerFactory informers.SharedInformerFactory
-	dbInformerFactory   dbinformers.SharedInformerFactory
+	kubeInformerFactory   informers.SharedInformerFactory
+	dbInformerFactory     dbinformers.SharedInformerFactory
+	appcatInformerFactory appcatinformers.SharedInformerFactory
 
 	// PostgresRole
 	pgRoleQueue    *queue.Worker
@@ -61,6 +64,10 @@ type Controller struct {
 	mgRoleBindingQueue    *queue.Worker
 	mgRoleBindingInformer cache.SharedIndexInformer
 	mgRoleBindingLister   dblisters.MongoDBRoleBindingLister
+
+	// AppBinding
+	appBindingInformer cache.SharedIndexInformer
+	appBindingLister   appcatlisters.AppBindingLister
 
 	// Contain the currently processing finalizer
 	processingFinalizer map[string]bool

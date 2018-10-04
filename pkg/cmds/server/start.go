@@ -5,6 +5,7 @@ import (
 	"io"
 	"net"
 
+	"github.com/appscode/kutil/tools/clientcmd"
 	"github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
 	"github.com/kubedb/user-manager/pkg/controller"
 	"github.com/kubedb/user-manager/pkg/server"
@@ -62,6 +63,7 @@ func (o UserManagerOptions) Config() (*server.UserManagerConfig, error) {
 	if err := o.RecommendedOptions.ApplyTo(serverConfig, server.Scheme); err != nil {
 		return nil, err
 	}
+	clientcmd.Fix(serverConfig.ClientConfig)
 	serverConfig.OpenAPIConfig = genericapiserver.DefaultOpenAPIConfig(v1alpha1.GetOpenAPIDefinitions, openapinamer.NewDefinitionNamer(server.Scheme))
 	serverConfig.OpenAPIConfig.Info.Title = "messenger"
 	serverConfig.OpenAPIConfig.Info.Version = v1alpha1.SchemeGroupVersion.Version

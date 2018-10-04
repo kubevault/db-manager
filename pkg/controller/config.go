@@ -13,7 +13,8 @@ import (
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	appcat_cs "kmodules.xyz/custom-resources/client/clientset/versioned/typed/appcatalog/v1alpha1"
+	appcat_cs "kmodules.xyz/custom-resources/client/clientset/versioned"
+	appcatinformers "kmodules.xyz/custom-resources/client/informers/externalversions"
 )
 
 var (
@@ -32,11 +33,11 @@ type config struct {
 type Config struct {
 	config
 
-	ClientConfig     *rest.Config
-	KubeClient       kubernetes.Interface
-	DbClient         cs.Interface
-	CRDClient        crd_cs.ApiextensionsV1beta1Interface
-	AppCatalogClient appcat_cs.AppcatalogV1alpha1Interface
+	ClientConfig  *rest.Config
+	KubeClient    kubernetes.Interface
+	DbClient      cs.Interface
+	CRDClient     crd_cs.ApiextensionsV1beta1Interface
+	CatalogClient appcat_cs.Interface
 }
 
 func NewConfig(clientConfig *rest.Config) *Config {
@@ -50,15 +51,16 @@ func (c *Config) New() (*Controller, error) {
 		opt.IncludeUninitialized = true
 	}
 	ctrl := &Controller{
-		config:              c.config,
-		kubeClient:          c.KubeClient,
-		dbClient:            c.DbClient,
-		crdClient:           c.CRDClient,
-		appCatalogClient:    c.AppCatalogClient,
-		kubeInformerFactory: informers.NewFilteredSharedInformerFactory(c.KubeClient, c.ResyncPeriod, core.NamespaceAll, tweakListOptions),
-		dbInformerFactory:   dbinformers.NewSharedInformerFactory(c.DbClient, c.ResyncPeriod),
-		recorder:            eventer.NewEventRecorder(c.KubeClient, "user-manager-controller"),
-		processingFinalizer: map[string]bool{},
+		config:                c.config,
+		kubeClient:            c.KubeClient,
+		dbClient:              c.DbClient,
+		crdClient:             c.CRDClient,
+		catalogClient:         c.CatalogClient,
+		kubeInformerFactory:   informers.NewFilteredSharedInformerFactory(c.KubeClient, c.ResyncPeriod, core.NamespaceAll, tweakListOptions),
+		dbInformerFactory:     dbinformers.NewSharedInformerFactory(c.DbClient, c.ResyncPeriod),
+		appcatInformerFactory: appcatinformers.NewSharedInformerFactory(c.CatalogClient, c.ResyncPeriod),
+		recorder:              eventer.NewEventRecorder(c.KubeClient, "user-manager-controller"),
+		processingFinalizer:   map[string]bool{},
 	}
 
 	if err := ctrl.ensureCustomResourceDefinitions(); err != nil {

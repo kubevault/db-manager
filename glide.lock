@@ -1,5 +1,5 @@
 hash: 4a56f97a62c0a65609c8edbb71ba12b71f32ad91eba66f5bb5cd36a33ce1b2f1
-updated: 2018-10-03T18:08:50.617334714-07:00
+updated: 2018-10-03T20:45:35.055301059-07:00
 imports:
 - name: bitbucket.org/ww/goautoneg
   version: 75cd24fc2f2c2a2088577d12123ddee5f54e0675
@@ -283,7 +283,7 @@ imports:
 - name: github.com/json-iterator/go
   version: 1624edc4454b8682399def8740d46db5e4362ba4
 - name: github.com/kubedb/apimachinery
-  version: adaa5721fd71b32887159f74b34f60629b74e31b
+  version: 233ace916ccf91dc14ef1abffe2d349e1c3e69ef
   subpackages:
   - apis
   - apis/authorization
@@ -922,9 +922,15 @@ imports:
   subpackages:
   - apis/appcatalog
   - apis/appcatalog/v1alpha1
+  - client/clientset/versioned
   - client/clientset/versioned/scheme
   - client/clientset/versioned/typed/appcatalog/v1alpha1
   - client/clientset/versioned/typed/appcatalog/v1alpha1/util
+  - client/informers/externalversions
+  - client/informers/externalversions/appcatalog
+  - client/informers/externalversions/appcatalog/v1alpha1
+  - client/informers/externalversions/internalinterfaces
+  - client/listers/appcatalog/v1alpha1
 - name: kmodules.xyz/monitoring-agent-api
   version: 00cac08cb50defd6df8d08483fad35df790d7675
   repo: https://github.com/kmodules/monitoring-agent-api.git
