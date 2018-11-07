@@ -6,7 +6,7 @@ import (
 
 	vaultapi "github.com/hashicorp/vault/api"
 	api "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
-	"github.com/kubedb/user-manager/pkg/vault"
+	"github.com/kubevault/db-manager/pkg/vault"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"

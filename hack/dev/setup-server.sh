@@ -2,7 +2,7 @@
 set -x
 
 GOPATH=$(go env GOPATH)
-REPO_ROOT="$GOPATH/src/github.com/kubedb/user-manager"
+REPO_ROOT="$GOPATH/src/github.com/kubevault/db-manager"
 
 pushd $REPO_ROOT
 

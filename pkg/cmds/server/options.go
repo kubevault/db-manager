@@ -6,7 +6,7 @@ import (
 
 	"github.com/kubedb/apimachinery/apis"
 	cs "github.com/kubedb/apimachinery/client/clientset/versioned"
-	"github.com/kubedb/user-manager/pkg/controller"
+	"github.com/kubevault/db-manager/pkg/controller"
 	"github.com/spf13/pflag"
 	crd_cs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
 	"k8s.io/client-go/kubernetes"

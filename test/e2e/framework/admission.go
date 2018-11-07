@@ -8,7 +8,7 @@ import (
 	"time"
 
 	shell "github.com/codeskyblue/go-sh"
-	"github.com/kubedb/user-manager/pkg/cmds/server"
+	"github.com/kubevault/db-manager/pkg/cmds/server"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

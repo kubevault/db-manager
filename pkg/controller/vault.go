@@ -5,7 +5,7 @@ import (
 
 	"github.com/golang/glog"
 	api "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
-	"github.com/kubedb/user-manager/pkg/vault"
+	"github.com/kubevault/db-manager/pkg/vault"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/labels"
 )

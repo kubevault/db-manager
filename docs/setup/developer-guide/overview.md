@@ -28,8 +28,8 @@ Scanner is written in Google's GO programming language. Currently, Scanner is de
 #### Download Source
 
 ```console
-$ go get github.com/kubedb/user-manager
-$ cd $(go env GOPATH)/src/github.com/kubedb/user-manager
+$ go get github.com/kubevault/db-manager
+$ cd $(go env GOPATH)/src/github.com/kubevault/db-manager
 ```
 
 #### Install Dev tools

@@ -7,8 +7,8 @@ import (
 
 	"github.com/appscode/kutil/tools/clientcmd"
 	"github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
-	"github.com/kubedb/user-manager/pkg/controller"
-	"github.com/kubedb/user-manager/pkg/server"
+	"github.com/kubevault/db-manager/pkg/controller"
+	"github.com/kubevault/db-manager/pkg/server"
 	"github.com/spf13/pflag"
 	admissionv1beta1 "k8s.io/api/admission/v1beta1"
 	openapinamer "k8s.io/apiserver/pkg/endpoints/openapi"

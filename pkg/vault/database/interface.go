@@ -1,7 +1,7 @@
 package database
 
 import (
-	"github.com/kubedb/user-manager/pkg/vault"
+	"github.com/kubevault/db-manager/pkg/vault"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

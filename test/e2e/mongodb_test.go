@@ -5,13 +5,13 @@ import (
 	"time"
 
 	api "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
-	"github.com/kubedb/user-manager/test/e2e/framework"
+	"github.com/kubevault/db-manager/test/e2e/framework"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 
 	patchutil "github.com/kubedb/apimachinery/client/clientset/versioned/typed/authorization/v1alpha1/util"
-	"github.com/kubedb/user-manager/pkg/vault/database"
+	"github.com/kubevault/db-manager/pkg/vault/database"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
