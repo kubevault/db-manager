@@ -31,7 +31,7 @@ From here you can learn all about Messenger's architecture and how to deploy and
 - [Reference](/docs/reference/). Detailed exhaustive lists of
 command-line options, configuration options, API definitions, and procedures.
 
-We're always looking for help improving our documentation, so please don't hesitate to [file an issue](https://github.com/kubevault/db-manager/issues/new) if you see some problem. Or better yet, submit your own [contributions](/docs/CONTRIBUTING.md) to help
+We're always looking for help improving our documentation, so please don't hesitate to [file an issue](https:///github.com/kubevault/project/issues/new) if you see some problem. Or better yet, submit your own [contributions](/docs/CONTRIBUTING.md) to help
 make our docs better.
 
 ---

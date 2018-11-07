@@ -25,7 +25,7 @@ import (
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
-	appcatalog_v1alpha1 "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1"
+	appcatalogv1alpha1 "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1"
 	versioned "kmodules.xyz/custom-resources/client/clientset/versioned"
 	internalinterfaces "kmodules.xyz/custom-resources/client/informers/externalversions/internalinterfaces"
 	v1alpha1 "kmodules.xyz/custom-resources/client/listers/appcatalog/v1alpha1"
@@ -70,7 +70,7 @@ func NewFilteredAppBindingInformer(client versioned.Interface, namespace string,
 				return client.AppcatalogV1alpha1().AppBindings(namespace).Watch(options)
 			},
 		},
-		&appcatalog_v1alpha1.AppBinding{},
+		&appcatalogv1alpha1.AppBinding{},
 		resyncPeriod,
 		indexers,
 	)
@@ -81,7 +81,7 @@ func (f *appBindingInformer) defaultInformer(client versioned.Interface, resyncP
 }
 
 func (f *appBindingInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&appcatalog_v1alpha1.AppBinding{}, f.defaultInformer)
+	return f.factory.InformerFor(&appcatalogv1alpha1.AppBinding{}, f.defaultInformer)
 }
 
 func (f *appBindingInformer) Lister() v1alpha1.AppBindingLister {

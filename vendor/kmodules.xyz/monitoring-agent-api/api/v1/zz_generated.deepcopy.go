@@ -25,13 +25,10 @@ func (in *AgentSpec) DeepCopyInto(out *AgentSpec) {
 	*out = *in
 	if in.Prometheus != nil {
 		in, out := &in.Prometheus, &out.Prometheus
-		if *in == nil {
-			*out = nil
-		} else {
-			*out = new(PrometheusSpec)
-			(*in).DeepCopyInto(*out)
-		}
+		*out = new(PrometheusSpec)
+		(*in).DeepCopyInto(*out)
 	}
+	in.Resources.DeepCopyInto(&out.Resources)
 	return
 }
 

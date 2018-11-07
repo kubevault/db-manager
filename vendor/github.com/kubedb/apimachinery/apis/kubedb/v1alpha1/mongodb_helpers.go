@@ -2,7 +2,9 @@ package v1alpha1
 
 import (
 	"fmt"
+	"strconv"
 
+	"github.com/appscode/go/types"
 	crdutils "github.com/appscode/kutil/apiextensions/v1beta1"
 	meta_util "github.com/appscode/kutil/meta"
 	"github.com/kubedb/apimachinery/apis"
@@ -48,6 +50,27 @@ func (m MongoDB) ResourcePlural() string {
 
 func (m MongoDB) ServiceName() string {
 	return m.OffshootName()
+}
+
+func (m MongoDB) GoverningServiceName() string {
+	return m.OffshootName() + "-gvr"
+}
+
+// HostAddress returns serviceName for standalone mongodb.
+// and, for replica set = <replName>/<host1>,<host2>,<host3>
+// Here, host1 = <pod-name>.<governing-serviceName>
+// Governing service name is used for replica host because,
+// we used governing service name as part of host while adding members
+// to replicaset.
+func (m MongoDB) HostAddress() string {
+	host := m.ServiceName()
+	if m.Spec.ReplicaSet != nil {
+		host = m.Spec.ReplicaSet.Name + "/" + m.Name + "-0." + m.GoverningServiceName() + ".svc"
+		for i := 1; i < int(types.Int32(m.Spec.Replicas)); i++ {
+			host += "," + m.Name + "-" + strconv.Itoa(i) + m.GoverningServiceName() + ".svc"
+		}
+	}
+	return host
 }
 
 type mongoDBApp struct {
@@ -195,21 +218,25 @@ func (m *MongoDBSpec) SetDefaults() {
 		m.UpdateStrategy.Type = apps.RollingUpdateStatefulSetStrategyType
 	}
 	if m.TerminationPolicy == "" {
-		m.TerminationPolicy = TerminationPolicyPause
+		if m.StorageType == StorageTypeEphemeral {
+			m.TerminationPolicy = TerminationPolicyDelete
+		} else {
+			m.TerminationPolicy = TerminationPolicyPause
+		}
 	}
 }
 
-func (e *MongoDBSpec) GetSecrets() []string {
-	if e == nil {
+func (m *MongoDBSpec) GetSecrets() []string {
+	if m == nil {
 		return nil
 	}
 
 	var secrets []string
-	if e.DatabaseSecret != nil {
-		secrets = append(secrets, e.DatabaseSecret.SecretName)
+	if m.DatabaseSecret != nil {
+		secrets = append(secrets, m.DatabaseSecret.SecretName)
 	}
-	if e.ReplicaSet != nil {
-		secrets = append(secrets, e.ReplicaSet.KeyFile.SecretName)
+	if m.ReplicaSet != nil && m.ReplicaSet.KeyFile != nil {
+		secrets = append(secrets, m.ReplicaSet.KeyFile.SecretName)
 	}
 	return secrets
 }
