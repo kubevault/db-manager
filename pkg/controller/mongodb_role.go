@@ -120,7 +120,7 @@ func (c *Controller) reconcileMongoDBRole(dbRClient database.DatabaseRoleInterfa
 		if err2 != nil {
 			return errors.Wrap(err2, "failed to update status")
 		}
-		return errors.Wrapf(err, "failed to created database connection config %s", mgRole.Spec.Database.Name)
+		return errors.Wrap(err, "failed to created database connection config")
 	}
 
 	// create role
@@ -151,10 +151,8 @@ func (c *Controller) reconcileMongoDBRole(dbRClient database.DatabaseRoleInterfa
 		return errors.Wrapf(err, "failed to update MongoDBRole status")
 	}
 
-	if mgRole.Spec.Provider == nil || mgRole.Spec.Provider.Vault == nil {
-		return errors.New("spec.provider.vault is nil")
-	}
-
+	// TODO: use go routine
+	// this could be time consuming if number of MongoDBRoleBinding is huge
 	mList, err := c.mgRoleBindingLister.MongoDBRoleBindings(mgRole.Namespace).List(labels.Everything())
 	for _, m := range mList {
 		if m.Spec.RoleRef == mgRole.Name {

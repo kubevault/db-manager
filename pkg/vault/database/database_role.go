@@ -2,16 +2,21 @@ package database
 
 import (
 	"fmt"
-	"path/filepath"
 
+	"encoding/json"
+
+	"github.com/appscode/go/types"
 	vaultapi "github.com/hashicorp/vault/api"
 	api "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
-	"github.com/kubevault/db-manager/pkg/vault"
 	"github.com/kubevault/db-manager/pkg/vault/database/mongodb"
 	"github.com/kubevault/db-manager/pkg/vault/database/mysql"
 	"github.com/kubevault/db-manager/pkg/vault/database/postgres"
+	vaultcs "github.com/kubevault/operator/pkg/vault"
 	"github.com/pkg/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	appcat "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1"
+	appcat_cs "kmodules.xyz/custom-resources/client/clientset/versioned/typed/appcatalog/v1alpha1"
 )
 
 const (
@@ -24,18 +29,19 @@ type DatabaseRole struct {
 	path        string
 }
 
-func NewDatabaseRoleForPostgres(kClient kubernetes.Interface, role *api.PostgresRole) (DatabaseRoleInterface, error) {
-	vClient, err := getVaultClient(kClient, role.Namespace, role.Spec.Provider)
+func NewDatabaseRoleForPostgres(kClient kubernetes.Interface, appClient appcat_cs.AppcatalogV1alpha1Interface, role *api.PostgresRole) (DatabaseRoleInterface, error) {
+	vClient, err := vaultcs.NewClient(kClient, appClient, &appcat.AppReference{
+		Name:      types.String(role.Spec.AuthManagerRef.Name),
+		Namespace: types.String(role.Spec.AuthManagerRef.Namespace),
+	})
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	path := DefaultDatabasePath
-	if role.Spec.Provider.Vault.Path != "" {
-		// remove trailing slash if have any
-		path = filepath.Clean(role.Spec.Provider.Vault.Path)
+	path, err := getDatabasePath(appClient, role.Spec.AuthManagerRef)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get database path")
 	}
-
 	d := &DatabaseRole{
 		RoleInterface: postgres.NewPostgresRole(kClient, vClient, role, path),
 		path:          path,
@@ -44,16 +50,18 @@ func NewDatabaseRoleForPostgres(kClient kubernetes.Interface, role *api.Postgres
 	return d, nil
 }
 
-func NewDatabaseRoleForMysql(kClient kubernetes.Interface, role *api.MySQLRole) (DatabaseRoleInterface, error) {
-	vClient, err := getVaultClient(kClient, role.Namespace, role.Spec.Provider)
+func NewDatabaseRoleForMysql(kClient kubernetes.Interface, appClient appcat_cs.AppcatalogV1alpha1Interface, role *api.MySQLRole) (DatabaseRoleInterface, error) {
+	vClient, err := vaultcs.NewClient(kClient, appClient, &appcat.AppReference{
+		Name:      types.String(role.Spec.AuthManagerRef.Name),
+		Namespace: types.String(role.Spec.AuthManagerRef.Namespace),
+	})
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	path := DefaultDatabasePath
-	if role.Spec.Provider.Vault.Path != "" {
-		// remove trailing slash if have any
-		path = filepath.Clean(role.Spec.Provider.Vault.Path)
+	path, err := getDatabasePath(appClient, role.Spec.AuthManagerRef)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get database path")
 	}
 
 	d := &DatabaseRole{
@@ -64,16 +72,18 @@ func NewDatabaseRoleForMysql(kClient kubernetes.Interface, role *api.MySQLRole) 
 	return d, nil
 }
 
-func NewDatabaseRoleForMongodb(kClient kubernetes.Interface, role *api.MongoDBRole) (DatabaseRoleInterface, error) {
-	vClient, err := getVaultClient(kClient, role.Namespace, role.Spec.Provider)
+func NewDatabaseRoleForMongodb(kClient kubernetes.Interface, appClient appcat_cs.AppcatalogV1alpha1Interface, role *api.MongoDBRole) (DatabaseRoleInterface, error) {
+	vClient, err := vaultcs.NewClient(kClient, appClient, &appcat.AppReference{
+		Name:      types.String(role.Spec.AuthManagerRef.Name),
+		Namespace: types.String(role.Spec.AuthManagerRef.Namespace),
+	})
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	path := DefaultDatabasePath
-	if role.Spec.Provider.Vault.Path != "" {
-		// remove trailing slash if have any
-		path = filepath.Clean(role.Spec.Provider.Vault.Path)
+	path, err := getDatabasePath(appClient, role.Spec.AuthManagerRef)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get database path")
 	}
 
 	d := &DatabaseRole{
@@ -137,17 +147,26 @@ func (d *DatabaseRole) DeleteRole(name string) error {
 	return nil
 }
 
-func getVaultClient(k kubernetes.Interface, namespace string, p *api.ProviderSpec) (*vaultapi.Client, error) {
-	if p == nil {
-		return nil, errors.New("spec.provider is not provided")
-	}
-	if p.Vault == nil {
-		return nil, errors.New("spec.provider.vault is not provided")
+// If database path does not exist, then use default database path
+func getDatabasePath(c appcat_cs.AppcatalogV1alpha1Interface, ref api.AuthManagerRef) (string, error) {
+	vApp, err := c.AppBindings(types.String(ref.Namespace)).Get(types.String(ref.Name), metav1.GetOptions{})
+	if err != nil {
+		return "", err
 	}
 
-	v, err := vault.NewClient(k, namespace, p.Vault)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create vault client")
+	var cf struct {
+		DatabasePath string `json:"database_Path,omitempty"`
 	}
-	return v, nil
+
+	if vApp.Spec.Parameters != nil {
+		err := json.Unmarshal(vApp.Spec.Parameters.Raw, &cf)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	if cf.DatabasePath != "" {
+		return cf.DatabasePath, nil
+	}
+	return DefaultDatabasePath, nil
 }

@@ -18,6 +18,10 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	vaultcs "github.com/kubevault/operator/pkg/vault"
+	appcat_cs "kmodules.xyz/custom-resources/client/clientset/versioned/typed/appcatalog/v1alpha1"
+	appcat "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1"
+	"github.com/appscode/go/types"
 )
 
 type DatabaseRoleBinding struct {
@@ -27,79 +31,91 @@ type DatabaseRoleBinding struct {
 	path        string
 }
 
-func NewDatabaseRoleBindingForPostgres(k kubernetes.Interface, cr crd.Interface, roleBinding *api.PostgresRoleBinding) (DatabaseRoleBindingInterface, error) {
+func NewDatabaseRoleBindingForPostgres(kClient kubernetes.Interface, appClient appcat_cs.AppcatalogV1alpha1Interface, cr crd.Interface, roleBinding *api.PostgresRoleBinding) (DatabaseRoleBindingInterface, error) {
 	pgRole, err := cr.AuthorizationV1alpha1().PostgresRoles(roleBinding.Namespace).Get(roleBinding.Spec.RoleRef, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get postgres role %s/%s", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
-	v, err := getVaultClient(k, roleBinding.Namespace, pgRole.Spec.Provider)
+	ref := pgRole.Spec.AuthManagerRef
+	v, err := vaultcs.NewClient(kClient, appClient, &appcat.AppReference{
+		Name:      types.String(ref.Name),
+		Namespace: types.String(ref.Namespace),
+	})
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create vault client from postgres role %s/%s spec.provider.vault", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+		return nil, errors.Wrapf(err, "failed to create vault client from postgres role", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
-	path := DefaultDatabasePath
-	if pgRole.Spec.Provider.Vault.Path != "" {
-		path = pgRole.Spec.Provider.Vault.Path
+	path, err := getDatabasePath(appClient, ref)
+	if err!=nil {
+		return nil, errors.Wrap(err, "failed to get database path")
 	}
 
-	p := postgres.NewPostgresRoleBinding(k, v, roleBinding, path)
+	p := postgres.NewPostgresRoleBinding(kClient, v, roleBinding, path)
 
 	return &DatabaseRoleBinding{
 		CredentialGetter: p,
-		kubeClient:       k,
+		kubeClient:       kClient,
 		vaultClient:      v,
 		path:             path,
 	}, nil
 }
 
-func NewDatabaseRoleBindingForMysql(k kubernetes.Interface, cr crd.Interface, roleBinding *api.MySQLRoleBinding) (DatabaseRoleBindingInterface, error) {
+func NewDatabaseRoleBindingForMysql(kClient kubernetes.Interface,appClient appcat_cs.AppcatalogV1alpha1Interface, cr crd.Interface, roleBinding *api.MySQLRoleBinding) (DatabaseRoleBindingInterface, error) {
 	mRole, err := cr.AuthorizationV1alpha1().MySQLRoles(roleBinding.Namespace).Get(roleBinding.Spec.RoleRef, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get mysql role %s/%s", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
-	v, err := getVaultClient(k, roleBinding.Namespace, mRole.Spec.Provider)
+	ref := mRole.Spec.AuthManagerRef
+	v, err := vaultcs.NewClient(kClient, appClient, &appcat.AppReference{
+		Name:      types.String(ref.Name),
+		Namespace: types.String(ref.Namespace),
+	})
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create vault client from mysql role %s/%s spec.provider.vault", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+		return nil, errors.Wrapf(err, "failed to create vault client from mysql role", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
-	path := DefaultDatabasePath
-	if mRole.Spec.Provider.Vault.Path != "" {
-		path = mRole.Spec.Provider.Vault.Path
+	path, err := getDatabasePath(appClient, ref)
+	if err!=nil {
+		return nil, errors.Wrap(err, "failed to get database path")
 	}
 
-	m := mysql.NewMySQLRoleBinding(k, v, roleBinding, path)
+	m := mysql.NewMySQLRoleBinding(kClient, v, roleBinding, path)
 
 	return &DatabaseRoleBinding{
 		CredentialGetter: m,
-		kubeClient:       k,
+		kubeClient:       kClient,
 		vaultClient:      v,
 		path:             path,
 	}, nil
 }
 
-func NewDatabaseRoleBindingForMongodb(k kubernetes.Interface, cr crd.Interface, roleBinding *api.MongoDBRoleBinding) (DatabaseRoleBindingInterface, error) {
+func NewDatabaseRoleBindingForMongodb(kClient kubernetes.Interface, appClient appcat_cs.AppcatalogV1alpha1Interface, cr crd.Interface, roleBinding *api.MongoDBRoleBinding) (DatabaseRoleBindingInterface, error) {
 	mRole, err := cr.AuthorizationV1alpha1().MongoDBRoles(roleBinding.Namespace).Get(roleBinding.Spec.RoleRef, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get mongodb role %s/%s", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
-	v, err := getVaultClient(k, roleBinding.Namespace, mRole.Spec.Provider)
+	ref := mRole.Spec.AuthManagerRef
+	v, err := vaultcs.NewClient(kClient, appClient, &appcat.AppReference{
+		Name:      types.String(ref.Name),
+		Namespace: types.String(ref.Namespace),
+	})
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create vault client from mongodb role %s/%s spec.provider.vault", roleBinding.Namespace, roleBinding.Spec.RoleRef)
+		return nil, errors.Wrapf(err, "failed to create vault client from mongodb role", roleBinding.Namespace, roleBinding.Spec.RoleRef)
 	}
 
-	path := DefaultDatabasePath
-	if mRole.Spec.Provider.Vault.Path != "" {
-		path = mRole.Spec.Provider.Vault.Path
+	path, err := getDatabasePath(appClient, ref)
+	if err!=nil {
+		return nil, errors.Wrap(err, "failed to get database path")
 	}
 
-	m := mongodb.NewMongoDBRoleBinding(k, v, roleBinding, path)
+	m := mongodb.NewMongoDBRoleBinding(kClient, v, roleBinding, path)
 
 	return &DatabaseRoleBinding{
 		CredentialGetter: m,
-		kubeClient:       k,
+		kubeClient:       kClient,
 		vaultClient:      v,
 		path:             path,
 	}, nil

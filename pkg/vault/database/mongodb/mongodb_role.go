@@ -3,27 +3,61 @@ package mongodb
 import (
 	"fmt"
 
+	"encoding/json"
+
 	vaultapi "github.com/hashicorp/vault/api"
 	api "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
+	configapi "github.com/kubedb/apimachinery/apis/config/v1alpha1"
 	"github.com/pkg/errors"
+	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	appcat_cs "kmodules.xyz/custom-resources/client/clientset/versioned/typed/appcatalog/v1alpha1"
 )
 
 type MongoDBRole struct {
+	config       *configapi.MongoDBConfiguration
+	secret       *core.Secret
 	mdbRole      *api.MongoDBRole
 	vaultClient  *vaultapi.Client
 	kubeClient   kubernetes.Interface
 	databasePath string
 }
 
-func NewMongoDBRole(k kubernetes.Interface, v *vaultapi.Client, mdbRole *api.MongoDBRole, databasePath string) *MongoDBRole {
+func NewMongoDBRole(kClient kubernetes.Interface, appClient appcat_cs.AppcatalogV1alpha1Interface, v *vaultapi.Client, mdbRole *api.MongoDBRole, databasePath string) (*MongoDBRole, error) {
+	ref := mdbRole.Spec.DatabaseRef
+	dApp, err := appClient.AppBindings(ref.Namespace).Get(ref.Namespace, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	secretRef := dApp.Spec.Secret
+	if secretRef != nil {
+		return nil, errors.New("database secret is not provided")
+	}
+
+	sr, err := kClient.CoreV1().Secrets(mdbRole.Namespace).Get(secretRef.Name, metav1.GetOptions{})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get database secret")
+	}
+
+	cf := &configapi.MongoDBConfiguration{}
+	if dApp.Spec.Parameters != nil {
+		err := json.Unmarshal(dApp.Spec.Parameters.Raw, cf)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to unmarshal database parameter")
+		}
+	}
+	cf.SetDefaults()
+
 	return &MongoDBRole{
 		mdbRole:      mdbRole,
+		config:       cf,
+		secret:       sr,
 		vaultClient:  v,
-		kubeClient:   k,
+		kubeClient:   kClient,
 		databasePath: databasePath,
-	}
+	}, nil
 }
 
 // https://www.vaultproject.io/api/secret/databases/index.html#configure-connection
@@ -31,47 +65,45 @@ func NewMongoDBRole(k kubernetes.Interface, v *vaultapi.Client, mdbRole *api.Mon
 //
 // CreateConfig creates database configuration
 func (m *MongoDBRole) CreateConfig() error {
-	if m.mdbRole.Spec.Database == nil {
-		return errors.New("spec.database is not provided")
+	if m.config == nil {
+		return errors.New("database config is nil")
+	}
+	if m.secret == nil {
+		return errors.New("database config is nil")
 	}
 
-	cfg := m.mdbRole.Spec.Database
-	ns := m.mdbRole.Namespace
-
-	path := fmt.Sprintf("/v1/%s/config/%s", m.databasePath, cfg.Name)
+	dRef := m.mdbRole.Spec.DatabaseRef
+	path := fmt.Sprintf("/v1/%s/config/%s", m.databasePath, dRef.Name)
 	req := m.vaultClient.NewRequest("POST", path)
 
 	payload := map[string]interface{}{
-		"plugin_name":    "mongodb-database-plugin",
-		"allowed_roles":  cfg.AllowedRoles,
-		"connection_url": cfg.ConnectionUrl,
+		"plugin_name":   m.config.PluginName,
+		"allowed_roles": m.config.AllowedRoles,
 	}
 
-	if cfg.PluginName != "" {
-		payload["plugin_name"] = cfg.PluginName
+	if m.config.WriteConcern != "" {
+		payload["write_concern"] = m.config.WriteConcern
 	}
 
-	if cfg.WriteConcern != "" {
-		payload["write_concern"] = cfg.WriteConcern
+	data := m.secret.Data
+	if val, ok := data["username"]; ok {
+		payload["username"] = string(val)
+	}
+	if val, ok := data["password"]; ok {
+		payload["password"] = string(val)
+	}
+	if val, ok := data["connection_url"]; ok {
+		payload["connection_url"] = string(val)
 	}
 
-	sr, err := m.kubeClient.CoreV1().Secrets(ns).Get(cfg.CredentialSecret, metav1.GetOptions{})
-	if err != nil {
-		return errors.Wrapf(err, "failed to get credential information from secret %s/%s", ns, cfg.CredentialSecret)
-	}
-
-	payload["username"] = string(sr.Data["username"])
-	payload["password"] = string(sr.Data["password"])
-
-	err = req.SetJSONBody(payload)
+	err := req.SetJSONBody(payload)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 	_, err = m.vaultClient.RawRequest(req)
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Wrap(err, "failed to create database config")
 	}
-
 	return nil
 }
 
@@ -80,24 +112,24 @@ func (m *MongoDBRole) CreateConfig() error {
 // CreateRole creates role
 func (m *MongoDBRole) CreateRole() error {
 	name := m.mdbRole.Name
-	pg := m.mdbRole.Spec
+	mdb := m.mdbRole.Spec
 
 	path := fmt.Sprintf("/v1/%s/roles/%s", m.databasePath, name)
 	req := m.vaultClient.NewRequest("POST", path)
 
 	payload := map[string]interface{}{
-		"db_name":             pg.DBName,
-		"creation_statements": pg.CreationStatements,
+		"db_name":             mdb.DatabaseRef.Name,
+		"creation_statements": mdb.CreationStatements,
 	}
 
-	if len(pg.RevocationStatements) > 0 {
-		payload["revocation_statements"] = pg.RevocationStatements
+	if len(mdb.RevocationStatements) > 0 {
+		payload["revocation_statements"] = mdb.RevocationStatements
 	}
-	if pg.DefaultTTL != "" {
-		payload["default_ttl"] = pg.DefaultTTL
+	if mdb.DefaultTTL != "" {
+		payload["default_ttl"] = mdb.DefaultTTL
 	}
-	if pg.MaxTTL != "" {
-		payload["max_ttl"] = pg.MaxTTL
+	if mdb.MaxTTL != "" {
+		payload["max_ttl"] = mdb.MaxTTL
 	}
 
 	err := req.SetJSONBody(payload)
@@ -107,7 +139,7 @@ func (m *MongoDBRole) CreateRole() error {
 
 	_, err = m.vaultClient.RawRequest(req)
 	if err != nil {
-		return errors.Wrapf(err, "failed to create database role %s for config %s", name, pg.DBName)
+		return errors.Wrapf(err, "failed to create database role %s for config %s", name, mdb.DBName)
 	}
 
 	return nil
