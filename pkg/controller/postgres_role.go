@@ -63,7 +63,7 @@ func (c *Controller) runPostgresRoleInjector(key string) error {
 				}
 			}
 
-			dbRClient, err := database.NewDatabaseRoleForPostgres(c.kubeClient, pgRole)
+			dbRClient, err := database.NewDatabaseRoleForPostgres(c.kubeClient, c.catalogClient.AppcatalogV1alpha1(), pgRole)
 			if err != nil {
 				return err
 			}
@@ -198,9 +198,11 @@ func (c *Controller) runPostgresRoleFinalizer(pgRole *api.PostgresRole, timeout 
 	}
 
 	c.processingFinalizer[id] = true
+	glog.Infof("PostgresRole %s/%s finalizer: process starting...", pgRole.Namespace, pgRole.Name)
 
 	stopCh := time.After(timeout)
 	finalizationDone := false
+	attempt := 0
 
 	for {
 		p, err := c.dbClient.AuthorizationV1alpha1().PostgresRoles(pgRole.Namespace).Get(pgRole.Name, metav1.GetOptions{})
@@ -227,8 +229,10 @@ func (c *Controller) runPostgresRoleFinalizer(pgRole *api.PostgresRole, timeout 
 		default:
 		}
 
+		glog.Infof("PostgresRole %s/%s finalizer: attempt %d", pgRole.Namespace, pgRole.Name, attempt)
+
 		if !finalizationDone {
-			d, err := database.NewDatabaseRoleForPostgres(c.kubeClient, p)
+			d, err := database.NewDatabaseRoleForPostgres(c.kubeClient, c.catalogClient.AppcatalogV1alpha1(), p)
 			if err != nil {
 				glog.Errorf("PostgresRole %s/%s finalizer: %v", p.Namespace, p.Name, err)
 			} else {
@@ -245,9 +249,10 @@ func (c *Controller) runPostgresRoleFinalizer(pgRole *api.PostgresRole, timeout 
 			err := c.removePostgresRoleFinalizer(p)
 			if err != nil {
 				glog.Errorf("PostgresRole %s/%s finalizer: %v", p.Namespace, p.Name, err)
+			} else {
+				delete(c.processingFinalizer, id)
+				return
 			}
-			delete(c.processingFinalizer, id)
-			return
 		}
 
 		select {
@@ -260,6 +265,7 @@ func (c *Controller) runPostgresRoleFinalizer(pgRole *api.PostgresRole, timeout 
 			return
 		case <-time.After(interval):
 		}
+		attempt++
 	}
 }
 

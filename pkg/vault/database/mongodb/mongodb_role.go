@@ -91,6 +91,7 @@ func (m *MongoDBRole) CreateConfig() error {
 	if val, ok := data["password"]; ok {
 		payload["password"] = string(val)
 	}
+	// TODO: get connection url from config parameters
 	if val, ok := data["connection_url"]; ok {
 		payload["connection_url"] = string(val)
 	}

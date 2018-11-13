@@ -59,7 +59,7 @@ func (c *Controller) runPostgresRoleBindingInjector(key string) error {
 
 			}
 
-			dbRBClient, err := database.NewDatabaseRoleBindingForPostgres(c.kubeClient, c.dbClient, pgRoleBinding)
+			dbRBClient, err := database.NewDatabaseRoleBindingForPostgres(c.kubeClient, c.catalogClient.AppcatalogV1alpha1(), c.dbClient, pgRoleBinding)
 			if err != nil {
 				return err
 			}
@@ -225,9 +225,10 @@ func (c *Controller) runPostgresRoleBindingFinalizer(pgRoleBinding *api.Postgres
 	}
 
 	c.processingFinalizer[id] = true
-
+	glog.Infof("PostgresRoleBinding %s/%s finalizer: process starting...", pgRoleBinding.Namespace, pgRoleBinding.Name)
 	stopCh := time.After(timeout)
 	finalizationDone := false
+	attempt := 0
 
 	for {
 		p, err := c.dbClient.AuthorizationV1alpha1().PostgresRoleBindings(pgRoleBinding.Namespace).Get(pgRoleBinding.Name, metav1.GetOptions{})
@@ -254,8 +255,10 @@ func (c *Controller) runPostgresRoleBindingFinalizer(pgRoleBinding *api.Postgres
 		default:
 		}
 
+		glog.Infof("PostgresRoleBinding %s/%s finalizer: attempt %d\n", pgRoleBinding.Namespace, pgRoleBinding.Name, attempt)
+
 		if !finalizationDone {
-			d, err := database.NewDatabaseRoleBindingForPostgres(c.kubeClient, c.dbClient, p)
+			d, err := database.NewDatabaseRoleBindingForPostgres(c.kubeClient, c.catalogClient.AppcatalogV1alpha1(), c.dbClient, p)
 			if err != nil {
 				glog.Errorf("PostgresRoleBinding %s/%s finalizer: %v", p.Namespace, p.Name, err)
 			} else {
@@ -272,9 +275,10 @@ func (c *Controller) runPostgresRoleBindingFinalizer(pgRoleBinding *api.Postgres
 			err := c.removePostgresRoleBindingFinalizer(p)
 			if err != nil {
 				glog.Errorf("PostgresRoleBinding %s/%s finalizer: %v", p.Namespace, p.Name, err)
+			} else {
+				delete(c.processingFinalizer, id)
+				return
 			}
-			delete(c.processingFinalizer, id)
-			return
 		}
 
 		select {
@@ -287,6 +291,7 @@ func (c *Controller) runPostgresRoleBindingFinalizer(pgRoleBinding *api.Postgres
 			return
 		case <-time.After(interval):
 		}
+		attempt++
 	}
 }
 

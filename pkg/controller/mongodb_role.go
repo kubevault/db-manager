@@ -120,7 +120,7 @@ func (c *Controller) reconcileMongoDBRole(dbRClient database.DatabaseRoleInterfa
 		if err2 != nil {
 			return errors.Wrap(err2, "failed to update status")
 		}
-		return errors.Wrap(err, "failed to created database connection config")
+		return errors.Wrap(err, "failed to create database connection config")
 	}
 
 	// create role

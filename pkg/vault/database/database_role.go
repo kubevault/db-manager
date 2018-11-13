@@ -1,9 +1,8 @@
 package database
 
 import (
-	"fmt"
-
 	"encoding/json"
+	"fmt"
 
 	"github.com/appscode/go/types"
 	vaultapi "github.com/hashicorp/vault/api"
@@ -42,8 +41,14 @@ func NewDatabaseRoleForPostgres(kClient kubernetes.Interface, appClient appcat_c
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get database path")
 	}
+
+	pg, err := postgres.NewPostgresRole(kClient, appClient, vClient, role, path)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create postgres role client")
+	}
+
 	d := &DatabaseRole{
-		RoleInterface: postgres.NewPostgresRole(kClient, vClient, role, path),
+		RoleInterface: pg,
 		path:          path,
 		vaultClient:   vClient,
 	}
@@ -64,8 +69,13 @@ func NewDatabaseRoleForMysql(kClient kubernetes.Interface, appClient appcat_cs.A
 		return nil, errors.Wrap(err, "failed to get database path")
 	}
 
+	m, err := mysql.NewMySQLRole(kClient, appClient, vClient, role, path)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create mysql role client")
+	}
+
 	d := &DatabaseRole{
-		RoleInterface: mysql.NewMySQLRole(kClient, vClient, role, path),
+		RoleInterface: m,
 		path:          path,
 		vaultClient:   vClient,
 	}
@@ -86,8 +96,12 @@ func NewDatabaseRoleForMongodb(kClient kubernetes.Interface, appClient appcat_cs
 		return nil, errors.Wrap(err, "failed to get database path")
 	}
 
+	m, err := mongodb.NewMongoDBRole(kClient, appClient, vClient, role, path)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create mongodb role client")
+	}
 	d := &DatabaseRole{
-		RoleInterface: mongodb.NewMongoDBRole(kClient, vClient, role, path),
+		RoleInterface: m,
 		path:          path,
 		vaultClient:   vClient,
 	}

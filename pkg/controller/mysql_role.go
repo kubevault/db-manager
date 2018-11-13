@@ -63,7 +63,7 @@ func (c *Controller) runMySQLRoleInjector(key string) error {
 				}
 			}
 
-			dbRClient, err := database.NewDatabaseRoleForMysql(c.kubeClient, mRole)
+			dbRClient, err := database.NewDatabaseRoleForMysql(c.kubeClient, c.catalogClient.AppcatalogV1alpha1(), mRole)
 			if err != nil {
 				return err
 			}
@@ -121,7 +121,7 @@ func (c *Controller) reconcileMySQLRole(dbRClient database.DatabaseRoleInterface
 		if err2 != nil {
 			return errors.Wrap(err2, "failed to update status")
 		}
-		return errors.Wrapf(err, "failed to created database connection config %s", myRole.Spec.Database.Name)
+		return errors.Wrap(err, "failed to create database connection config")
 	}
 
 	// create role
@@ -197,9 +197,11 @@ func (c *Controller) runMySQLRoleFinalizer(mRole *api.MySQLRole, timeout time.Du
 	}
 
 	c.processingFinalizer[id] = true
+	glog.Infof("MySQLRole %s/%s finalizer: start processing\n", mRole.Namespace, mRole.Name)
 
 	stopCh := time.After(timeout)
 	finalizationDone := false
+	attempt := 0
 
 	for {
 		m, err := c.dbClient.AuthorizationV1alpha1().MySQLRoles(mRole.Namespace).Get(mRole.Name, metav1.GetOptions{})
@@ -226,8 +228,10 @@ func (c *Controller) runMySQLRoleFinalizer(mRole *api.MySQLRole, timeout time.Du
 		default:
 		}
 
+		glog.Infof("MySQLRole %s/%s finalizer: attempt %d\n", mRole.Namespace, mRole.Name, attempt)
+
 		if !finalizationDone {
-			d, err := database.NewDatabaseRoleForMysql(c.kubeClient, m)
+			d, err := database.NewDatabaseRoleForMysql(c.kubeClient, c.catalogClient.AppcatalogV1alpha1(), m)
 			if err != nil {
 				glog.Errorf("MySQLRole %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			} else {
@@ -245,9 +249,10 @@ func (c *Controller) runMySQLRoleFinalizer(mRole *api.MySQLRole, timeout time.Du
 			err := c.removeMySQLRoleFinalizer(m)
 			if err != nil {
 				glog.Errorf("MySQLRole %s/%s finalizer: %v", m.Namespace, m.Name, err)
+			} else {
+				delete(c.processingFinalizer, id)
+				return
 			}
-			delete(c.processingFinalizer, id)
-			return
 		}
 
 		select {
@@ -260,6 +265,7 @@ func (c *Controller) runMySQLRoleFinalizer(mRole *api.MySQLRole, timeout time.Du
 			return
 		case <-time.After(interval):
 		}
+		attempt++
 	}
 }
 

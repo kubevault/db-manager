@@ -1,29 +1,62 @@
 package postgres
 
 import (
+	"encoding/json"
 	"fmt"
 
 	vaultapi "github.com/hashicorp/vault/api"
 	api "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
+	configapi "github.com/kubedb/apimachinery/apis/config/v1alpha1"
 	"github.com/pkg/errors"
+	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	appcat_cs "kmodules.xyz/custom-resources/client/clientset/versioned/typed/appcatalog/v1alpha1"
 )
 
 type PostgresRole struct {
+	config       *configapi.PostgresConfiguration
+	secret       *core.Secret
 	pgRole       *api.PostgresRole
 	vaultClient  *vaultapi.Client
 	kubeClient   kubernetes.Interface
 	databasePath string
 }
 
-func NewPostgresRole(k kubernetes.Interface, v *vaultapi.Client, pgRole *api.PostgresRole, databasePath string) *PostgresRole {
+func NewPostgresRole(kClient kubernetes.Interface, appClient appcat_cs.AppcatalogV1alpha1Interface, v *vaultapi.Client, pgRole *api.PostgresRole, databasePath string) (*PostgresRole, error) {
+	ref := pgRole.Spec.DatabaseRef
+	dApp, err := appClient.AppBindings(ref.Namespace).Get(ref.Name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	secretRef := dApp.Spec.Secret
+	if secretRef == nil {
+		return nil, errors.New("database secret is not provided")
+	}
+
+	sr, err := kClient.CoreV1().Secrets(pgRole.Namespace).Get(secretRef.Name, metav1.GetOptions{})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get database secret")
+	}
+
+	cf := &configapi.PostgresConfiguration{}
+	if dApp.Spec.Parameters != nil {
+		err := json.Unmarshal(dApp.Spec.Parameters.Raw, cf)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to unmarshal database parameter")
+		}
+	}
+	cf.SetDefaults()
+
 	return &PostgresRole{
+		config:       cf,
+		secret:       sr,
 		pgRole:       pgRole,
 		vaultClient:  v,
-		kubeClient:   k,
+		kubeClient:   kClient,
 		databasePath: databasePath,
-	}
+	}, nil
 }
 
 // https://www.vaultproject.io/api/secret/databases/index.html#configure-connection
@@ -31,54 +64,49 @@ func NewPostgresRole(k kubernetes.Interface, v *vaultapi.Client, pgRole *api.Pos
 //
 // CreateConfig creates database configuration
 func (p *PostgresRole) CreateConfig() error {
-	if p.pgRole.Spec.Database == nil {
-		return errors.New("spec.database is not provided")
+	if p.config == nil {
+		return errors.New("database config is nil")
+	}
+	if p.secret == nil {
+		return errors.New("database config is nil")
 	}
 
-	cfg := p.pgRole.Spec.Database
-	ns := p.pgRole.Namespace
-
-	path := fmt.Sprintf("/v1/%s/config/%s", p.databasePath, cfg.Name)
+	dRef := p.pgRole.Spec.DatabaseRef
+	path := fmt.Sprintf("/v1/%s/config/%s", p.databasePath, dRef.Name)
 	req := p.vaultClient.NewRequest("POST", path)
-
 	payload := map[string]interface{}{
-		"plugin_name":    "postgresql-database-plugin",
-		"allowed_roles":  cfg.AllowedRoles,
-		"connection_url": cfg.ConnectionUrl,
+		"plugin_name":   p.config.PluginName,
+		"allowed_roles": p.config.AllowedRoles,
 	}
 
-	if cfg.PluginName != "" {
-		payload["plugin_name"] = cfg.PluginName
+	data := p.secret.Data
+	if val, ok := data["username"]; ok {
+		payload["username"] = string(val)
+	}
+	if val, ok := data["password"]; ok {
+		payload["password"] = string(val)
+	}
+	// TODO: get connection url from config parameters
+	if val, ok := data["connection_url"]; ok {
+		payload["connection_url"] = string(val)
 	}
 
-	sr, err := p.kubeClient.CoreV1().Secrets(ns).Get(cfg.CredentialSecret, metav1.GetOptions{})
-	if err != nil {
-		return errors.Wrapf(err, "failed to get credential information from secret %s/%s", ns, cfg.CredentialSecret)
+	if p.config.MaxOpenConnections > 0 {
+		payload["max_open_connections"] = p.config.MaxOpenConnections
+	}
+	if p.config.MaxIdleConnections > 0 {
+		payload["max_idle_connections"] = p.config.MaxIdleConnections
+	}
+	if p.config.MaxConnectionLifetime != "" {
+		payload["max_connection_lifetime"] = p.config.MaxConnectionLifetime
 	}
 
-	payload["username"] = string(sr.Data["username"])
-	payload["password"] = string(sr.Data["password"])
-
-	if cfg.MaxOpenConnections > 0 {
-		payload["max_open_connections"] = cfg.MaxOpenConnections
-	}
-	if cfg.MaxIdleConnections > 0 {
-		payload["max_idle_connections"] = cfg.MaxIdleConnections
-	}
-	if cfg.MaxConnectionLifetime != "" {
-		payload["max_connection_lifetime"] = cfg.MaxConnectionLifetime
-	}
-
-	err = req.SetJSONBody(payload)
+	err := req.SetJSONBody(payload)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 	_, err = p.vaultClient.RawRequest(req)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	return nil
+	return err
 }
 
 // https://www.vaultproject.io/api/secret/databases/index.html#create-role
@@ -92,7 +120,7 @@ func (p *PostgresRole) CreateRole() error {
 	req := p.vaultClient.NewRequest("POST", path)
 
 	payload := map[string]interface{}{
-		"db_name":             pg.DBName,
+		"db_name":             pg.DatabaseRef.Name,
 		"creation_statements": pg.CreationStatements,
 	}
 

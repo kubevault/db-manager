@@ -59,7 +59,7 @@ func (c *Controller) runMySQLRoleBindingInjector(key string) error {
 
 			}
 
-			dbRBClient, err := database.NewDatabaseRoleBindingForMysql(c.kubeClient, c.dbClient, mRoleBinding)
+			dbRBClient, err := database.NewDatabaseRoleBindingForMysql(c.kubeClient, c.catalogClient.AppcatalogV1alpha1(), c.dbClient, mRoleBinding)
 			if err != nil {
 				return err
 			}
@@ -228,9 +228,11 @@ func (c *Controller) runMySQLRoleBindingFinalizer(mRoleBinding *api.MySQLRoleBin
 	}
 
 	c.processingFinalizer[id] = true
+	glog.Infof("MySQLRoleBinding %s/%s finalizer: start processing\n", mRoleBinding.Namespace, mRoleBinding.Name)
 
 	stopCh := time.After(timeout)
 	finalizationDone := false
+	attempt := 0
 
 	for {
 		m, err := c.dbClient.AuthorizationV1alpha1().MySQLRoleBindings(mRoleBinding.Namespace).Get(mRoleBinding.Name, metav1.GetOptions{})
@@ -258,7 +260,7 @@ func (c *Controller) runMySQLRoleBindingFinalizer(mRoleBinding *api.MySQLRoleBin
 		}
 
 		if !finalizationDone {
-			d, err := database.NewDatabaseRoleBindingForMysql(c.kubeClient, c.dbClient, m)
+			d, err := database.NewDatabaseRoleBindingForMysql(c.kubeClient, c.catalogClient.AppcatalogV1alpha1(), c.dbClient, m)
 			if err != nil {
 				glog.Errorf("MySQLRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			} else {
@@ -271,13 +273,16 @@ func (c *Controller) runMySQLRoleBindingFinalizer(mRoleBinding *api.MySQLRoleBin
 			}
 		}
 
+		glog.Infof("MySQLRoleBinding %s/%s finalizer: attempt %d\n", mRoleBinding.Namespace, mRoleBinding.Name, attempt)
+
 		if finalizationDone {
 			err := c.removeMySQLRoleBindingFinalizer(m)
 			if err != nil {
 				glog.Errorf("MySQLRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
+			} else {
+				delete(c.processingFinalizer, id)
+				return
 			}
-			delete(c.processingFinalizer, id)
-			return
 		}
 
 		select {
@@ -290,6 +295,7 @@ func (c *Controller) runMySQLRoleBindingFinalizer(mRoleBinding *api.MySQLRoleBin
 			return
 		case <-time.After(interval):
 		}
+		attempt++
 	}
 }
 

@@ -17,6 +17,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
+	appcat "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1"
 	appcat_cs "kmodules.xyz/custom-resources/client/clientset/versioned"
 	appcatinformers "kmodules.xyz/custom-resources/client/informers/externalversions"
 	appcatlisters "kmodules.xyz/custom-resources/client/listers/appcatalog/v1alpha1"
@@ -81,6 +82,7 @@ func (c *Controller) ensureCustomResourceDefinitions() error {
 		api.MySQLRoleBinding{}.CustomResourceDefinition(),
 		api.MongoDBRole{}.CustomResourceDefinition(),
 		api.MongoDBRoleBinding{}.CustomResourceDefinition(),
+		appcat.AppBinding{}.CustomResourceDefinition(),
 	}
 	return crdutils.RegisterCRDs(c.crdClient, crds)
 }

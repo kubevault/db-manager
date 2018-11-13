@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"strconv"
 
+	"github.com/appscode/go/types"
 	patchutilv1 "github.com/appscode/kutil/core/v1"
 	patchutil "github.com/appscode/kutil/rbac/v1"
 	vaultapi "github.com/hashicorp/vault/api"
@@ -13,15 +14,14 @@ import (
 	"github.com/kubevault/db-manager/pkg/vault/database/mongodb"
 	"github.com/kubevault/db-manager/pkg/vault/database/mysql"
 	"github.com/kubevault/db-manager/pkg/vault/database/postgres"
+	vaultcs "github.com/kubevault/operator/pkg/vault"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	vaultcs "github.com/kubevault/operator/pkg/vault"
-	appcat_cs "kmodules.xyz/custom-resources/client/clientset/versioned/typed/appcatalog/v1alpha1"
 	appcat "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1"
-	"github.com/appscode/go/types"
+	appcat_cs "kmodules.xyz/custom-resources/client/clientset/versioned/typed/appcatalog/v1alpha1"
 )
 
 type DatabaseRoleBinding struct {
@@ -47,7 +47,7 @@ func NewDatabaseRoleBindingForPostgres(kClient kubernetes.Interface, appClient a
 	}
 
 	path, err := getDatabasePath(appClient, ref)
-	if err!=nil {
+	if err != nil {
 		return nil, errors.Wrap(err, "failed to get database path")
 	}
 
@@ -61,7 +61,7 @@ func NewDatabaseRoleBindingForPostgres(kClient kubernetes.Interface, appClient a
 	}, nil
 }
 
-func NewDatabaseRoleBindingForMysql(kClient kubernetes.Interface,appClient appcat_cs.AppcatalogV1alpha1Interface, cr crd.Interface, roleBinding *api.MySQLRoleBinding) (DatabaseRoleBindingInterface, error) {
+func NewDatabaseRoleBindingForMysql(kClient kubernetes.Interface, appClient appcat_cs.AppcatalogV1alpha1Interface, cr crd.Interface, roleBinding *api.MySQLRoleBinding) (DatabaseRoleBindingInterface, error) {
 	mRole, err := cr.AuthorizationV1alpha1().MySQLRoles(roleBinding.Namespace).Get(roleBinding.Spec.RoleRef, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get mysql role %s/%s", roleBinding.Namespace, roleBinding.Spec.RoleRef)
@@ -77,7 +77,7 @@ func NewDatabaseRoleBindingForMysql(kClient kubernetes.Interface,appClient appca
 	}
 
 	path, err := getDatabasePath(appClient, ref)
-	if err!=nil {
+	if err != nil {
 		return nil, errors.Wrap(err, "failed to get database path")
 	}
 
@@ -107,7 +107,7 @@ func NewDatabaseRoleBindingForMongodb(kClient kubernetes.Interface, appClient ap
 	}
 
 	path, err := getDatabasePath(appClient, ref)
-	if err!=nil {
+	if err != nil {
 		return nil, errors.Wrap(err, "failed to get database path")
 	}
 
