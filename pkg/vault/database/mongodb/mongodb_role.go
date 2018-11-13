@@ -1,9 +1,8 @@
 package mongodb
 
 import (
-	"fmt"
-
 	"encoding/json"
+	"fmt"
 
 	vaultapi "github.com/hashicorp/vault/api"
 	api "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
@@ -26,13 +25,13 @@ type MongoDBRole struct {
 
 func NewMongoDBRole(kClient kubernetes.Interface, appClient appcat_cs.AppcatalogV1alpha1Interface, v *vaultapi.Client, mdbRole *api.MongoDBRole, databasePath string) (*MongoDBRole, error) {
 	ref := mdbRole.Spec.DatabaseRef
-	dApp, err := appClient.AppBindings(ref.Namespace).Get(ref.Namespace, metav1.GetOptions{})
+	dApp, err := appClient.AppBindings(ref.Namespace).Get(ref.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
 	secretRef := dApp.Spec.Secret
-	if secretRef != nil {
+	if secretRef == nil {
 		return nil, errors.New("database secret is not provided")
 	}
 

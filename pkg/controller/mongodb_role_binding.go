@@ -57,7 +57,7 @@ func (c *Controller) runMongoDBRoleBindingInjector(key string) error {
 				}
 			}
 
-			dbRBClient, err := database.NewDatabaseRoleBindingForMongodb(c.kubeClient, c.dbClient, mRoleBinding)
+			dbRBClient, err := database.NewDatabaseRoleBindingForMongodb(c.kubeClient, c.catalogClient.AppcatalogV1alpha1(), c.dbClient, mRoleBinding)
 			if err != nil {
 				return err
 			}
@@ -227,9 +227,11 @@ func (c *Controller) runMongoDBRoleBindingFinalizer(mRoleBinding *api.MongoDBRol
 	}
 
 	c.processingFinalizer[id] = true
+	glog.Infof("MongoDBRoleBinding %s/%s finalizer: start processing\n", mRoleBinding.Namespace, mRoleBinding.Name)
 
 	stopCh := time.After(timeout)
 	finalizationDone := false
+	attempt := 0
 
 	for {
 		m, err := c.dbClient.AuthorizationV1alpha1().MongoDBRoleBindings(mRoleBinding.Namespace).Get(mRoleBinding.Name, metav1.GetOptions{})
@@ -245,19 +247,22 @@ func (c *Controller) runMongoDBRoleBindingFinalizer(mRoleBinding *api.MongoDBRol
 			m = mRoleBinding
 		}
 
+		glog.Infof("MongoDBRoleBinding %s/%s finalizer: attempt %d\n", mRoleBinding.Namespace, mRoleBinding.Name, attempt)
+
 		select {
 		case <-stopCh:
 			err := c.removeMongoDBRoleBindingFinalizer(m)
 			if err != nil {
 				glog.Errorf("MongoDBRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
+			} else {
+				delete(c.processingFinalizer, id)
+				return
 			}
-			delete(c.processingFinalizer, id)
-			return
 		default:
 		}
 
 		if !finalizationDone {
-			d, err := database.NewDatabaseRoleBindingForMongodb(c.kubeClient, c.dbClient, m)
+			d, err := database.NewDatabaseRoleBindingForMongodb(c.kubeClient, c.catalogClient.AppcatalogV1alpha1(), c.dbClient, m)
 			if err != nil {
 				glog.Errorf("MongoDBRoleBinding %s/%s finalizer: %v", m.Namespace, m.Name, err)
 			} else {
@@ -289,6 +294,7 @@ func (c *Controller) runMongoDBRoleBindingFinalizer(mRoleBinding *api.MongoDBRol
 			return
 		case <-time.After(interval):
 		}
+		attempt++
 	}
 }
 
