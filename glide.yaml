@@ -1,4 +1,4 @@
-package: github.com/kubedb/user-manager
+package: github.com/kubevault/db-manager
 import:
 - package: github.com/appscode/envconfig
   version: master
