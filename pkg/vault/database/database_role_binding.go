@@ -126,11 +126,8 @@ func (d *DatabaseRoleBinding) CreateSecret(name string, namespace string, cred *
 	data := map[string][]byte{}
 	if cred != nil {
 		data = map[string][]byte{
-			"lease_id":       []byte(cred.LeaseID),
-			"lease_duration": []byte(strconv.FormatInt(cred.LeaseDuration, 10)),
-			"renewable":      []byte(strconv.FormatBool(cred.Renewable)),
-			"password":       []byte(cred.Data.Password),
 			"username":       []byte(cred.Data.Username),
+			"password":       []byte(cred.Data.Password),
 		}
 	}
 
