@@ -17,11 +17,12 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 )
 
 const (
 	MongoDBRolePhaseSuccess api.MongoDBRolePhase = "Success"
+	finalizerInterval                            = 5 * time.Second
+	finalizerTimeout                             = 30 * time.Minute
 )
 
 func (c *Controller) initMongoDBRoleWatcher() {
@@ -48,7 +49,7 @@ func (c *Controller) runMongoDBRoleInjector(key string) error {
 
 		if mRole.DeletionTimestamp != nil {
 			if core_util.HasFinalizer(mRole.ObjectMeta, apis.Finalizer) {
-				go c.runMongoDBRoleFinalizer(mRole, 1*time.Minute, 10*time.Second)
+				go c.runMongoDBRoleFinalizer(mRole, finalizerTimeout, finalizerInterval)
 			}
 		} else {
 			if !core_util.HasFinalizer(mRole.ObjectMeta, apis.Finalizer) {
@@ -150,31 +151,6 @@ func (c *Controller) reconcileMongoDBRole(dbRClient database.DatabaseRoleInterfa
 	if err != nil {
 		return errors.Wrapf(err, "failed to update MongoDBRole status")
 	}
-
-	// TODO: use go routine
-	// this could be time consuming if number of MongoDBRoleBinding is huge
-	mList, err := c.mgRoleBindingLister.MongoDBRoleBindings(mgRole.Namespace).List(labels.Everything())
-	for _, m := range mList {
-		if m.Spec.RoleRef == mgRole.Name {
-			// revoke lease if have any lease
-			if m.Status.Lease.ID != "" {
-				err = c.RevokeLease(mgRole.Spec.AuthManagerRef, m.Status.Lease.ID)
-				if err != nil {
-					return errors.Wrap(err, "failed to revoke lease")
-				}
-
-				status := m.Status
-				status.Lease = api.LeaseData{}
-				err = c.updateMongoDBRoleBindingStatus(&status, m)
-				if err != nil {
-					return errors.WithStack(err)
-				}
-			}
-
-			// enqueue mongodbRoleBinding to reissue database credentials lease
-			queue.Enqueue(c.mgRoleBindingQueue.GetQueue(), m)
-		}
-	}
 	return nil
 }
 
@@ -274,30 +250,7 @@ func (c *Controller) runMongoDBRoleFinalizer(mRole *api.MongoDBRole, timeout tim
 //	- delete role in vault
 //	- revoke lease of all the corresponding mongodbRoleBinding
 func (c *Controller) finalizeMongoDBRole(dbRClient database.DatabaseRoleInterface, mRole *api.MongoDBRole) error {
-	mRList, err := c.mgRoleBindingLister.MongoDBRoleBindings(mRole.Namespace).List(labels.Everything())
-	if err != nil {
-		return errors.Wrap(err, "failed to list mongodbRoleBinding")
-	}
-
-	for _, m := range mRList {
-		if m.Spec.RoleRef == mRole.Name {
-			if m.Status.Lease.ID != "" {
-				err = c.RevokeLease(mRole.Spec.AuthManagerRef, m.Status.Lease.ID)
-				if err != nil {
-					return errors.Wrap(err, "failed to revoke lease")
-				}
-
-				status := m.Status
-				status.Lease = api.LeaseData{}
-				err = c.updateMongoDBRoleBindingStatus(&status, m)
-				if err != nil {
-					return errors.WithStack(err)
-				}
-			}
-		}
-	}
-
-	err = dbRClient.DeleteRole(mRole.Name)
+	err := dbRClient.DeleteRole(mRole.RoleName())
 	if err != nil {
 		return errors.Wrap(err, "failed to database role")
 	}

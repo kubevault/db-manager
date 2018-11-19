@@ -41,30 +41,20 @@ type Controller struct {
 	pgRoleInformer cache.SharedIndexInformer
 	pgRoleLister   dblisters.PostgresRoleLister
 
-	// PostgresRoleBinding
-	pgRoleBindingQueue    *queue.Worker
-	pgRoleBindingInformer cache.SharedIndexInformer
-	pgRoleBindingLister   dblisters.PostgresRoleBindingLister
-
 	// MySQLRole
 	myRoleQueue    *queue.Worker
 	myRoleInformer cache.SharedIndexInformer
 	myRoleLister   dblisters.MySQLRoleLister
-
-	// MySQLRoleBinding
-	myRoleBindingQueue    *queue.Worker
-	myRoleBindingInformer cache.SharedIndexInformer
-	myRoleBindingLister   dblisters.MySQLRoleBindingLister
 
 	// MongoDBRole
 	mgRoleQueue    *queue.Worker
 	mgRoleInformer cache.SharedIndexInformer
 	mgRoleLister   dblisters.MongoDBRoleLister
 
-	// MongoDBRoleBinding
-	mgRoleBindingQueue    *queue.Worker
-	mgRoleBindingInformer cache.SharedIndexInformer
-	mgRoleBindingLister   dblisters.MongoDBRoleBindingLister
+	// DatabaseAccessRequest
+	dbAccessQueue    *queue.Worker
+	dbAccessInformer cache.SharedIndexInformer
+	dbAccessLister   dblisters.DatabaseAccessRequestLister
 
 	// AppBinding
 	appBindingInformer cache.SharedIndexInformer
@@ -77,11 +67,9 @@ type Controller struct {
 func (c *Controller) ensureCustomResourceDefinitions() error {
 	crds := []*apiextensions.CustomResourceDefinition{
 		api.PostgresRole{}.CustomResourceDefinition(),
-		api.PostgresRoleBinding{}.CustomResourceDefinition(),
 		api.MySQLRole{}.CustomResourceDefinition(),
-		api.MySQLRoleBinding{}.CustomResourceDefinition(),
 		api.MongoDBRole{}.CustomResourceDefinition(),
-		api.MongoDBRoleBinding{}.CustomResourceDefinition(),
+		api.DatabaseAccessRequest{}.CustomResourceDefinition(),
 		appcat.AppBinding{}.CustomResourceDefinition(),
 	}
 	return crdutils.RegisterCRDs(c.crdClient, crds)
@@ -110,15 +98,10 @@ func (c *Controller) RunInformers(stopCh <-chan struct{}) {
 	}
 
 	go c.pgRoleQueue.Run(stopCh)
-	go c.pgRoleBindingQueue.Run(stopCh)
-
 	go c.myRoleQueue.Run(stopCh)
-	go c.myRoleBindingQueue.Run(stopCh)
-
 	go c.mgRoleQueue.Run(stopCh)
-	go c.mgRoleBindingQueue.Run(stopCh)
 
-	go c.LeaseRenewer(c.LeaseRenewTime)
+	go c.dbAccessQueue.Run(stopCh)
 
 	<-stopCh
 	glog.Info("Stopping KubeDB user manager controller")

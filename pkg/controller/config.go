@@ -68,13 +68,9 @@ func (c *Config) New() (*Controller, error) {
 	}
 
 	ctrl.initPostgresRoleWatcher()
-	ctrl.initPostgresRoleBindingWatcher()
-
 	ctrl.initMySQLRoleWatcher()
-	ctrl.initMySQLRoleBindingWatcher()
-
 	ctrl.initMongoDBRoleWatcher()
-	ctrl.initMongoDBRoleBindingWatcher()
+	ctrl.initDatabaseAccessWatcher()
 
 	return ctrl, nil
 }

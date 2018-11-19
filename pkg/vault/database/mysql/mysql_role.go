@@ -3,6 +3,8 @@ package mysql
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
+	"path/filepath"
 
 	vaultapi "github.com/hashicorp/vault/api"
 	api "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
@@ -11,6 +13,7 @@ import (
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	appcat "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1"
 	appcat_cs "kmodules.xyz/custom-resources/client/clientset/versioned/typed/appcatalog/v1alpha1"
 )
 
@@ -21,11 +24,12 @@ type MySQLRole struct {
 	vaultClient  *vaultapi.Client
 	kubeClient   kubernetes.Interface
 	databasePath string
+	dbConnUrl    string
 }
 
 func NewMySQLRole(kClient kubernetes.Interface, appClient appcat_cs.AppcatalogV1alpha1Interface, v *vaultapi.Client, mRole *api.MySQLRole, databasePath string) (*MySQLRole, error) {
 	ref := mRole.Spec.DatabaseRef
-	dApp, err := appClient.AppBindings(ref.Namespace).Get(ref.Name, metav1.GetOptions{})
+	dApp, err := appClient.AppBindings(mRole.Namespace).Get(ref.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -48,6 +52,12 @@ func NewMySQLRole(kClient kubernetes.Interface, appClient appcat_cs.AppcatalogV1
 		}
 	}
 	cf.SetDefaults()
+
+	connUrl, err := getConnectionUrl(dApp)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get database connection url")
+	}
+
 	return &MySQLRole{
 		config:       cf,
 		secret:       sr,
@@ -55,6 +65,7 @@ func NewMySQLRole(kClient kubernetes.Interface, appClient appcat_cs.AppcatalogV1
 		vaultClient:  v,
 		kubeClient:   kClient,
 		databasePath: databasePath,
+		dbConnUrl:    connUrl,
 	}, nil
 }
 
@@ -74,8 +85,9 @@ func (m *MySQLRole) CreateConfig() error {
 	path := fmt.Sprintf("/v1/%s/config/%s", m.databasePath, dRef.Name)
 	req := m.vaultClient.NewRequest("POST", path)
 	payload := map[string]interface{}{
-		"plugin_name":   m.config.PluginName,
-		"allowed_roles": m.config.AllowedRoles,
+		"plugin_name":    m.config.PluginName,
+		"allowed_roles":  m.config.AllowedRoles,
+		"connection_url": m.dbConnUrl,
 	}
 
 	data := m.secret.Data
@@ -84,10 +96,6 @@ func (m *MySQLRole) CreateConfig() error {
 	}
 	if val, ok := data["password"]; ok {
 		payload["password"] = string(val)
-	}
-	// TODO: get connection url from config parameters
-	if val, ok := data["connection_url"]; ok {
-		payload["connection_url"] = string(val)
 	}
 
 	if m.config.MaxOpenConnections > 0 {
@@ -112,7 +120,7 @@ func (m *MySQLRole) CreateConfig() error {
 //
 // CreateRole creates role
 func (m *MySQLRole) CreateRole() error {
-	name := m.mRole.Name
+	name := m.mRole.RoleName()
 	my := m.mRole.Spec
 
 	path := fmt.Sprintf("/v1/%s/roles/%s", m.databasePath, name)
@@ -140,8 +148,31 @@ func (m *MySQLRole) CreateRole() error {
 
 	_, err = m.vaultClient.RawRequest(req)
 	if err != nil {
-		return errors.Wrapf(err, "failed to create database role %s for config %s", name, my.DBName)
+		return errors.Wrapf(err, "failed to create database role %s for config %s", name, my.DatabaseRef.Name)
 	}
-
 	return nil
+}
+
+func getConnectionUrl(app *appcat.AppBinding) (string, error) {
+	c := app.Spec.ClientConfig
+	if c.URL != nil {
+		u, err := url.Parse(*c.URL)
+		if err == nil {
+			if u.User != nil {
+				return "", errors.New("username/password must not be included in url, use {{field_name}} template instead and provide username and password in secret")
+			}
+		}
+		return *c.URL, nil
+
+	} else if c.Service != nil {
+		srv := c.Service
+		rawUrl := fmt.Sprintf("{{username}}:{{password}}@tcp(%s.%s.svc:%d)/", srv.Name, app.Namespace, srv.Port)
+		if srv.Path != nil {
+			rawUrl = filepath.Join(rawUrl, *srv.Path)
+		}
+		return rawUrl, nil
+
+	} else {
+		return "", errors.New("connection url is not provided")
+	}
 }

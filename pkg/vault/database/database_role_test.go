@@ -86,7 +86,7 @@ func TestTry(t *testing.T) {
 	cl, _ := vaultapi.NewClient(cfg)
 	cl.SetToken("root")
 
-	d := DatabaseRoleBinding{
+	d := DBCredManager{
 		vaultClient: cl,
 		path:        "database",
 	}

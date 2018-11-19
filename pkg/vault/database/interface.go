@@ -3,7 +3,6 @@ package database
 import (
 	"github.com/kubevault/db-manager/pkg/vault"
 	rbacv1 "k8s.io/api/rbac/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type DatabaseRoleInterface interface {
@@ -27,8 +26,9 @@ type RoleInterface interface {
 	CreateRole() error
 }
 
-type DatabaseRoleBindingInterface interface {
-	CredentialGetter
+type DatabaseCredentialManager interface {
+	// Gets credential from vault
+	GetCredential() (*vault.DatabaseCredential, error)
 
 	// Creates a kubernetes secret containing postgres credential
 	CreateSecret(name string, namespace string, credential *vault.DatabaseCredential) error
@@ -42,12 +42,4 @@ type DatabaseRoleBindingInterface interface {
 	IsLeaseExpired(leaseID string) (bool, error)
 
 	RevokeLease(leaseID string) error
-}
-
-type CredentialGetter interface {
-	// Gets credential from vault
-	GetCredential() (*vault.DatabaseCredential, error)
-
-	// asOwner returns an owner reference
-	AsOwner() metav1.OwnerReference
 }

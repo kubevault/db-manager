@@ -191,7 +191,7 @@ func TestUserManagerController_reconcileMongoDBRoleBinding(t *testing.T) {
 
 	testData := []struct {
 		testName           string
-		dbRBClient         database.DatabaseRoleBindingInterface
+		dbRBClient         database.DatabaseCredentialManager
 		mRBinding          api.MongoDBRoleBinding
 		expectedErr        bool
 		hasStatusCondition bool

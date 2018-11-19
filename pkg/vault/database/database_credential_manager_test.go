@@ -95,7 +95,7 @@ func TestCreateSecret(t *testing.T) {
 
 	testData := []struct {
 		testName     string
-		dClient      *DatabaseRoleBinding
+		dClient      *DBCredManager
 		cred         *vault.DatabaseCredential
 		secretName   string
 		namespace    string
@@ -103,7 +103,7 @@ func TestCreateSecret(t *testing.T) {
 	}{
 		{
 			testName: "Successfully secret created",
-			dClient: &DatabaseRoleBinding{
+			dClient: &DBCredManager{
 				CredentialGetter: pgRB,
 				vaultClient:      nil,
 				path:             "database",
@@ -115,7 +115,7 @@ func TestCreateSecret(t *testing.T) {
 		},
 		{
 			testName: "create secret, secret already exists, no error",
-			dClient: &DatabaseRoleBinding{
+			dClient: &DBCredManager{
 				CredentialGetter: pgRB,
 				vaultClient:      nil,
 				path:             "database",
@@ -165,7 +165,7 @@ func TestCreateRole(t *testing.T) {
 
 	testData := []struct {
 		testName   string
-		dClient    *DatabaseRoleBinding
+		dClient    *DBCredManager
 		createRole bool
 		roleName   string
 		secretName string
@@ -173,7 +173,7 @@ func TestCreateRole(t *testing.T) {
 	}{
 		{
 			testName: "Successfully role created",
-			dClient: &DatabaseRoleBinding{
+			dClient: &DBCredManager{
 				CredentialGetter: pgRB,
 				vaultClient:      nil,
 				path:             "database",
@@ -185,7 +185,7 @@ func TestCreateRole(t *testing.T) {
 		},
 		{
 			testName: "create role, role already exists, no error",
-			dClient: &DatabaseRoleBinding{
+			dClient: &DBCredManager{
 				CredentialGetter: pgRB,
 				vaultClient:      nil,
 				path:             "database",
@@ -240,7 +240,7 @@ func TestCreateRoleBinding(t *testing.T) {
 
 	testData := []struct {
 		testName        string
-		dClient         *DatabaseRoleBinding
+		dClient         *DBCredManager
 		createRB        bool
 		roleName        string
 		roleBindingName string
@@ -249,7 +249,7 @@ func TestCreateRoleBinding(t *testing.T) {
 	}{
 		{
 			testName: "Successfully role binding created",
-			dClient: &DatabaseRoleBinding{
+			dClient: &DBCredManager{
 				CredentialGetter: pgRB,
 				vaultClient:      nil,
 				path:             "database",
@@ -261,7 +261,7 @@ func TestCreateRoleBinding(t *testing.T) {
 		},
 		{
 			testName: "Successfully role binding patched",
-			dClient: &DatabaseRoleBinding{
+			dClient: &DBCredManager{
 				CredentialGetter: pgRB,
 				vaultClient:      nil,
 				path:             "database",
@@ -319,13 +319,13 @@ func TestRevokeLease(t *testing.T) {
 
 	testData := []struct {
 		testName    string
-		dClient     *DatabaseRoleBinding
+		dClient     *DBCredManager
 		expectedErr bool
 		leaseID     string
 	}{
 		{
 			testName: "Lease revoke successful",
-			dClient: &DatabaseRoleBinding{
+			dClient: &DBCredManager{
 				CredentialGetter: pgRB,
 				vaultClient:      cl,
 				path:             "database",
@@ -335,7 +335,7 @@ func TestRevokeLease(t *testing.T) {
 		},
 		{
 			testName: "Lease revoke failed",
-			dClient: &DatabaseRoleBinding{
+			dClient: &DBCredManager{
 				CredentialGetter: pgRB,
 				vaultClient:      cl,
 				path:             "database",
@@ -371,13 +371,13 @@ func TestDatabaseRoleBinding_IsLeaseExpired(t *testing.T) {
 
 	testData := []struct {
 		testName  string
-		dClient   *DatabaseRoleBinding
+		dClient   *DBCredManager
 		isExpired bool
 		leaseID   string
 	}{
 		{
 			testName: "lease is expired",
-			dClient: &DatabaseRoleBinding{
+			dClient: &DBCredManager{
 				vaultClient: cl,
 			},
 			isExpired: true,
@@ -385,7 +385,7 @@ func TestDatabaseRoleBinding_IsLeaseExpired(t *testing.T) {
 		},
 		{
 			testName: "lease is valid",
-			dClient: &DatabaseRoleBinding{
+			dClient: &DBCredManager{
 				vaultClient: cl,
 			},
 			isExpired: false,

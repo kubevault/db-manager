@@ -17,7 +17,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 )
 
 const (
@@ -48,7 +47,7 @@ func (c *Controller) runPostgresRoleInjector(key string) error {
 
 		if pgRole.DeletionTimestamp != nil {
 			if core_util.HasFinalizer(pgRole.ObjectMeta, apis.Finalizer) {
-				go c.runPostgresRoleFinalizer(pgRole, 1*time.Minute, 10*time.Second)
+				go c.runPostgresRoleFinalizer(pgRole, finalizerTimeout, finalizerInterval)
 			}
 
 		} else {
@@ -151,29 +150,6 @@ func (c *Controller) reconcilePostgresRole(dbRClient database.DatabaseRoleInterf
 	if err != nil {
 		return errors.Wrap(err, "failed to update postgresRole status")
 	}
-
-	pList, err := c.pgRoleBindingLister.PostgresRoleBindings(pgRole.Namespace).List(labels.Everything())
-	for _, p := range pList {
-		if p.Spec.RoleRef == pgRole.Name {
-			// revoke lease if have any lease
-			if p.Status.Lease.ID != "" {
-				err = c.RevokeLease(pgRole.Spec.AuthManagerRef, p.Status.Lease.ID)
-				if err != nil {
-					return errors.Wrap(err, "failed to revoke lease")
-				}
-
-				status := p.Status
-				status.Lease = api.LeaseData{}
-				err = c.updatePostgresRoleBindingStatus(&status, p)
-				if err != nil {
-					return errors.WithStack(err)
-				}
-			}
-
-			// enqueue postgresRoleBinding to reissue database credentials lease
-			queue.Enqueue(c.pgRoleBindingQueue.GetQueue(), p)
-		}
-	}
 	return nil
 }
 
@@ -273,30 +249,7 @@ func (c *Controller) runPostgresRoleFinalizer(pgRole *api.PostgresRole, timeout 
 //	- delete role in vault
 //	- revoke lease of all the corresponding postgresRoleBinding
 func (c *Controller) finalizePostgresRole(dbRClient database.DatabaseRoleInterface, pgRole *api.PostgresRole) error {
-	pRList, err := c.pgRoleBindingLister.PostgresRoleBindings(pgRole.Namespace).List(labels.Everything())
-	if err != nil {
-		return errors.Wrap(err, "failed to list postgresRoleBinding")
-	}
-
-	for _, p := range pRList {
-		if p.Spec.RoleRef == pgRole.Name {
-			if p.Status.Lease.ID != "" {
-				err = c.RevokeLease(pgRole.Spec.AuthManagerRef, p.Status.Lease.ID)
-				if err != nil {
-					return errors.Wrap(err, "failed to revoke lease")
-				}
-
-				status := p.Status
-				status.Lease = api.LeaseData{}
-				err = c.updatePostgresRoleBindingStatus(&status, p)
-				if err != nil {
-					return errors.WithStack(err)
-				}
-			}
-		}
-	}
-
-	err = dbRClient.DeleteRole(pgRole.Name)
+	err := dbRClient.DeleteRole(pgRole.RoleName())
 	if err != nil {
 		return errors.Wrap(err, "failed to database role")
 	}

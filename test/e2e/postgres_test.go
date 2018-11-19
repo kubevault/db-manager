@@ -128,7 +128,7 @@ var _ = Describe("Postgres role and role binding", func() {
 			}, timeOut, pollingInterval).Should(BeTrue(), "Is vault database role deleted")
 		}
 
-		IsVaultLeaseRevoked = func(dRB database.DatabaseRoleBindingInterface, leaseID string) {
+		IsVaultLeaseRevoked = func(dRB database.DatabaseCredentialManager, leaseID string) {
 			By(fmt.Sprintf("Checking Is lease revoked"))
 			Eventually(func() bool {
 				ok, err := dRB.IsLeaseExpired(leaseID)
@@ -136,7 +136,7 @@ var _ = Describe("Postgres role and role binding", func() {
 			}, timeOut, pollingInterval).Should(BeTrue(), "Is lease revoked")
 		}
 
-		IsVaultLeaseValid = func(dRB database.DatabaseRoleBindingInterface, leaseID string) {
+		IsVaultLeaseValid = func(dRB database.DatabaseCredentialManager, leaseID string) {
 			By(fmt.Sprintf("Checking Is lease valid"))
 			Eventually(func() bool {
 				ok, err := dRB.IsLeaseExpired(leaseID)

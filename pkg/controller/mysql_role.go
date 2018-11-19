@@ -17,7 +17,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 )
 
 const (
@@ -48,7 +47,7 @@ func (c *Controller) runMySQLRoleInjector(key string) error {
 
 		if mRole.DeletionTimestamp != nil {
 			if core_util.HasFinalizer(mRole.ObjectMeta, apis.Finalizer) {
-				go c.runMySQLRoleFinalizer(mRole, 1*time.Minute, 10*time.Second)
+				go c.runMySQLRoleFinalizer(mRole, finalizerTimeout, finalizerInterval)
 			}
 
 		} else {
@@ -151,29 +150,6 @@ func (c *Controller) reconcileMySQLRole(dbRClient database.DatabaseRoleInterface
 	if err != nil {
 		return errors.Wrap(err, "failed to update MySQLRole status")
 	}
-
-	mList, err := c.myRoleBindingLister.MySQLRoleBindings(myRole.Namespace).List(labels.Everything())
-	for _, m := range mList {
-		if m.Spec.RoleRef == myRole.Name {
-			// revoke lease if have any lease
-			if m.Status.Lease.ID != "" {
-				err = c.RevokeLease(myRole.Spec.AuthManagerRef, m.Status.Lease.ID)
-				if err != nil {
-					return errors.Wrap(err, "failed to revoke lease")
-				}
-
-				status := m.Status
-				status.Lease = api.LeaseData{}
-				err = c.updateMySQLRoleBindingStatus(&status, m)
-				if err != nil {
-					return errors.WithStack(err)
-				}
-			}
-
-			// enqueue mysqlRoleBinding to reissue database credentials lease
-			queue.Enqueue(c.myRoleBindingQueue.GetQueue(), m)
-		}
-	}
 	return nil
 }
 
@@ -273,30 +249,7 @@ func (c *Controller) runMySQLRoleFinalizer(mRole *api.MySQLRole, timeout time.Du
 //	- delete role in vault
 //	- revoke lease of all the corresponding mysqlRoleBinding
 func (c *Controller) finalizeMySQLRole(dbRClient database.DatabaseRoleInterface, mRole *api.MySQLRole) error {
-	mRList, err := c.myRoleBindingLister.MySQLRoleBindings(mRole.Namespace).List(labels.Everything())
-	if err != nil {
-		return errors.Wrap(err, "failed to list mysqlRoleBinding")
-	}
-
-	for _, m := range mRList {
-		if m.Spec.RoleRef == mRole.Name {
-			if m.Status.Lease.ID != "" {
-				err = c.RevokeLease(mRole.Spec.AuthManagerRef, m.Status.Lease.ID)
-				if err != nil {
-					return errors.Wrap(err, "failed to revoke lease")
-				}
-
-				status := m.Status
-				status.Lease = api.LeaseData{}
-				err = c.updateMySQLRoleBindingStatus(&status, m)
-				if err != nil {
-					return errors.WithStack(err)
-				}
-			}
-		}
-	}
-
-	err = dbRClient.DeleteRole(mRole.Name)
+	err := dbRClient.DeleteRole(mRole.RoleName())
 	if err != nil {
 		return errors.Wrap(err, "failed to database role")
 	}

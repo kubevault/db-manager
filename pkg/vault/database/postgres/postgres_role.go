@@ -3,6 +3,8 @@ package postgres
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
+	"path/filepath"
 
 	vaultapi "github.com/hashicorp/vault/api"
 	api "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
@@ -11,6 +13,7 @@ import (
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	appcat "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1"
 	appcat_cs "kmodules.xyz/custom-resources/client/clientset/versioned/typed/appcatalog/v1alpha1"
 )
 
@@ -21,11 +24,12 @@ type PostgresRole struct {
 	vaultClient  *vaultapi.Client
 	kubeClient   kubernetes.Interface
 	databasePath string
+	dbConnUrl    string
 }
 
 func NewPostgresRole(kClient kubernetes.Interface, appClient appcat_cs.AppcatalogV1alpha1Interface, v *vaultapi.Client, pgRole *api.PostgresRole, databasePath string) (*PostgresRole, error) {
 	ref := pgRole.Spec.DatabaseRef
-	dApp, err := appClient.AppBindings(ref.Namespace).Get(ref.Name, metav1.GetOptions{})
+	dApp, err := appClient.AppBindings(pgRole.Namespace).Get(ref.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -49,6 +53,11 @@ func NewPostgresRole(kClient kubernetes.Interface, appClient appcat_cs.Appcatalo
 	}
 	cf.SetDefaults()
 
+	connUrl, err := getConnectionUrl(dApp)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get database connection url")
+	}
+
 	return &PostgresRole{
 		config:       cf,
 		secret:       sr,
@@ -56,6 +65,7 @@ func NewPostgresRole(kClient kubernetes.Interface, appClient appcat_cs.Appcatalo
 		vaultClient:  v,
 		kubeClient:   kClient,
 		databasePath: databasePath,
+		dbConnUrl:    connUrl,
 	}, nil
 }
 
@@ -75,8 +85,9 @@ func (p *PostgresRole) CreateConfig() error {
 	path := fmt.Sprintf("/v1/%s/config/%s", p.databasePath, dRef.Name)
 	req := p.vaultClient.NewRequest("POST", path)
 	payload := map[string]interface{}{
-		"plugin_name":   p.config.PluginName,
-		"allowed_roles": p.config.AllowedRoles,
+		"plugin_name":    p.config.PluginName,
+		"allowed_roles":  p.config.AllowedRoles,
+		"connection_url": p.dbConnUrl,
 	}
 
 	data := p.secret.Data
@@ -85,10 +96,6 @@ func (p *PostgresRole) CreateConfig() error {
 	}
 	if val, ok := data["password"]; ok {
 		payload["password"] = string(val)
-	}
-	// TODO: get connection url from config parameters
-	if val, ok := data["connection_url"]; ok {
-		payload["connection_url"] = string(val)
 	}
 
 	if p.config.MaxOpenConnections > 0 {
@@ -113,7 +120,7 @@ func (p *PostgresRole) CreateConfig() error {
 //
 // CreateRole creates role
 func (p *PostgresRole) CreateRole() error {
-	name := p.pgRole.Name
+	name := p.pgRole.RoleName()
 	pg := p.pgRole.Spec
 
 	path := fmt.Sprintf("/v1/%s/roles/%s", p.databasePath, name)
@@ -147,8 +154,32 @@ func (p *PostgresRole) CreateRole() error {
 
 	_, err = p.vaultClient.RawRequest(req)
 	if err != nil {
-		return errors.Wrapf(err, "failed to create database role %s for config %s", name, pg.DBName)
+		return errors.Wrapf(err, "failed to create database role %s for config %s", name, pg.DatabaseRef.Name)
 	}
-
 	return nil
+}
+
+func getConnectionUrl(app *appcat.AppBinding) (string, error) {
+	c := app.Spec.ClientConfig
+	if c.URL != nil {
+		u, err := url.Parse(*c.URL)
+		if err == nil {
+			if u.User != nil {
+				return "", errors.New("username/password must not be included in url, use {{field_name}} template instead and provide username and password in secret")
+			}
+		}
+		return *c.URL, nil
+
+	} else if c.Service != nil {
+		srv := c.Service
+		rawUrl := fmt.Sprintf("{{username}}:{{password}}@%s.%s.svc:%d", srv.Name, app.Namespace, srv.Port)
+		if srv.Path != nil {
+			rawUrl = filepath.Join(rawUrl, *srv.Path)
+		}
+		rawUrl = fmt.Sprintf("postgresql://%s", rawUrl)
+		return rawUrl, nil
+
+	} else {
+		return "", errors.New("connection url is not provided")
+	}
 }
