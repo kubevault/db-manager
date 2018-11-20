@@ -220,7 +220,7 @@ func (c *Controller) updateDatabaseAccessRequestStatus(status *api.DatabaseAcces
 	_, err := patchutil.UpdateDatabaseAccessRequestStatus(c.dbClient.AuthorizationV1alpha1(), mRoleBinding, func(s *api.DatabaseAccessRequestStatus) *api.DatabaseAccessRequestStatus {
 		s = status
 		return s
-	})
+	}, apis.EnableStatusSubresource)
 	return err
 }
 

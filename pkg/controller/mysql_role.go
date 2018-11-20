@@ -157,7 +157,7 @@ func (c *Controller) updatedMySQLRoleStatus(status *api.MySQLRoleStatus, mRole *
 	_, err := patchutil.UpdateMySQLRoleStatus(c.dbClient.AuthorizationV1alpha1(), mRole, func(s *api.MySQLRoleStatus) *api.MySQLRoleStatus {
 		s = status
 		return s
-	})
+	}, apis.EnableStatusSubresource)
 	if err != nil {
 		return err
 	}

@@ -158,7 +158,7 @@ func (c *Controller) updatedMongoDBRoleStatus(status *api.MongoDBRoleStatus, mRo
 	_, err := patchutil.UpdateMongoDBRoleStatus(c.dbClient.AuthorizationV1alpha1(), mRole, func(s *api.MongoDBRoleStatus) *api.MongoDBRoleStatus {
 		s = status
 		return s
-	})
+	}, apis.EnableStatusSubresource)
 	if err != nil {
 		return err
 	}

@@ -157,7 +157,7 @@ func (c *Controller) updatePostgresRoleStatus(status *api.PostgresRoleStatus, pg
 	_, err := patchutil.UpdatePostgresRoleStatus(c.dbClient.AuthorizationV1alpha1(), pgRole, func(s *api.PostgresRoleStatus) *api.PostgresRoleStatus {
 		s = status
 		return s
-	})
+	}, apis.EnableStatusSubresource)
 	if err != nil {
 		return err
 	}

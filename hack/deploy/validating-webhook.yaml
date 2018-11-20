@@ -1,25 +1,25 @@
 apiVersion: admissionregistration.k8s.io/v1beta1
 kind: ValidatingWebhookConfiguration
 metadata:
-  name: admission.users.kubedb.com
+  name: validators.authorization.kubedb.com
   labels:
-    app: messenger
+    app: db-manager
 webhooks:
-- name: message.admission.users.kubedb.com
+- name: databaseaccessrequests.validators.authorization.kubedb.com
   clientConfig:
     service:
       namespace: default
       name: kubernetes
-      path: /apis/admission.users.kubedb.com/v1alpha1/messages
+      path: /apis/validators.authorization.kubedb.com/v1alpha1/databaseaccessrequests
     caBundle: ${KUBE_CA}
   rules:
   - operations:
     - CREATE
     - UPDATE
     apiGroups:
-    - users.kubedb.com
+    - authorization.kubedb.com
     apiVersions:
     - "*"
     resources:
-    - messages
+    - databaseaccessrequests
   failurePolicy: Fail

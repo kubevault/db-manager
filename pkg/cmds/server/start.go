@@ -5,13 +5,10 @@ import (
 	"io"
 	"net"
 
-	"github.com/appscode/kutil/tools/clientcmd"
-	"github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
 	"github.com/kubevault/db-manager/pkg/controller"
 	"github.com/kubevault/db-manager/pkg/server"
 	"github.com/spf13/pflag"
 	admissionv1beta1 "k8s.io/api/admission/v1beta1"
-	openapinamer "k8s.io/apiserver/pkg/endpoints/openapi"
 	genericapiserver "k8s.io/apiserver/pkg/server"
 	genericoptions "k8s.io/apiserver/pkg/server/options"
 )
@@ -60,16 +57,9 @@ func (o UserManagerOptions) Config() (*server.UserManagerConfig, error) {
 	}
 
 	serverConfig := genericapiserver.NewRecommendedConfig(server.Codecs)
+	serverConfig.EnableMetrics = true
 	if err := o.RecommendedOptions.ApplyTo(serverConfig, server.Scheme); err != nil {
 		return nil, err
-	}
-	clientcmd.Fix(serverConfig.ClientConfig)
-	serverConfig.OpenAPIConfig = genericapiserver.DefaultOpenAPIConfig(v1alpha1.GetOpenAPIDefinitions, openapinamer.NewDefinitionNamer(server.Scheme))
-	serverConfig.OpenAPIConfig.Info.Title = "messenger"
-	serverConfig.OpenAPIConfig.Info.Version = v1alpha1.SchemeGroupVersion.Version
-	serverConfig.OpenAPIConfig.IgnorePrefixes = []string{
-		"/swaggerapi",
-		"/apis/admission.authorization.kubedb.com/v1alpha1/messages",
 	}
 
 	extraConfig := controller.NewConfig(serverConfig.ClientConfig)

@@ -17,14 +17,14 @@ const (
 	validatorVersion = "v1alpha1"
 )
 
-type VaultServerValidator struct {
+type DatabaseAccessRequestValidator struct {
 	lock        sync.RWMutex
 	initialized bool
 }
 
-var _ hookapi.AdmissionHook = &VaultServerValidator{}
+var _ hookapi.AdmissionHook = &DatabaseAccessRequestValidator{}
 
-func (v *VaultServerValidator) Resource() (plural schema.GroupVersionResource, singular string) {
+func (v *DatabaseAccessRequestValidator) Resource() (plural schema.GroupVersionResource, singular string) {
 	return schema.GroupVersionResource{
 			Group:    validatorGroup,
 			Version:  validatorVersion,
@@ -33,7 +33,7 @@ func (v *VaultServerValidator) Resource() (plural schema.GroupVersionResource, s
 		api.ResourceDatabaseAccessRequest
 }
 
-func (v *VaultServerValidator) Initialize(config *rest.Config, stopCh <-chan struct{}) error {
+func (v *DatabaseAccessRequestValidator) Initialize(config *rest.Config, stopCh <-chan struct{}) error {
 	v.lock.Lock()
 	defer v.lock.Unlock()
 
@@ -41,7 +41,7 @@ func (v *VaultServerValidator) Initialize(config *rest.Config, stopCh <-chan str
 	return nil
 }
 
-func (v *VaultServerValidator) Admit(req *admission.AdmissionRequest) *admission.AdmissionResponse {
+func (v *DatabaseAccessRequestValidator) Admit(req *admission.AdmissionRequest) *admission.AdmissionResponse {
 	status := &admission.AdmissionResponse{}
 
 	if req.Operation != admission.Update ||
