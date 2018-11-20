@@ -4,15 +4,17 @@ import (
 	"time"
 
 	"github.com/appscode/go/log/golog"
-	cs "github.com/kubedb/user-manager/client/clientset/versioned"
-	dbinformers "github.com/kubedb/user-manager/client/informers/externalversions"
-	"github.com/kubedb/user-manager/pkg/eventer"
+	cs "github.com/kubedb/apimachinery/client/clientset/versioned"
+	dbinformers "github.com/kubedb/apimachinery/client/informers/externalversions"
+	"github.com/kubevault/db-manager/pkg/eventer"
 	core "k8s.io/api/core/v1"
 	crd_cs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	appcat_cs "kmodules.xyz/custom-resources/client/clientset/versioned"
+	appcatinformers "kmodules.xyz/custom-resources/client/informers/externalversions"
 )
 
 var (
@@ -31,10 +33,11 @@ type config struct {
 type Config struct {
 	config
 
-	ClientConfig *rest.Config
-	KubeClient   kubernetes.Interface
-	DbClient     cs.Interface
-	CRDClient    crd_cs.ApiextensionsV1beta1Interface
+	ClientConfig  *rest.Config
+	KubeClient    kubernetes.Interface
+	DbClient      cs.Interface
+	CRDClient     crd_cs.ApiextensionsV1beta1Interface
+	CatalogClient appcat_cs.Interface
 }
 
 func NewConfig(clientConfig *rest.Config) *Config {
@@ -43,19 +46,21 @@ func NewConfig(clientConfig *rest.Config) *Config {
 	}
 }
 
-func (c *Config) New() (*UserManagerController, error) {
+func (c *Config) New() (*Controller, error) {
 	tweakListOptions := func(opt *metav1.ListOptions) {
 		opt.IncludeUninitialized = true
 	}
-	ctrl := &UserManagerController{
-		config:              c.config,
-		kubeClient:          c.KubeClient,
-		dbClient:            c.DbClient,
-		crdClient:           c.CRDClient,
-		kubeInformerFactory: informers.NewFilteredSharedInformerFactory(c.KubeClient, c.ResyncPeriod, core.NamespaceAll, tweakListOptions),
-		dbInformerFactory:   dbinformers.NewSharedInformerFactory(c.DbClient, c.ResyncPeriod),
-		recorder:            eventer.NewEventRecorder(c.KubeClient, "user-manager-controller"),
-		processingFinalizer: map[string]bool{},
+	ctrl := &Controller{
+		config:                c.config,
+		kubeClient:            c.KubeClient,
+		dbClient:              c.DbClient,
+		crdClient:             c.CRDClient,
+		catalogClient:         c.CatalogClient,
+		kubeInformerFactory:   informers.NewFilteredSharedInformerFactory(c.KubeClient, c.ResyncPeriod, core.NamespaceAll, tweakListOptions),
+		dbInformerFactory:     dbinformers.NewSharedInformerFactory(c.DbClient, c.ResyncPeriod),
+		appcatInformerFactory: appcatinformers.NewSharedInformerFactory(c.CatalogClient, c.ResyncPeriod),
+		recorder:              eventer.NewEventRecorder(c.KubeClient, "user-manager-controller"),
+		processingFinalizer:   map[string]bool{},
 	}
 
 	if err := ctrl.ensureCustomResourceDefinitions(); err != nil {
@@ -63,13 +68,9 @@ func (c *Config) New() (*UserManagerController, error) {
 	}
 
 	ctrl.initPostgresRoleWatcher()
-	ctrl.initPostgresRoleBindingWatcher()
-
 	ctrl.initMySQLRoleWatcher()
-	ctrl.initMySQLRoleBindingWatcher()
-
 	ctrl.initMongoDBRoleWatcher()
-	ctrl.initMongoDBRoleBindingWatcher()
+	ctrl.initDatabaseAccessWatcher()
 
 	return ctrl, nil
 }

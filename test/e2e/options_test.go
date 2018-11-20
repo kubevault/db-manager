@@ -6,7 +6,7 @@ import (
 
 	"github.com/appscode/go/flags"
 	logs "github.com/appscode/go/log/golog"
-	"github.com/kubedb/user-manager/pkg/cmds/server"
+	"github.com/kubevault/db-manager/pkg/cmds/server"
 	"k8s.io/client-go/util/homedir"
 )
 

@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"github.com/appscode/pat"
-	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
-	dbfake "github.com/kubedb/user-manager/client/clientset/versioned/fake"
-	dbinformers "github.com/kubedb/user-manager/client/informers/externalversions"
-	"github.com/kubedb/user-manager/pkg/vault/database"
+	api "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
+	dbfake "github.com/kubedb/apimachinery/client/clientset/versioned/fake"
+	dbinformers "github.com/kubedb/apimachinery/client/informers/externalversions"
+	"github.com/kubevault/db-manager/pkg/vault/database"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -45,7 +45,7 @@ func TestUserManagerController_runMysqlFinalizer(t *testing.T) {
 		},
 	}
 
-	userManager := &UserManagerController{
+	userManager := &Controller{
 		processingFinalizer: map[string]bool{},
 		dbClient:            dbfake.NewSimpleClientset(),
 		kubeClient:          kfake.NewSimpleClientset(),
@@ -63,7 +63,7 @@ func TestUserManagerController_runMysqlFinalizer(t *testing.T) {
 
 	testData := []struct {
 		testName            string
-		userManger          *UserManagerController
+		userManger          *Controller
 		mRole               *api.MySQLRole
 		createVaultCred     bool
 		timeout             time.Duration
@@ -242,7 +242,7 @@ func TestUserManagerController_reconcileMySQLRole(t *testing.T) {
 
 	for _, test := range testData {
 		t.Run(test.testName, func(t *testing.T) {
-			c := &UserManagerController{
+			c := &Controller{
 				kubeClient: kfake.NewSimpleClientset(),
 				dbClient:   dbfake.NewSimpleClientset(),
 			}

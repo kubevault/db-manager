@@ -18,7 +18,7 @@ resources:
   type: git
   tags: [cncf]
   source:
-    uri: https://github.com/kubedb/user-manager
+    uri: https://github.com/kubevault/db-manager
     branch: master
 
 - name: repo-status

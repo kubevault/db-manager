@@ -8,7 +8,7 @@ GOPATH=$(go env GOPATH)
 SRC=$GOPATH/src
 BIN=$GOPATH/bin
 ROOT=$GOPATH
-REPO_ROOT=$GOPATH/src/github.com/kubedb/user-manager
+REPO_ROOT=$GOPATH/src/github.com/kubevault/db-manager
 
 source "$REPO_ROOT/hack/libbuild/common/lib.sh"
 source "$REPO_ROOT/hack/libbuild/common/public_image.sh"
@@ -16,20 +16,20 @@ source "$REPO_ROOT/hack/libbuild/common/public_image.sh"
 APPSCODE_ENV=${APPSCODE_ENV:-dev}
 IMG=messenger
 
-DIST=$GOPATH/src/github.com/kubedb/user-manager/dist
+DIST=$GOPATH/src/github.com/kubevault/db-manager/dist
 mkdir -p $DIST
 if [ -f "$DIST/.tag" ]; then
   export $(cat $DIST/.tag | xargs)
 fi
 
 clean() {
-  pushd $GOPATH/src/github.com/kubedb/user-manager/hack/docker
+  pushd $GOPATH/src/github.com/kubevault/db-manager/hack/docker
   rm messenger Dockerfile
   popd
 }
 
 build_binary() {
-  pushd $GOPATH/src/github.com/kubedb/user-manager
+  pushd $GOPATH/src/github.com/kubevault/db-manager
   ./hack/builddeps.sh
   ./hack/make.py build messenger
   detect_tag $DIST/.tag
@@ -37,7 +37,7 @@ build_binary() {
 }
 
 build_docker() {
-  pushd $GOPATH/src/github.com/kubedb/user-manager/hack/docker
+  pushd $GOPATH/src/github.com/kubevault/db-manager/hack/docker
   cp $DIST/messenger/messenger-alpine-amd64 messenger
   chmod 755 messenger
 

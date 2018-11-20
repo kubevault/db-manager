@@ -35,7 +35,7 @@ import subprocess
 import sys
 from os.path import expandvars, join, dirname
 
-libbuild.REPO_ROOT = libbuild.GOPATH + '/src/github.com/kubedb/user-manager'
+libbuild.REPO_ROOT = libbuild.GOPATH + '/src/github.com/kubevault/db-manager'
 BUILD_METADATA = libbuild.metadata(libbuild.REPO_ROOT)
 libbuild.BIN_MATRIX = {
     'messenger': {
@@ -82,18 +82,16 @@ def version():
 
 
 def fmt():
-    libbuild.ungroup_go_imports('apis', 'client', 'hack', 'pkg')
-    die(call('goimports -w apis client hack pkg'))
-    call('gofmt -s -w apis client hack pkg')
+    libbuild.ungroup_go_imports('hack', 'pkg')
+    die(call('goimports -w hack pkg'))
+    call('gofmt -s -w hack pkg')
 
 
 def vet():
-    call('go vet ./apis/... ./client/... ./pkg/...')
+    call('go vet ./pkg/...')
 
 
 def lint():
-    call('golint ./apis/...')
-    call('golint ./client/...')
     call('golint ./pkg/...')
 
 

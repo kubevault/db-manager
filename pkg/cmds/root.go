@@ -10,13 +10,14 @@ import (
 	v "github.com/appscode/go/version"
 	"github.com/appscode/kutil/tools/analytics"
 	"github.com/jpillora/go-ogle-analytics"
-	"github.com/kubedb/user-manager/client/clientset/versioned/scheme"
-	"github.com/kubedb/user-manager/pkg/controller"
+	"github.com/kubedb/apimachinery/client/clientset/versioned/scheme"
+	"github.com/kubevault/db-manager/pkg/controller"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	genericapiserver "k8s.io/apiserver/pkg/server"
 	clientsetscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/kubernetes/pkg/api/legacyscheme"
+	_ "kmodules.xyz/custom-resources/client/clientset/versioned/typed/appcatalog/v1alpha1/util"
 )
 
 const (
@@ -29,7 +30,7 @@ var (
 
 func NewRootCmd() *cobra.Command {
 	var rootCmd = &cobra.Command{
-		Use:               "user manager",
+		Use:               "user-manager",
 		Short:             `user manager by AppsCode`,
 		Long:              `user manager by AppsCode`,
 		DisableAutoGenTag: true,

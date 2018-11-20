@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"time"
 
-	api "github.com/kubedb/user-manager/apis/authorization/v1alpha1"
-	"github.com/kubedb/user-manager/test/e2e/framework"
+	api "github.com/kubedb/apimachinery/apis/authorization/v1alpha1"
+	"github.com/kubevault/db-manager/test/e2e/framework"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 
-	patchutil "github.com/kubedb/user-manager/client/clientset/versioned/typed/authorization/v1alpha1/util"
-	"github.com/kubedb/user-manager/pkg/vault/database"
+	patchutil "github.com/kubedb/apimachinery/client/clientset/versioned/typed/authorization/v1alpha1/util"
+	"github.com/kubevault/db-manager/pkg/vault/database"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -112,7 +112,7 @@ var _ = Describe("Mongodb role and role binding", func() {
 			}, timeOut, pollingInterval).Should(BeTrue(), "Is vault database role created")
 		}
 
-		IsVaultLeaseRevoked = func(dRB database.DatabaseRoleBindingInterface, leaseID string) {
+		IsVaultLeaseRevoked = func(dRB database.DatabaseCredentialManager, leaseID string) {
 			By(fmt.Sprintf("Checking Is lease revoked"))
 			Eventually(func() bool {
 				ok, err := dRB.IsLeaseExpired(leaseID)
@@ -120,7 +120,7 @@ var _ = Describe("Mongodb role and role binding", func() {
 			}, timeOut, pollingInterval).Should(BeTrue(), "Is lease revoked")
 		}
 
-		IsVaultLeaseValid = func(dRB database.DatabaseRoleBindingInterface, leaseID string) {
+		IsVaultLeaseValid = func(dRB database.DatabaseCredentialManager, leaseID string) {
 			By(fmt.Sprintf("Checking Is lease valid"))
 			Eventually(func() bool {
 				ok, err := dRB.IsLeaseExpired(leaseID)

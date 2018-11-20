@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/appscode/go/crypto/rand"
 	aggregator "github.com/appscode/go/util/errors"
-	cs "github.com/kubedb/user-manager/client/clientset/versioned"
+	cs "github.com/kubedb/apimachinery/client/clientset/versioned"
 	crd_cs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
